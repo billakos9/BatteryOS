@@ -1,7 +1,7 @@
 WORKFLOW_PLAN.md
 
 # Data (raw + processed)
-data/
+/data/
 
 # Python
 __pycache__/
@@ -14,6 +14,10 @@ dist/
 build/
 *.egg
 .eggs/
+
+# Frontend
+node_modules/
+src/ui/dist/
 
 # Virtual environments
 .venv/
