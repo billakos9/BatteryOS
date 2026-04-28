@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +39,16 @@ class BatteryProfile:
             raise ValueError("max_cycles_per_day must be >= 0")
         if self.degradation_cost_eur_per_mwh < 0:
             raise ValueError("degradation_cost must be >= 0")
+        if not 0 <= self.self_discharge_per_hour < 1:
+            raise ValueError(
+                f"self_discharge_per_hour must lie in [0, 1), got {self.self_discharge_per_hour}"
+            )
+        if self.terminal_soc_mwh is not None:
+            if not self.soc_min_mwh <= self.terminal_soc_mwh <= self.soc_max_mwh:
+                raise ValueError(
+                    f"terminal_soc_mwh ({self.terminal_soc_mwh}) must lie within "
+                    f"[soc_min, soc_max] = [{self.soc_min_mwh}, {self.soc_max_mwh}]"
+                )
 
     @property
     def round_trip_efficiency(self) -> float:

@@ -20,15 +20,19 @@ def optimize_deterministic(
     battery: BatteryProfile,
     duration_hours: float = 0.25,
     time_limit_s: Optional[int] = 60,
-    enforce_disjunction: bool = True,
+    enforce_disjunction: bool = False,
 ) -> Schedule:
-    """Deterministic MILP: maximize profit on a single price curve.
+    """Deterministic optimizer: maximize profit on a single price curve.
 
-    Sets `enforce_disjunction=False` to drop the binary z(t) variables and
-    solve the LP relaxation. With round-trip efficiency < 1 the LP optimum
-    coincides with the MILP optimum, so the relaxation is faster and exact.
+    Defaults to the LP relaxation (`enforce_disjunction=False`), which
+    matches the stochastic and CVaR optimizers. With round-trip
+    efficiency < 1 the LP optimum coincides with the MILP optimum
+    because simultaneous charge+discharge is dominated. The
+    `build_battery_model` guard enforces this assumption.
     """
     horizon = len(forecast_prices)
+    if horizon == 0:
+        raise ValueError("forecast_prices is empty")
     if horizon != len(timestamps):
         raise ValueError("timestamps and forecast_prices must have the same length")
 

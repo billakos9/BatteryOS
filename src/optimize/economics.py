@@ -18,6 +18,8 @@ class FeasibilityReport:
     simultaneity_violation_mw: float
     cycles_used: float
     cycle_violation: float
+    dynamics_residual_mwh: float
+    terminal_soc_violation_mwh: float
 
 
 def period_profit(
@@ -85,6 +87,7 @@ def feasibility_report(
     charge = schedule_df["charge_mw"].to_numpy()
     discharge = schedule_df["discharge_mw"].to_numpy()
     soc = schedule_df["state_of_charge_mwh"].to_numpy()
+    n = len(charge)
 
     soc_min_v = float(np.maximum(0.0, battery.soc_min_mwh - soc).max())
     soc_max_v = float(np.maximum(0.0, soc - battery.soc_max_mwh).max())
@@ -97,10 +100,30 @@ def feasibility_report(
     sim_v = float(np.minimum(charge, discharge).max())
 
     cycles = equivalent_full_cycles(charge, discharge, duration_hours, battery.usable_energy_mwh)
-    days = len(charge) * duration_hours / 24.0
+    days = n * duration_hours / 24.0
     cycle_v = max(0.0, cycles - battery.max_cycles_per_day * days)
 
-    feasible = max(soc_min_v, soc_max_v, power_v, sim_v, cycle_v) <= tol_mw
+    decay = 1.0 - battery.self_discharge_per_hour * duration_hours
+    sim_soc = np.zeros(n)
+    state = battery.initial_soc_mwh
+    for t in range(n):
+        state = (
+            decay * state
+            + battery.charge_efficiency * charge[t] * duration_hours
+            - discharge[t] * duration_hours / battery.discharge_efficiency
+        )
+        sim_soc[t] = state
+    dynamics_residual = float(np.max(np.abs(sim_soc - soc))) if n > 0 else 0.0
+
+    if battery.terminal_soc_mwh is not None and n > 0:
+        terminal_v = float(max(0.0, battery.terminal_soc_mwh - soc[-1]))
+    else:
+        terminal_v = 0.0
+
+    feasible = (
+        max(soc_min_v, soc_max_v, power_v, sim_v, cycle_v, terminal_v) <= tol_mw
+        and dynamics_residual <= max(tol_mw, 1e-3)
+    )
 
     return FeasibilityReport(
         feasible=feasible,
@@ -110,4 +133,6 @@ def feasibility_report(
         simultaneity_violation_mw=sim_v,
         cycles_used=cycles,
         cycle_violation=cycle_v,
+        dynamics_residual_mwh=dynamics_residual,
+        terminal_soc_violation_mwh=terminal_v,
     )

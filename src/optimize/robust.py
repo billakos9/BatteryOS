@@ -90,16 +90,18 @@ def optimize_cvar(
         scenario_profits.append(market - deg)
     scenario_profits = np.array(scenario_profits)
 
-    sorted_profits = np.sort(scenario_profits)
-    cum = np.cumsum(scenarios.weights[np.argsort(scenario_profits)])
-    cutoff_idx = int(np.searchsorted(cum, alpha))
-    tail_profits = sorted_profits[: cutoff_idx + 1]
-    tail_weights = scenarios.weights[np.argsort(scenario_profits)][: cutoff_idx + 1]
-    cvar_realized = (
-        float(np.sum(tail_profits * tail_weights) / max(tail_weights.sum(), 1e-9))
-        if len(tail_profits) > 0
-        else float("nan")
-    )
+    sort_idx = np.argsort(scenario_profits)
+    sorted_profits = scenario_profits[sort_idx]
+    sorted_weights = scenarios.weights[sort_idx]
+    tail_value = 0.0
+    mass_remaining = float(alpha)
+    for p_s, w_s in zip(sorted_profits, sorted_weights):
+        take = min(float(w_s), mass_remaining)
+        tail_value += float(p_s) * take
+        mass_remaining -= take
+        if mass_remaining <= 1e-12:
+            break
+    cvar_realized = float(tail_value / alpha) if alpha > 0 else float("nan")
 
     df = build_schedule_frame(
         scenarios.timestamps,

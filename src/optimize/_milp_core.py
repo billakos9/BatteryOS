@@ -29,8 +29,27 @@ def build_battery_model(
     horizon: int,
     duration_hours: float,
     name: str = "battery",
-    enforce_disjunction: bool = True,
+    enforce_disjunction: bool = False,
 ) -> BatteryMILP:
+    """Construct the shared MILP/LP scaffolding.
+
+    `enforce_disjunction=False` (default) drops the binary z(t) variables
+    and solves the LP relaxation. With round-trip efficiency < 1 the LP
+    optimum coincides with the MILP optimum because simultaneous charge
+    and discharge is strictly dominated. For lossless storage
+    (eta_rt >= 1) this is no longer guaranteed, so we require explicit
+    binaries in that case.
+    """
+    if horizon <= 0:
+        raise ValueError(f"horizon must be > 0, got {horizon}")
+    if duration_hours <= 0:
+        raise ValueError(f"duration_hours must be > 0, got {duration_hours}")
+    if not enforce_disjunction and battery.round_trip_efficiency >= 1.0 - 1e-9:
+        raise ValueError(
+            "LP relaxation is not safe when round_trip_efficiency >= 1.0; "
+            "the LP can return simultaneous charge+discharge. "
+            "Pass enforce_disjunction=True for lossless storage."
+        )
     prob = pulp.LpProblem(name, pulp.LpMaximize)
 
     p_ch = [

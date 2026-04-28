@@ -97,6 +97,8 @@ def build_bid_curves_resolve(
     """
     base = np.asarray(forecast_prices, dtype=float)
     horizon = len(base)
+    if horizon == 0:
+        raise ValueError("forecast_prices is empty")
     if horizon != len(timestamps):
         raise ValueError("timestamps and forecast_prices must have the same length")
 
@@ -144,6 +146,8 @@ def build_bid_curves_from_duals(
     battery: BatteryProfile,
     duration_hours: float = 0.25,
     time_limit_s: Optional[int] = 60,
+    degeneracy_tol_eur_per_mwh: float = 1.0,
+    fallback_to_resolve: bool = False,
 ) -> BidCurves:
     """Extract bid prices from the LP relaxation's shadow prices.
 
@@ -158,8 +162,19 @@ def build_bid_curves_from_duals(
 
     These are the Lagrangian-optimal bid prices for the LP relaxation.
     Returns a two-point ladder per period.
+
+    Degenerate case: when the cycle-limit constraint binds (the typical
+    case on high-spread days), the SoC-balance duals collapse to a near-
+    constant value across all t, and the bid curve reduces to a single
+    threshold per direction. The function flags this in metadata under
+    `degenerate_constant_shadow_prices`. With `fallback_to_resolve=True`
+    it transparently re-runs `build_bid_curves_resolve` instead.
     """
     horizon = len(forecast_prices)
+    if horizon == 0:
+        raise ValueError("forecast_prices is empty")
+    if horizon != len(timestamps):
+        raise ValueError("timestamps and forecast_prices must have the same length")
     model = build_battery_model(
         battery,
         horizon,
@@ -182,6 +197,18 @@ def build_bid_curves_from_duals(
         ]
         if constraints_with_var:
             shadow_prices[t] = float(constraints_with_var[0].pi or 0.0)
+
+    shadow_spread = float(shadow_prices.max() - shadow_prices.min())
+    is_degenerate = shadow_spread <= degeneracy_tol_eur_per_mwh
+
+    if is_degenerate and fallback_to_resolve:
+        return build_bid_curves_resolve(
+            timestamps,
+            forecast_prices,
+            battery,
+            duration_hours=duration_hours,
+            time_limit_s=time_limit_s,
+        )
 
     deg = battery.degradation_cost_eur_per_mwh
     sell_threshold = shadow_prices / max(battery.discharge_efficiency, 1e-6) + deg
@@ -218,5 +245,16 @@ def build_bid_curves_from_duals(
             "buy_thresholds_eur_per_mwh": buy_threshold.tolist(),
             "sell_thresholds_eur_per_mwh": sell_threshold.tolist(),
             "solver_status": pulp.LpStatus[status],
+            "shadow_price_spread_eur_per_mwh": shadow_spread,
+            "degenerate_constant_shadow_prices": bool(is_degenerate),
+            "degeneracy_explanation": (
+                "Cycle-limit constraint is binding; SoC-balance duals are "
+                "approximately constant across all periods. The bid curve "
+                "reduces to a single buy/sell threshold per direction. "
+                "Pass fallback_to_resolve=True to compute period-specific "
+                "curves via the resolve method instead."
+                if is_degenerate
+                else ""
+            ),
         },
     )
