@@ -139,6 +139,104 @@ Collect all external information needed to forecast Greek DAM prices and optimiz
 | ENTSO-E | Load, generation, cross-border, outage data | Multi-country context and coupling signals |
 | REMIT / outage feeds | Plant outage information | Outages affect supply and price spikes |
 
+### HEnEx DAM Results File Shape
+
+Example file:
+
+```text
+20260429_EL-DAM_Results_EN_v01.xlsx
+```
+
+This file has one sheet:
+
+```text
+EL-DAM_Results
+```
+
+Columns:
+
+```text
+TARGET
+BIDDING_ZONE_DESCR
+SIDE_DESCR
+DDAY
+ASSET_DESCR
+CLASSIFICATION
+DELIVERY_MTU
+DELIVERY_DURATION
+SORT
+MCP
+TOTAL_TRADES
+PUB_TIME
+VER
+```
+
+Important interpretation:
+
+```text
+DDAY = delivery day
+DELIVERY_MTU = 15-minute delivery timestamp
+DELIVERY_DURATION = MTU length, usually 15 minutes after 2025-10-01
+MCP = market clearing price, the target price signal
+TOTAL_TRADES = cleared/traded quantity for that row category
+PUB_TIME = when this version of the market result was published
+```
+
+The file is not one row per price. It repeats each 15-minute period across many market categories.
+
+That means one `DELIVERY_MTU` can have many rows:
+
+```text
+2026-04-29 00:00:00 + LOAD   + HV           + Buy
+2026-04-29 00:00:00 + SUPPLY + Natural Gas  + Sell
+2026-04-29 00:00:00 + SUPPLY + RES          + Sell
+2026-04-29 00:00:00 + GR-AL  + Exports      + Buy
+2026-04-29 00:00:00 + AL-GR  + Imports      + Sell
+...
+```
+
+So the timestamp is shared, but the row category changes.
+
+```text
+Buy / Sell
+LOAD / SUPPLY / STORAGE / cross-border assets
+RES / Natural Gas / Lignite / Big Hydro / Imports / Exports / etc.
+```
+
+For the forecasting target, we should collapse those repeated rows into one price per delivery MTU, because `MCP` is the same across all categories for the same timestamp:
+
+```text
+target_timestamp = DELIVERY_MTU
+target_price = MCP
+country = GR
+market = DAM
+published_at = PUB_TIME
+```
+
+For market-structure features, we can aggregate the repeated rows:
+
+```text
+load_quantity = sum TOTAL_TRADES where SIDE_DESCR = Buy and ASSET_DESCR = LOAD
+res_sell_quantity = sum TOTAL_TRADES where CLASSIFICATION = RES and SIDE_DESCR = Sell
+gas_sell_quantity = sum TOTAL_TRADES where CLASSIFICATION = Natural Gas
+import_quantity = sum TOTAL_TRADES where CLASSIFICATION = Imports
+export_quantity = sum TOTAL_TRADES where CLASSIFICATION = Exports
+storage_buy_quantity = sum TOTAL_TRADES where ASSET_DESCR = STORAGE and SIDE_DESCR = Buy
+storage_sell_quantity = sum TOTAL_TRADES where ASSET_DESCR = STORAGE and SIDE_DESCR = Sell
+```
+
+So the HEnEx ingestion should create two processed tables:
+
+```text
+dam_prices.parquet
+  one row per DELIVERY_MTU
+  this is the clean price target table
+
+dam_market_results_by_category.parquet
+  one row per DELIVERY_MTU × SIDE_DESCR × ASSET_DESCR × CLASSIFICATION
+  this keeps the repeated category rows for feature engineering
+```
+
 ### Output
 
 The data layer should produce cleaned time series such as:
