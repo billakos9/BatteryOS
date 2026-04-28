@@ -1,6 +1,11 @@
 from .battery import BatteryProfile, load_profile
 from .schedule import Schedule, SCHEDULE_COLUMNS
-from .scenarios import PriceScenarios, scenarios_from_quantiles, scenarios_from_samples
+from .scenarios import (
+    PriceScenarios,
+    scenarios_from_quantiles,
+    scenarios_from_samples,
+    scenarios_fast_forward,
+)
 from .economics import (
     evaluate_schedule,
     period_profit,
@@ -11,6 +16,17 @@ from .rule_based import optimize_rule_based
 from .milp import optimize_deterministic
 from .stochastic import optimize_stochastic
 from .robust import optimize_cvar, sweep_battery_parameters
+from .degradation import (
+    rainflow_count,
+    score_schedule_rainflow,
+    cycle_aging_cost_eur,
+    soc_banded_throughput_costs,
+)
+from .bid_curves import (
+    BidCurves,
+    build_bid_curves_resolve,
+    build_bid_curves_from_duals,
+)
 
 __all__ = [
     "BatteryProfile",
@@ -20,6 +36,7 @@ __all__ = [
     "PriceScenarios",
     "scenarios_from_quantiles",
     "scenarios_from_samples",
+    "scenarios_fast_forward",
     "evaluate_schedule",
     "period_profit",
     "equivalent_full_cycles",
@@ -29,4 +46,11 @@ __all__ = [
     "optimize_stochastic",
     "optimize_cvar",
     "sweep_battery_parameters",
+    "rainflow_count",
+    "score_schedule_rainflow",
+    "cycle_aging_cost_eur",
+    "soc_banded_throughput_costs",
+    "BidCurves",
+    "build_bid_curves_resolve",
+    "build_bid_curves_from_duals",
 ]

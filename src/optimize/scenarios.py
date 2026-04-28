@@ -112,6 +112,91 @@ def scenarios_from_samples(
     )
 
 
+def scenarios_fast_forward(
+    timestamps: Sequence,
+    samples: np.ndarray,
+    sample_weights: np.ndarray | None = None,
+    n_reduced: int = 20,
+    norm: int = 2,
+) -> PriceScenarios:
+    """Heitsch-Romisch fast-forward selection.
+
+    The production-standard scenario reduction technique for stochastic
+    programming. Iteratively picks the next scenario whose inclusion most
+    reduces the Kantorovich (Wasserstein-1) distance between the original
+    and reduced empirical distributions. The probability of each removed
+    scenario is reassigned to its closest kept neighbor.
+
+    Empirically preferred over k-means when the optimization is
+    cost-sensitive in the tails (which DAM dispatch is, because price
+    spikes drive most of the daily PnL).
+
+    Reference: Heitsch & Romisch, Computational Optimization and
+    Applications, 2003.
+    """
+    samples = np.asarray(samples, dtype=float)
+    if samples.ndim != 2:
+        raise ValueError("samples must be 2D (N, T)")
+    n_samples, horizon = samples.shape
+    if horizon != len(timestamps):
+        raise ValueError("samples columns must match timestamps")
+    if sample_weights is None:
+        weights = np.full(n_samples, 1.0 / n_samples)
+    else:
+        weights = np.asarray(sample_weights, dtype=float)
+        weights = weights / weights.sum()
+    if n_reduced >= n_samples:
+        return PriceScenarios(
+            timestamps=list(timestamps),
+            prices=samples,
+            weights=weights,
+            labels=[f"s{i}" for i in range(n_samples)],
+        )
+
+    diff = samples[:, None, :] - samples[None, :, :]
+    if norm == 1:
+        dist = np.abs(diff).sum(axis=2)
+    else:
+        dist = np.linalg.norm(diff, axis=2)
+
+    remaining = set(range(n_samples))
+    selected: list[int] = []
+
+    first = int(np.argmin(weights @ dist))
+    selected.append(first)
+    remaining.remove(first)
+
+    min_dist_to_selected = dist[:, first].copy()
+
+    while len(selected) < n_reduced and remaining:
+        best_candidate = None
+        best_score = np.inf
+        for i in remaining:
+            new_min = np.minimum(min_dist_to_selected, dist[:, i])
+            score = float(weights @ new_min)
+            if score < best_score:
+                best_score = score
+                best_candidate = i
+        assert best_candidate is not None
+        selected.append(best_candidate)
+        remaining.remove(best_candidate)
+        min_dist_to_selected = np.minimum(min_dist_to_selected, dist[:, best_candidate])
+
+    selected_arr = np.array(selected, dtype=int)
+    new_weights = np.zeros(len(selected_arr))
+    closest_in_selected = np.argmin(dist[:, selected_arr], axis=1)
+    for orig in range(n_samples):
+        new_weights[closest_in_selected[orig]] += weights[orig]
+    new_weights = new_weights / new_weights.sum()
+
+    return PriceScenarios(
+        timestamps=list(timestamps),
+        prices=samples[selected_arr],
+        weights=new_weights,
+        labels=[f"ff{i}" for i in range(len(selected_arr))],
+    )
+
+
 def _kmeans(
     data: np.ndarray, k: int, seed: int, max_iter: int = 50, tol: float = 1e-4
 ) -> tuple[np.ndarray, np.ndarray]:
