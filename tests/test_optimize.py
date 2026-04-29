@@ -18,11 +18,13 @@ sys.path.insert(0, str(ROOT))
 
 from src.optimize import (  # noqa: E402
     BatteryProfile,
+    DEFAULT_RISK_PROFILE,
     DispatchResult,
     PriceScenarios,
     feasibility_report,
     load_profile,
     optimize_dispatch,
+    resolve_risk_profile,
     scenarios_from_quantiles,
 )
 
@@ -207,3 +209,28 @@ def test_soc_banded_degradation_changes_in_milp_objective(battery, day):
     assert max(costs) > battery.degradation_cost_eur_per_mwh
     assert result.schedule.metadata["degradation_model"] == "soc_banded_fixed_point"
     assert result.feasibility.feasible
+
+
+def test_resolve_default_risk_profile():
+    key, label, risk_lambda, risk_alpha, description = resolve_risk_profile(None, None, None)
+    assert key == DEFAULT_RISK_PROFILE
+    assert label == "Balanced"
+    assert risk_lambda == 0.35
+    assert risk_alpha == 0.10
+    assert description
+
+
+def test_resolve_custom_risk_profile():
+    key, label, risk_lambda, risk_alpha, _ = resolve_risk_profile("custom", 0.72, 0.05)
+    assert key == "custom"
+    assert label == "Custom"
+    assert risk_lambda == 0.72
+    assert risk_alpha == 0.05
+
+
+def test_resolve_named_risk_profile_ignores_raw_overrides():
+    key, label, risk_lambda, risk_alpha, _ = resolve_risk_profile("defensive", 0.12, 0.20)
+    assert key == "defensive"
+    assert label == "Defensive"
+    assert risk_lambda == 0.60
+    assert risk_alpha == 0.10

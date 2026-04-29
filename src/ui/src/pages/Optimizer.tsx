@@ -4,6 +4,7 @@ import { Card, KPI, Tag, Slider, Toggle, Icon, ParamRow } from "@/components/bos
 import { DispatchChart, ProfitChart, ScenarioChart } from "@/components/bos/Charts";
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
+import { getRiskProfile, riskProfiles } from "@/lib/riskProfiles";
 import {
   artifactsToDispatchView,
   fetchBackendArtifacts,
@@ -26,6 +27,7 @@ export default function PageOptimizer() {
   const [solving, setSolving] = useState(false);
   const [artifacts, setArtifacts] = useState<BackendArtifacts | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const selectedRiskProfile = getRiskProfile(optimizer.riskProfile);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +35,11 @@ export default function PageOptimizer() {
       .then((next) => {
         if (!cancelled) {
           setArtifacts(next);
+          setOptimizer({
+            riskProfile: (next.run_metadata.risk_profile as typeof optimizer.riskProfile | undefined) ?? optimizer.riskProfile,
+            lambda: Number(next.run_metadata.cvar_lambda ?? optimizer.lambda),
+            alpha: Number(next.run_metadata.cvar_alpha ?? optimizer.alpha),
+          });
           setError(null);
         }
       })
@@ -61,8 +68,9 @@ export default function PageOptimizer() {
     try {
       const next = await runBackendOptimizer({
         battery_profile_name: asset.id,
-        risk_lambda: optimizer.lambda,
-        risk_alpha: optimizer.alpha,
+        risk_profile: optimizer.riskProfile,
+        risk_lambda: optimizer.riskProfile === "custom" ? optimizer.lambda : undefined,
+        risk_alpha: optimizer.riskProfile === "custom" ? optimizer.alpha : undefined,
         build_bid_curves: true,
         run_robustness_sweep: optimizer.robust,
       });
@@ -115,9 +123,9 @@ export default function PageOptimizer() {
 
       <div className="mb-4 grid grid-cols-4 gap-4">
         <KPI featured label="Expected profit" value={fmtEur(result.expected)} unit="EUR"
-          delta={{ tone: "up", text: `λ=${optimizer.lambda.toFixed(2)} · ${(result.capture * 100).toFixed(0)}% of perfect` }} />
-        <KPI label={`CVaR α=${optimizer.alpha.toFixed(2)}`} value={fmtEur(result.cvar)} unit="EUR"
-          delta={{ tone: "neu", text: "tail-protected" }} />
+          delta={{ tone: "up", text: `${result.riskProfileLabel} · ${(result.capture * 100).toFixed(0)}% of perfect` }} />
+        <KPI label="Risk profile" value={result.riskProfileLabel}
+          delta={{ tone: "neu", text: `λ=${result.riskLambda.toFixed(2)} · α=${result.riskAlpha.toFixed(2)}` }} />
         <KPI label="Worst case · robust" value={fmtEur(result.worst)} unit="EUR"
           delta={{ tone: "neu", text: optimizer.robust ? "verified across grid" : "robust mode off" }} />
         <KPI label="Cycles used" value={result.cyclesUsed.toFixed(2)} unit={`/ ${result.cyclesCap.toFixed(1)} cap`}
@@ -139,25 +147,33 @@ export default function PageOptimizer() {
             </div>
 
             <div className="eyebrow mb-2">Risk profile</div>
-            <ParamRow label="λ" hint="mean-CVaR mix" value={optimizer.lambda.toFixed(2)}>
-              <Slider min={0} max={1} step={0.05} value={optimizer.lambda} onChange={(v) => setOptimizer({ lambda: v })} />
-            </ParamRow>
-            <ParamRow label="α" hint="CVaR tail" value={optimizer.alpha.toFixed(2)}>
-              <Slider min={0.05} max={0.5} step={0.05} value={optimizer.alpha} onChange={(v) => setOptimizer({ alpha: v })} />
-            </ParamRow>
-
-            <div className="my-2 flex flex-wrap gap-2">
-              {[
-                { v: 0.0, l: "Risk Neutral" },
-                { v: 0.5, l: "Balanced" },
-                { v: 0.7, l: "Defensive" },
-                { v: 1.0, l: "Worst Case" },
-              ].map((o) => (
-                <span key={o.v} className={`bos-tag ${Math.abs(optimizer.lambda - o.v) < 0.03 ? "acc" : ""} cursor-pointer`}
-                  onClick={() => setOptimizer({ lambda: o.v })}>
-                  {Math.abs(optimizer.lambda - o.v) < 0.03 && <span className="dot" />}{o.l}
+            <div className="bos-opts mb-3">
+              {riskProfiles.map((profile) => (
+                <span
+                  key={profile.id}
+                  className={`o ${optimizer.riskProfile === profile.id ? "on" : ""}`}
+                  onClick={() => setOptimizer({
+                    riskProfile: profile.id,
+                    lambda: profile.id === "custom" ? optimizer.lambda : profile.lambda,
+                    alpha: profile.id === "custom" ? optimizer.alpha : profile.alpha,
+                  })}
+                >
+                  {profile.label}
                 </span>
               ))}
+            </div>
+
+            <ReadOnlyRow label="Preset" value={selectedRiskProfile.label} />
+            <ReadOnlyRow label="Description" value={selectedRiskProfile.description} />
+
+            <ParamRow label="λ" hint="mean-CVaR mix" value={optimizer.lambda.toFixed(2)}>
+              <Slider min={0} max={1} step={0.05} value={optimizer.lambda} onChange={(v) => setOptimizer({ lambda: v, riskProfile: "custom" })} />
+            </ParamRow>
+            <ParamRow label="α" hint="CVaR tail" value={optimizer.alpha.toFixed(2)}>
+              <Slider min={0.05} max={0.5} step={0.05} value={optimizer.alpha} onChange={(v) => setOptimizer({ alpha: v, riskProfile: "custom" })} />
+            </ParamRow>
+            <div className="mt-2 font-mono-tnum text-[10px] text-fg-3">
+              {optimizer.riskProfile === "custom" ? "Custom mode: sliders define the backend tuple." : "Preset mode: backend tuple is fixed by the selected category."}
             </div>
 
             <div className="eyebrow mb-1 mt-3">Backend profile values</div>
@@ -178,7 +194,7 @@ export default function PageOptimizer() {
             <DispatchChart data={data} height={300} showSoc />
             <div className="mt-3 flex items-center gap-4 border-t border-line pt-3 font-mono-tnum text-[10px] text-fg-3">
               <span>optimizer: {artifacts?.run_metadata.optimizer_display_name ?? "Optimizer V1"} · {result.solveMs}ms · status: {result.status}</span>
-              <span className="ml-auto">{artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} scenarios · α={optimizer.alpha.toFixed(2)}</span>
+              <span className="ml-auto">{artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} scenarios · {result.riskProfileLabel}</span>
             </div>
           </Card>
 
@@ -196,7 +212,7 @@ export default function PageOptimizer() {
                 { t: "External scenarios", d: `${artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} price paths loaded from backend artifact`, x: "forecaster contract" },
                 { t: "Battery constraints", d: "power, energy, η, SoC bounds", x: `P≤${asset.power} · E≤${asset.energy}` },
                 { t: "Cycle envelope", d: "daily cycle cap from selected storage profile", x: `max ${result.cyclesCap.toFixed(1)} eq. cycles` },
-                { t: "Mean-CVaR objective", d: "(1−λ)·E[π] + λ·CVaR_α[π]", x: `λ=${optimizer.lambda.toFixed(2)} · α=${optimizer.alpha.toFixed(2)}` },
+                { t: "Mean-CVaR objective", d: "(1−λ)·E[π] + λ·CVaR_α[π]", x: `${result.riskProfileLabel} · λ=${result.riskLambda.toFixed(2)} · α=${result.riskAlpha.toFixed(2)}` },
                 { t: "LP / MILP solve", d: "backend optimizer call", x: `${result.solveMs} ms · ${result.status}` },
                 { t: "Feasibility check", d: "SoC, power, simultaneity, cycles", x: artifacts?.run_metadata.feasibility?.feasible === false ? "violations reported" : "feasible" },
                 { t: "Period economics", d: "profit per MTU at realized price", x: `Σ = ${fmtEur(result.expected)}` },
@@ -232,7 +248,7 @@ export default function PageOptimizer() {
 
       <div className="bos-callout">
         <div className="eyebrow mb-1 text-acc">Decision-aware insight</div>
-        At λ={optimizer.lambda.toFixed(2)} the backend optimizer chooses one feasible schedule from the scenario bundle.
+        Under the {result.riskProfileLabel} profile, the backend optimizer chooses one feasible schedule from the scenario bundle.
         The UI is displaying schedule, profit, rainflow aging and robustness artifacts returned by that solve. Same code path can be backtested on{" "}
         <button className="bos-btn sm ghost inline-flex" onClick={() => navigate("/backtest")}>90 historical days <Icon name="chevR" size={11} /></button>.
       </div>

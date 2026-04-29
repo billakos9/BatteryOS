@@ -22,7 +22,8 @@ interface BosState {
 
 const defaultOptimizer: OptimizerParams = {
   assetId: "liion_100_2h",
-  lambda: 0.5,
+  riskProfile: "balanced",
+  lambda: 0.35,
   alpha: 0.10,
   cyclesCap: 1.5,
   eff: 0.949,
@@ -92,7 +93,18 @@ export const useBosStore = create<BosState>()(
     }),
     {
       name: "batteryos-store-v1",
-      version: 1,
+      version: 2,
+      migrate: (persistedState: unknown) => {
+        const state = persistedState as Partial<BosState> & { optimizer?: Partial<OptimizerParams> };
+        const optimizer = { ...defaultOptimizer, ...state.optimizer };
+        if (!optimizer.riskProfile) {
+          optimizer.riskProfile = "custom";
+        }
+        return {
+          ...state,
+          optimizer,
+        } as BosState;
+      },
     }
   )
 );

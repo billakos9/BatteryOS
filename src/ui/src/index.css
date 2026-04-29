@@ -283,6 +283,23 @@
     border-left-color: hsl(var(--acc));
   }
   .sb-link.active svg { color: hsl(var(--acc)); }
+  .sb-link.collapsed {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    margin: 0 10px;
+    border-left: none;
+    border-radius: 6px;
+  }
+  .sb-link.collapsed.active {
+    border-left-color: transparent;
+    box-shadow: inset 0 0 0 1px hsl(var(--acc-dim));
+  }
+
+  .bos-shell-collapsed .bos-ticker {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   /* Status dot */
   .sdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }

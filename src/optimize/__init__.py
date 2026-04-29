@@ -29,6 +29,13 @@ from .economics import (
     period_profit,
 )
 from .robust import ParameterSweepResult
+from .risk_profiles import (
+    CUSTOM_RISK_PROFILE,
+    DEFAULT_RISK_PROFILE,
+    RISK_PROFILE_PRESETS,
+    RiskProfilePreset,
+    resolve_risk_profile,
+)
 from .scenarios import (
     PriceScenarios,
     scenarios_fast_forward,
@@ -64,6 +71,11 @@ __all__ = [
     "RainflowCycle",
     "RainflowScore",
     "ParameterSweepResult",
+    "RiskProfilePreset",
+    "RISK_PROFILE_PRESETS",
+    "DEFAULT_RISK_PROFILE",
+    "CUSTOM_RISK_PROFILE",
+    "resolve_risk_profile",
     # Degradation utilities (also used by score_schedule_rainflow)
     "rainflow_count",
     "score_schedule_rainflow",

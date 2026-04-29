@@ -1,6 +1,7 @@
 // Domain types for BatteryOS
 export type AssetTech = "Li-Ion" | "Pumped Hydro" | "Vanadium Flow" | "NaS" | "Custom";
 export type AssetStatus = "active" | "paused" | "maintenance";
+export type RiskProfileId = "risk_neutral" | "balanced" | "defensive" | "tail_hedged" | "custom";
 
 export interface BatteryAsset {
   id: string;
@@ -19,6 +20,7 @@ export interface BatteryAsset {
 
 export interface OptimizerParams {
   assetId: string;
+  riskProfile: RiskProfileId;
   lambda: number;          // 0..1 mean-CVaR mix
   alpha: number;           // 0.05..0.5 CVaR tail
   cyclesCap: number;       // override cycles/day

@@ -14,6 +14,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -25,6 +26,7 @@ from src.optimize import (  # noqa: E402
     BatteryProfile,
     DispatchResult,
     PriceScenarios,
+    resolve_risk_profile,
     load_profile,
     optimize_dispatch,
 )
@@ -182,6 +184,9 @@ def _extract_run_metadata(result: DispatchResult, runtime_ms: float) -> dict:
         },
         "optimizer": "optimize_dispatch",
         "optimizer_display_name": "Optimizer V1",
+        "risk_profile": meta.get("risk_profile"),
+        "risk_profile_label": meta.get("risk_profile_label"),
+        "risk_profile_description": meta.get("risk_profile_description"),
         "objective_value_eur": meta.get("expected_profit_eur", 0.0),
         "solver_status": result.schedule.solver_status,
         "expected_profit_eur": meta.get("expected_profit_eur", 0.0),
@@ -270,8 +275,9 @@ def _write_artifacts(
 
 class OptimizeRequest(BaseModel):
     battery_profile_name: str = "liion_100_2h"
-    risk_lambda: float = 0.5
-    risk_alpha: float = 0.10
+    risk_profile: str | None = None
+    risk_lambda: float | None = None
+    risk_alpha: float | None = None
     build_bid_curves: bool = False
     run_robustness_sweep: bool = True
 
@@ -279,6 +285,14 @@ class OptimizeRequest(BaseModel):
 @app.post("/api/optimize")
 async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
     t0 = time.time()
+    try:
+        risk_profile_key, risk_profile_label, risk_lambda, risk_alpha, risk_profile_description = resolve_risk_profile(
+            req.risk_profile,
+            req.risk_lambda,
+            req.risk_alpha,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # Load battery profile
     try:
@@ -299,10 +313,17 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
     result: DispatchResult = optimize_dispatch(
         scenarios=ps,
         battery=battery,
-        alpha=req.risk_alpha,
-        risk_aversion=req.risk_lambda,
+        alpha=risk_alpha,
+        risk_aversion=risk_lambda,
         build_bid_curves=req.build_bid_curves,
         run_robustness_sweep=req.run_robustness_sweep,
+    )
+    result.schedule.metadata.update(
+        {
+            "risk_profile": risk_profile_key,
+            "risk_profile_label": risk_profile_label,
+            "risk_profile_description": risk_profile_description,
+        }
     )
 
     runtime_ms = int((time.time() - t0) * 1000)
@@ -312,8 +333,10 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
         "ok": True,
         "runtime_ms": runtime_ms,
         "battery_profile": battery.name,
-        "risk_lambda": req.risk_lambda,
-        "risk_alpha": req.risk_alpha,
+        "risk_profile": risk_profile_key,
+        "risk_profile_label": risk_profile_label,
+        "risk_lambda": risk_lambda,
+        "risk_alpha": risk_alpha,
         "artifacts": artifacts,
     }
 

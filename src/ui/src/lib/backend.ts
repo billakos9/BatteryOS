@@ -19,6 +19,9 @@ export interface BackendScenarioRow {
 export interface BackendRunMetadata {
   delivery_day?: string;
   optimizer_display_name?: string;
+  risk_profile?: string;
+  risk_profile_label?: string;
+  risk_profile_description?: string;
   solver_status?: string;
   expected_profit_eur?: number;
   realized_profit_eur?: number;
@@ -80,6 +83,10 @@ export interface BackendDispatchView {
   cumProfit: number[];
   scenarios: number[][];
   expected: number;
+  riskProfile: string;
+  riskProfileLabel: string;
+  riskLambda: number;
+  riskAlpha: number;
   cvar: number;
   worst: number;
   capture: number;
@@ -92,8 +99,9 @@ export interface BackendDispatchView {
 
 export interface OptimizePayload {
   battery_profile_name: string;
-  risk_lambda: number;
-  risk_alpha: number;
+  risk_profile?: string;
+  risk_lambda?: number;
+  risk_alpha?: number;
   build_bid_curves?: boolean;
   run_robustness_sweep?: boolean;
 }
@@ -167,6 +175,10 @@ export function artifactsToDispatchView(artifacts: BackendArtifacts): BackendDis
     cumProfit,
     scenarios: scenarioMatrix,
     expected,
+    riskProfile: String(meta.risk_profile ?? "custom"),
+    riskProfileLabel: String(meta.risk_profile_label ?? "Custom"),
+    riskLambda: Number(meta.cvar_lambda ?? 0.5),
+    riskAlpha: Number(meta.cvar_alpha ?? 0.10),
     cvar: Number(meta.cvar_eur ?? expected),
     worst: Number(meta.worst_profit_eur ?? expected),
     capture: best > 0 ? expected / best : 0,

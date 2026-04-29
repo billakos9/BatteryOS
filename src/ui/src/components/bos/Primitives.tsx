@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 // ============ ICONS (inline SVG, single stroke) ============
 type IconName =
   | "grid" | "activity" | "sliders" | "history" | "battery" | "database"
-  | "chevR" | "chevD" | "plus" | "play" | "refresh" | "download" | "settings"
+  | "chevR" | "chevL" | "chevD" | "plus" | "play" | "refresh" | "download" | "settings"
   | "bolt" | "flow" | "target" | "bell" | "search" | "sun" | "wind" | "trash"
   | "edit" | "pause" | "check" | "x" | "info" | "save" | "arrowR";
 
@@ -22,6 +22,7 @@ export function Icon({ name, size = 14, className = "" }: { name: IconName; size
     battery: <g><rect x="3" y="8" width="16" height="8" rx="1"/><line x1="21" y1="11" x2="21" y2="13"/><rect x="5" y="10" width="3" height="4" fill="currentColor" stroke="none"/><rect x="9" y="10" width="3" height="4" fill="currentColor" stroke="none"/></g>,
     database: <g><ellipse cx="12" cy="5" rx="8" ry="2.5"/><path d="M4 5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V5"/><path d="M4 11v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/></g>,
     chevR: <polyline points="9 6 15 12 9 18"/>,
+    chevL: <polyline points="15 6 9 12 15 18"/>,
     chevD: <polyline points="6 9 12 15 18 9"/>,
     plus: <g><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>,
     play: <polygon points="6 4 20 12 6 20 6 4"/>,
