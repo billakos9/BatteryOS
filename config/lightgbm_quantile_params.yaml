@@ -1,0 +1,36 @@
+alpha_0.10:
+  alpha: 0.1
+  learning_rate: 0.0990707246722968
+  max_depth: 4
+  n_estimators: 1000
+  n_jobs: -1
+  num_leaves: 10
+  objective: quantile
+  random_state: 42
+  reg_lambda: 0.3229570570694958
+  subsample: 0.7170523892340518
+  verbose: -1
+alpha_0.50:
+  alpha: 0.5
+  learning_rate: 0.06375050310853675
+  max_depth: 8
+  n_estimators: 1000
+  n_jobs: -1
+  num_leaves: 33
+  objective: quantile
+  random_state: 42
+  reg_lambda: 1.1063953616365314
+  subsample: 0.7955791600545273
+  verbose: -1
+alpha_0.90:
+  alpha: 0.9
+  learning_rate: 0.13852660251967117
+  max_depth: 4
+  n_estimators: 1000
+  n_jobs: -1
+  num_leaves: 10
+  objective: quantile
+  random_state: 42
+  reg_lambda: 4.680922972632502
+  subsample: 0.6031008937778126
+  verbose: -1

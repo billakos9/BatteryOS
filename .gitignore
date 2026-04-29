@@ -1,7 +1,8 @@
 WORKFLOW_PLAN.md
 
-# Data (raw + processed)
+# Data (raw + processed + interim)
 /data/
+/reports/figures/*.png
 
 # Python
 __pycache__/
@@ -66,3 +67,14 @@ cleaned_dam_results.xlsx
 downloaded_dam_results/
 extracted_dam_results/
 *_EL-DAM_Results_EN_v*.xlsx
+
+# Model outputs
+outputs/*.csv
+outputs/*.png
+outputs/**/*.png
+logs/*.log
+
+# Old root-level data files (backwards compat)
+df_master_ml_ready*.csv
+entsoe_greece_dam_forecasts.csv
+openmeteo_weather_master.csv
