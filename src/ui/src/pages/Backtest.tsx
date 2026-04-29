@@ -1,34 +1,22 @@
 import { useState } from "react";
 import { Card, KPI, Tag, Seg, Icon, Legend } from "@/components/bos/Primitives";
 import { Spark, EquityChart, Heatmap, Histogram } from "@/components/bos/Charts";
-import { equityCurve } from "@/lib/data";
+import { useBacktestSummary } from "@/lib/api";
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
 
 export default function PageBacktest() {
   const [period, setPeriod] = useState<"30" | "90" | "365">("90");
   const { selectedAssetId } = useBosStore();
-  const { equity, dayProfits } = equityCurve;
-  const totalBOS = equity.batteryOS[equity.batteryOS.length - 1];
-  const totalNaive = equity.naive[equity.naive.length - 1];
-  const totalPerfect = equity.perfect[equity.perfect.length - 1];
+  const days = period === "30" ? 30 : period === "365" ? 365 : 90;
+  const { data, isLoading, isError } = useBacktestSummary(days);
+  const equity = data?.equity ?? { batteryOS: [], naive: [], perfect: [] };
+  const dayProfits = data?.dayProfits ?? [];
+  const heat = data?.heatmap ?? [];
+  const totalBOS = equity.batteryOS[equity.batteryOS.length - 1] ?? 0;
+  const totalNaive = equity.naive[equity.naive.length - 1] ?? 0;
+  const totalPerfect = equity.perfect[equity.perfect.length - 1] ?? 0;
   const profits = dayProfits.map((d) => d.bos);
-
-  // ad-hoc heatmap from existing data import
-  const heat = (() => {
-    // 30 × 24 simple shape replication
-    const out: number[][] = [];
-    for (let d = 0; d < 30; d++) {
-      const row: number[] = [];
-      for (let h = 0; h < 24; h++) {
-        const peak = Math.exp(-Math.pow((h - 8) / 2, 2)) + 1.4 * Math.exp(-Math.pow((h - 19) / 1.6, 2));
-        const trough = -0.7 * Math.exp(-Math.pow((h - 13) / 1.7, 2));
-        row.push(peak + trough + 0.4 + Math.sin(d * 0.4 + h) * 0.2);
-      }
-      out.push(row);
-    }
-    return out;
-  })();
 
   return (
     <div>
@@ -60,7 +48,9 @@ export default function PageBacktest() {
           delta={{ tone: "neu", text: "no losing days · 90/90" }} />
       </div>
 
-      <Card title="Equity curve" meta="walk-forward · 90 days"
+      {isLoading && <div className="mb-4 font-mono-tnum text-[11px] text-fg-3">Loading walk-forward summary from /api/backtest/summary…</div>}
+      {isError && <div className="mb-4 font-mono-tnum text-[11px] text-red">Backend /api/backtest/summary unavailable.</div>}
+      <Card title="Equity curve" meta={`walk-forward · ${days} days`}
         actions={<Legend items={[
           { color: "hsl(var(--acc))", label: "BatteryOS" },
           { color: "hsl(var(--magenta))", label: "Naive" },
@@ -93,7 +83,7 @@ export default function PageBacktest() {
                 return [
                   ["P10", fmtEur(sorted[Math.floor(sorted.length * 0.1)])],
                   ["Median", fmtEur(sorted[Math.floor(sorted.length / 2)])],
-                  ["Mean", fmtEur(totalBOS / 90)],
+                  ["Mean", fmtEur(days > 0 ? totalBOS / days : 0)],
                   ["P90", fmtEur(sorted[Math.floor(sorted.length * 0.9)])],
                 ].map(([k, v]) => (
                   <div key={k}><div className="eyebrow">{k}</div><div className="font-mono-tnum text-fg-0">{v}</div></div>

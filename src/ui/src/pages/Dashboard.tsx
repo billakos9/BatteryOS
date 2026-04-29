@@ -5,6 +5,7 @@ import { Spark, DispatchChart, ProfitChart, BatteryGauge } from "@/components/bo
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
 import { artifactsToDispatchView, fetchBackendArtifacts, type BackendArtifacts } from "@/lib/backend";
+import WorkflowDiagram from "@/components/bos/WorkflowDiagram";
 
 const emptyArtifacts: BackendArtifacts = {
   schedule: [],
@@ -17,7 +18,7 @@ const ATHENS_TZ = "Europe/Athens";
 
 export default function PageDashboard() {
   const navigate = useNavigate();
-  const { assets, selectedAssetId, optimizer, runs } = useBosStore();
+  const { assets, selectedAssetId, optimizer } = useBosStore();
   const asset = assets.find((a) => a.id === selectedAssetId) ?? assets[0];
   const [artifacts, setArtifacts] = useState<BackendArtifacts | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -136,56 +137,10 @@ export default function PageDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-8">
-          <Card title="Recent optimizer runs" meta="last 24h" flush
-            actions={<button className="bos-btn sm ghost" onClick={() => navigate("/optimizer")}>New run <Icon name="plus" size={11} /></button>}>
-            <table className="bos-tbl">
-              <thead><tr><th>Run</th><th>Time</th><th>Day</th><th>Asset</th><th className="num">λ</th><th>Status</th><th className="num">Capture</th><th className="num">Profit</th></tr></thead>
-              <tbody>
-                {runs.map((r) => (
-                  <tr key={r.id}>
-                    <td className="font-mono-tnum">{r.id}</td>
-                    <td className="font-mono-tnum">{r.time}</td>
-                    <td className="font-mono-tnum">{r.day}</td>
-                    <td className="font-mono-tnum">{r.assetId}</td>
-                    <td className="num">{r.lambda.toFixed(2)}</td>
-                    <td><Tag tone={r.status === "Optimal" ? "acc" : "amber"} dot>{r.status}</Tag></td>
-                    <td className="num">{(r.capture * 100).toFixed(0)}%</td>
-                    <td className="num text-fg-0">{fmtEur(r.profit)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        </div>
-
-        <div className="col-span-4">
-          <Card title="Pipeline" meta="last hour">
-            <div className="bos-steps pt-1">
-              {[
-                { l: "Ingest", t: "7 sources", n: "08m" },
-                { l: "Features", t: "184 features", n: "11m" },
-                { l: "Forecast", t: "LightGBM-q50", n: "21m" },
-                { l: "Optimize", t: "Mean-CVaR · 20s", n: "18m" },
-                { l: "Backtest", t: "queued", n: "—" },
-              ].map((s, i) => (
-                <div key={i} className={`bos-step ${i < 4 ? "done" : "active"}`}>
-                  <div className="num">{i + 1}</div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="ttl">{s.l}</span>
-                      <span className={`sdot ${i < 4 ? "ok" : "warn"}`} />
-                      <span className="ml-auto font-mono-tnum text-[10px] text-fg-3">{s.n} ago</span>
-                    </div>
-                    <div className="desc">{s.t}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+      <div className="mt-4">
+        <WorkflowDiagram />
       </div>
+
     </div>
   );
 }

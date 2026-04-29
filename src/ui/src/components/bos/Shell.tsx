@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Icon } from "@/components/bos/Primitives";
+import { useBatteries } from "@/lib/api";
+import { useBosStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -21,6 +23,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const meta = LABEL_BY_PATH[location.pathname] ?? { label: "Dashboard", group: "Overview" };
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Hydrate the asset store from /api/batteries on every shell mount.
+  // No synthetic seed: pages render against backend-driven profiles only.
+  const { data: backendBatteries } = useBatteries();
+  const hydrateAssets = useBosStore((s) => s.hydrateAssets);
+  useEffect(() => {
+    if (backendBatteries && backendBatteries.length > 0) hydrateAssets(backendBatteries);
+  }, [backendBatteries, hydrateAssets]);
 
   const groups: Record<string, typeof NAV[number][]> = {};
   NAV.forEach((n) => ((groups[n.group] = groups[n.group] || []).push(n)));

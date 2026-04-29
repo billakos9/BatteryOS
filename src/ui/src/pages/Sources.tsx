@@ -1,7 +1,8 @@
 import { Card, KPI, Tag, Icon } from "@/components/bos/Primitives";
-import { sources } from "@/lib/data";
+import { useSources } from "@/lib/api";
 
 export default function PageSources() {
+  const { data: sources = [], isLoading, isError } = useSources();
   return (
     <div>
       <div className="mb-6 flex items-end gap-6 border-b border-line pb-5">
@@ -26,6 +27,8 @@ export default function PageSources() {
       </div>
 
       <Card title="Source registry" meta="health · latency · cadence" flush>
+        {isLoading && <div className="px-4 py-3 font-mono-tnum text-[11px] text-fg-3">Loading sources from /api/sources…</div>}
+        {isError && <div className="px-4 py-3 font-mono-tnum text-[11px] text-red">Backend /api/sources unavailable.</div>}
         <table className="bos-tbl">
           <thead><tr>
             <th>Source</th><th>Description</th><th>Status</th><th>Latency</th>

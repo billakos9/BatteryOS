@@ -107,40 +107,13 @@ This chart shows:
 
 It answers: where during the day did the schedule make or lose money?
 
-### Recent Optimizer Runs
-
-This table shows stored UI run history:
-
-- Run id.
-- Time.
-- Day.
-- Asset.
-- Risk lambda.
-- Status.
-- Capture.
-- Profit.
-
-Current state: newly solved runs are recorded client-side in the Zustand store. Seed rows are static demo rows.
-
-### Pipeline Card
-
-This card shows the conceptual pipeline:
-
-1. Ingest
-2. Features
-3. Forecast
-4. Optimize
-5. Backtest
-
-Current state: this is a static workflow explanation, not live pipeline telemetry.
-
 ## Forecaster
 
 Route: `/forecaster`
 
 Purpose: explain the future forecasting module and show what the optimizer expects to receive from a forecaster.
 
-Current state: the user has said the forecaster is not implemented yet. This page is therefore mostly demo/explanatory UI, not the production forecasting backend.
+Current state: the page now reads from the local BatteryOS backend forecast endpoint. The numbers are backend-served, with a backend demo fallback until persisted forecaster artifacts are available.
 
 ### Header
 
@@ -159,7 +132,7 @@ Shows forecast model diagnostics:
 - Profit capture.
 - Pinball loss.
 
-Current state: these are synthetic/static model metrics from `src/ui/src/lib/data.ts`.
+Current state: these KPI tiles are now read from the local backend forecast overview endpoint.
 
 ### Forecasting Workflow
 
@@ -182,7 +155,7 @@ Shows:
 - Optional realized DAM overlay.
 - 24h/48h horizon toggle.
 
-Current state: the page tries to fetch quantile forecasts from a Supabase edge function. If that service fails, it shows an error panel.
+Current state: the page fetches quantile forecasts from `/api/forecast/overview`. If the real forecaster artifacts are not available yet, the backend serves a demo payload with the same contract.
 
 ### Model Ladder
 
@@ -194,13 +167,13 @@ Shows possible forecasting models:
 - LightGBM.
 - LightGBM Quantile.
 
-Current state: static model comparison data.
+Current state: served by the local backend forecast overview endpoint.
 
 ### Feature Importance
 
 Shows feature names, families, and importance bars.
 
-Current state: static demo feature importances.
+Current state: served by the local backend forecast overview endpoint.
 
 ### Residuals and Calibration
 
@@ -209,7 +182,7 @@ These charts explain forecast error behavior:
 - Residual distribution.
 - Calibration curve.
 
-Current state: synthetic values from demo arrays.
+Current state: served by the local backend forecast overview endpoint.
 
 ## Optimizer
 
@@ -526,7 +499,7 @@ Backend-connected:
 Static or synthetic demo context:
 
 - Market ticker.
-- Forecaster model metrics and feature importance.
+- Forecaster payload is backend-connected, but currently uses a backend demo fallback until real persisted forecaster artifacts are written to disk.
 - Most Data Sources page values.
 - Backtest equity/daily results.
 - Seed recent optimizer run history.

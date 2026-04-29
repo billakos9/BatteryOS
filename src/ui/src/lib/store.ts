@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { defaultAssets } from "./data";
 import type { BatteryAsset, OptimizerParams, OptimizerRun } from "./types";
 
 interface BosState {
@@ -14,6 +13,7 @@ interface BosState {
   removeAsset: (id: string) => void;
   resetAssets: () => void;
   toggleAssetStatus: (id: string) => void;
+  hydrateAssets: (assets: BatteryAsset[]) => void;
 
   setOptimizer: (patch: Partial<OptimizerParams>) => void;
   resetOptimizer: () => void;
@@ -47,8 +47,8 @@ const seedRuns: OptimizerRun[] = [
 
 export const useBosStore = create<BosState>()(
   persist(
-    (set) => ({
-      assets: defaultAssets,
+    (set, get) => ({
+      assets: [] as BatteryAsset[],
       selectedAssetId: "liion_100_2h",
       optimizer: defaultOptimizer,
       runs: seedRuns,
@@ -77,13 +77,20 @@ export const useBosStore = create<BosState>()(
           };
         }),
 
-      resetAssets: () => set({ assets: defaultAssets }),
+      resetAssets: () => set({ assets: get().assets }),
 
       toggleAssetStatus: (id) =>
         set((s) => ({
           assets: s.assets.map((a) =>
             a.id === id ? { ...a, status: a.status === "active" ? "paused" : "active" } : a
           ),
+        })),
+
+      hydrateAssets: (assets) =>
+        set((s) => ({
+          assets,
+          selectedAssetId:
+            assets.find((a) => a.id === s.selectedAssetId)?.id ?? assets[0]?.id ?? s.selectedAssetId,
         })),
 
       setOptimizer: (patch) => set((s) => ({ optimizer: { ...s.optimizer, ...patch } })),
@@ -93,7 +100,13 @@ export const useBosStore = create<BosState>()(
     }),
     {
       name: "batteryos-store-v1",
-      version: 2,
+      version: 3,
+      partialize: (state) => ({
+        // Persist only user-modified fields, not server-derived assets.
+        selectedAssetId: state.selectedAssetId,
+        optimizer: state.optimizer,
+        runs: state.runs,
+      }),
       migrate: (persistedState: unknown) => {
         const state = persistedState as Partial<BosState> & { optimizer?: Partial<OptimizerParams> };
         const optimizer = { ...defaultOptimizer, ...state.optimizer };
@@ -103,6 +116,7 @@ export const useBosStore = create<BosState>()(
         return {
           ...state,
           optimizer,
+          assets: [],
         } as BosState;
       },
     }

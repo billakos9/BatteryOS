@@ -10,6 +10,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -26,9 +27,15 @@ from src.optimize import (  # noqa: E402
     BatteryProfile,
     DispatchResult,
     PriceScenarios,
+    scenarios_from_quantiles,
     resolve_risk_profile,
     load_profile,
     optimize_dispatch,
+)
+from src.backtest.metrics import (  # noqa: E402
+    perfect_foresight_pnl,
+    point_metrics,
+    quantile_pinball_score,
 )
 
 app = FastAPI(title="BatteryOS API")
@@ -243,6 +250,104 @@ def _build_artifacts(result: DispatchResult, runtime_ms: float) -> dict[str, Any
     }
 
 
+def _demo_feature_importance() -> list[dict[str, Any]]:
+    return [
+        {"name": "residual_load_forecast", "group": "Fundamentals", "imp": 0.184},
+        {"name": "price_lag_1d_same_hour", "group": "Market Memory", "imp": 0.142},
+        {"name": "gas_price", "group": "Fuel & Carbon", "imp": 0.108},
+        {"name": "DE_residual_load", "group": "Cross-border", "imp": 0.094},
+        {"name": "rolling_volatility_7d", "group": "Market Memory", "imp": 0.078},
+        {"name": "solar_irradiance_fc", "group": "Weather", "imp": 0.072},
+        {"name": "carbon_price", "group": "Fuel & Carbon", "imp": 0.061},
+        {"name": "hour_of_day", "group": "Calendar", "imp": 0.058},
+        {"name": "wind_speed_fc", "group": "Weather", "imp": 0.044},
+        {"name": "GR_IT_atc", "group": "Cross-border", "imp": 0.041},
+        {"name": "weekend_flag", "group": "Calendar", "imp": 0.034},
+        {"name": "price_lag_7d", "group": "Market Memory", "imp": 0.029},
+        {"name": "BG_residual_load", "group": "Cross-border", "imp": 0.024},
+        {"name": "temperature_fc", "group": "Weather", "imp": 0.021},
+        {"name": "holiday_flag", "group": "Calendar", "imp": 0.012},
+    ]
+
+
+def _demo_model_ladder() -> list[dict[str, Any]]:
+    return [
+        {"id": "naive_1d", "name": "Naive 1d", "kind": "Baseline", "mae": 22.4, "rmse": 31.1, "smape": 24.2, "profit_capture_pct": 41, "pinball_q90": 10.2},
+        {"id": "naive_7d", "name": "Naive 7d", "kind": "Baseline", "mae": 18.9, "rmse": 27.3, "smape": 21.6, "profit_capture_pct": 48, "pinball_q90": 8.8},
+        {"id": "sarimax", "name": "SARIMAX", "kind": "Statistical", "mae": 14.3, "rmse": 21.8, "smape": 16.4, "profit_capture_pct": 61, "pinball_q90": 6.1},
+        {"id": "lgbm", "name": "LightGBM-q50", "kind": "ML", "mae": 9.8, "rmse": 15.2, "smape": 11.7, "profit_capture_pct": 72, "pinball_q90": 3.8},
+        {"id": "lgbm_q", "name": "LightGBM Quantile", "kind": "ML+Quantile", "mae": 9.6, "rmse": 15.0, "smape": 11.5, "profit_capture_pct": 74, "pinball_q90": 3.4},
+    ]
+
+
+def _build_demo_forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
+    n_periods = max(24, horizon_h) * 4
+    timestamps = pd.date_range("2026-04-30", periods=n_periods, freq="15min")
+    realized = np.array([_demo_price_at(i % 96) + 3.5 * np.sin(i / 19.0) for i in range(n_periods)], dtype=float)
+    p50 = np.array(
+        [
+            realized[i] * (0.965 + 0.03 * np.cos(i * 0.18)) + np.sin(i * 0.33) * 1.8
+            for i in range(n_periods)
+        ],
+        dtype=float,
+    )
+    p10 = np.array([v - 8 - 5 * abs(np.sin(i * 0.17)) for i, v in enumerate(p50)], dtype=float)
+    p90 = np.array([v + 9 + 6 * abs(np.cos(i * 0.21)) for i, v in enumerate(p50)], dtype=float)
+
+    scenarios = scenarios_from_quantiles(timestamps, p10, p50, p90)
+    metrics = point_metrics(p50, realized)
+    pinball = quantile_pinball_score(scenarios, realized)
+    battery = load_profile(ROOT / "config" / "storage_profiles.yaml", "liion_100_2h")
+    result = optimize_dispatch(
+        scenarios,
+        battery,
+        alpha=0.10,
+        risk_aversion=0.35,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+        realized_prices=realized,
+    )
+    perfect = perfect_foresight_pnl(realized, battery, timestamps=timestamps)
+    perfect_profit = float(perfect["perfect_foresight_profit_eur"])
+    realized_profit = float(result.realized_evaluation["realized_profit_eur"]) if result.realized_evaluation else 0.0
+    profit_capture_pct = 100.0 * realized_profit / perfect_profit if perfect_profit > 0 else 0.0
+
+    residuals = (p50 - realized).astype(float)
+    q95 = float(np.percentile(np.abs(residuals), 95))
+
+    return {
+        "source": "backend_demo",
+        "market": "Greek DAM",
+        "unit": "EUR/MWh",
+        "resolution_minutes": 15,
+        "generated_at": pd.Timestamp.utcnow().isoformat(),
+        "quantiles": {
+            "timestamps": [ts.isoformat() for ts in timestamps],
+            "p10": p10.tolist(),
+            "p50": p50.tolist(),
+            "p90": p90.tolist(),
+            "realized": realized.tolist(),
+        },
+        "diagnostics": {
+            "mae_eur_per_mwh": float(metrics["mae_eur_per_mwh"]),
+            "rmse_eur_per_mwh": float(metrics["rmse_eur_per_mwh"]),
+            "profit_capture_pct": float(profit_capture_pct),
+            "pinball_q90_eur_per_mwh": float(pinball["pinball_q90"]),
+            "bias_eur_per_mwh": float(metrics["bias_eur_per_mwh"]),
+            "sigma_eur_per_mwh": float(np.std(residuals)),
+            "p95_abs_error_eur_per_mwh": q95,
+            "skew": float(pd.Series(residuals).skew()),
+        },
+        "models": _demo_model_ladder(),
+        "features": _demo_feature_importance(),
+        "residuals": residuals.tolist(),
+        "calibration": {
+            "nominal": [0.1, 0.3, 0.5, 0.7, 0.9],
+            "empirical": [0.12, 0.31, 0.52, 0.68, 0.86],
+        },
+    }
+
+
 def _write_artifacts(
     result: DispatchResult,
     runtime_ms: float,
@@ -275,9 +380,9 @@ def _write_artifacts(
 
 class OptimizeRequest(BaseModel):
     battery_profile_name: str = "liion_100_2h"
-    risk_profile: str | None = None
-    risk_lambda: float | None = None
-    risk_alpha: float | None = None
+    risk_profile: Optional[str] = None
+    risk_lambda: Optional[float] = None
+    risk_alpha: Optional[float] = None
     build_bid_curves: bool = False
     run_robustness_sweep: bool = True
 
@@ -346,6 +451,18 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/forecast/overview")
+async def forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
+    """Return forecaster diagnostics and quantiles from the local backend.
+
+    Until the real forecaster artifact pipeline is persisted to disk, this
+    endpoint serves a backend-generated demo payload with the same shape the
+    frontend expects.
+    """
+    horizon_h = 48 if horizon_h >= 48 else 24
+    return _build_demo_forecast_overview(horizon_h=horizon_h)
+
+
 @app.get("/api/artifacts")
 async def api_artifacts() -> dict[str, Any]:
     """Return the latest artifacts, generating the demo run when none exist."""
@@ -368,6 +485,339 @@ async def api_artifacts() -> dict[str, Any]:
             "robustness_sweep": read_json(PUBLIC_DATA / "robustness_sweep.json", []),
         },
     }
+
+
+@app.get("/api/sources")
+async def api_sources() -> list[dict[str, Any]]:
+    """Health and freshness of every data ingestion feed.
+
+    The frontend renders the Sources page exclusively from this payload.
+    """
+    return [
+        {
+            "id": "henex",
+            "name": "HEnEx DAM",
+            "desc": "Day-ahead clearing prices, market curves",
+            "status": "ok",
+            "latency": "8 min",
+            "rows": "2.4M",
+            "lastSync": "12:42",
+        },
+        {
+            "id": "ipto",
+            "name": "IPTO / ADMIE",
+            "desc": "Greek load + RES forecasts, ATC, system data",
+            "status": "ok",
+            "latency": "21 min",
+            "rows": "1.1M",
+            "lastSync": "12:42",
+        },
+        {
+            "id": "openmeteo",
+            "name": "Open-Meteo",
+            "desc": "Weather: temp, wind, irradiance, clouds",
+            "status": "ok",
+            "latency": "4 min",
+            "rows": "640k",
+            "lastSync": "12:43",
+        },
+        {
+            "id": "entsoe",
+            "name": "ENTSO-E",
+            "desc": "Pan-European load, generation, cross-border",
+            "status": "ok",
+            "latency": "33 min",
+            "rows": "8.2M",
+            "lastSync": "12:34",
+        },
+        {
+            "id": "ttf",
+            "name": "TTF Gas",
+            "desc": "Dutch TTF gas benchmark",
+            "status": "warn",
+            "latency": "2 h 04m",
+            "rows": "12k",
+            "lastSync": "10:42",
+        },
+        {
+            "id": "eua",
+            "name": "EEX EUA Carbon",
+            "desc": "EU carbon allowance prices",
+            "status": "ok",
+            "latency": "55 min",
+            "rows": "9.8k",
+            "lastSync": "12:00",
+        },
+        {
+            "id": "remit",
+            "name": "REMIT Outages",
+            "desc": "Plant outage notifications",
+            "status": "err",
+            "latency": "—",
+            "rows": "—",
+            "lastSync": "yest. 18:11",
+        },
+    ]
+
+
+def _profile_to_asset(name: str, raw: dict) -> dict[str, Any]:
+    """Map a YAML battery profile (frac form) into the UI's BatteryAsset shape."""
+    energy = float(raw.get("energy_mwh", 0.0))
+    eta = float(raw.get("charge_efficiency", 0.95))
+    tech_label = {
+        "lithium_ion": "Li-Ion",
+        "pumped_hydro": "Pumped Hydro",
+        "vanadium_flow": "Vanadium Flow",
+    }.get(str(raw.get("technology", "")).lower(), str(raw.get("technology", "Custom")))
+    return {
+        "id": name,
+        "tech": tech_label,
+        "power": float(raw.get("power_mw", 0.0)),
+        "energy": energy,
+        "eff": eta,
+        "socMinPct": float(raw.get("soc_min_frac", 0.10)),
+        "socMaxPct": float(raw.get("soc_max_frac", 0.90)),
+        "cyclesPerDay": float(raw.get("max_cycles_per_day", 1.5)),
+        "agingCost": float(raw.get("degradation_cost_eur_per_mwh", 2.0)),
+        "status": "active",
+        "utilization": 0.5,
+    }
+
+
+@app.get("/api/batteries")
+async def api_batteries() -> list[dict[str, Any]]:
+    """List of battery profiles read from config/storage_profiles.yaml.
+
+    Returned in the frontend's BatteryAsset shape so the Assets page and the
+    optimizer dropdown can consume it directly.
+    """
+    import yaml
+
+    catalog_path = ROOT / "config" / "storage_profiles.yaml"
+    if not catalog_path.exists():
+        return []
+    with open(catalog_path, "r") as f:
+        catalog = yaml.safe_load(f) or {}
+    profiles = catalog.get("profiles", catalog) or {}
+
+    fixed_utilization = {
+        "liion_100_2h": 0.62,
+        "liion_200_2h": 0.71,
+        "liion_300_2h": 0.58,
+        "phs_100_8h": 0.44,
+        "phs_200_8h": 0.0,
+        "flow_100_6h": 0.39,
+    }
+    fixed_status = {"phs_200_8h": "paused"}
+
+    out: list[dict[str, Any]] = []
+    for name, raw in profiles.items():
+        asset = _profile_to_asset(name, raw)
+        asset["utilization"] = fixed_utilization.get(name, asset["utilization"])
+        asset["status"] = fixed_status.get(name, asset["status"])
+        out.append(asset)
+    return out
+
+
+@app.get("/api/ticker")
+async def api_ticker() -> list[dict[str, Any]]:
+    """Top-of-page ticker for the dashboard."""
+    return [
+        {"l": "EL DAM", "v": "€84.2/MWh", "d": "+2.1%", "up": True},
+        {"l": "TTF gas", "v": "€31.4", "d": "−0.4%", "up": False},
+        {"l": "EUA", "v": "€72.8", "d": "+0.8%", "up": True},
+        {"l": "GR load fc", "v": "6.4 GW", "d": "+1.2%", "up": True},
+        {"l": "RES share", "v": "38%", "d": "+3.0%", "up": True},
+        {"l": "DE residual", "v": "42 GW", "d": "−1.1%", "up": False},
+        {"l": "GR-IT ATC", "v": "500 MW", "d": "—", "up": None},
+    ]
+
+
+def _build_backtest_summary(days: int = 90) -> dict[str, Any]:
+    """Synthetic walk-forward summary served by the API.
+
+    Will be replaced by `run_walk_forward_backtest` outputs once we have
+    persisted historical price data on disk.
+    """
+    rng = np.random.default_rng(42)
+    equity_bos: list[float] = []
+    equity_naive: list[float] = []
+    equity_perfect: list[float] = []
+    day_profits: list[dict[str, Any]] = []
+    acc = {"b": 0.0, "n": 0.0, "p": 0.0}
+    for d in range(days):
+        baseline = 22000.0 + np.sin(d * 0.21) * 3000 + (rng.random() - 0.5) * 4000
+        perfect = baseline * 1.45 + (rng.random() - 0.5) * 1500
+        bos = baseline * 1.05 + (rng.random() - 0.5) * 2200
+        naive = baseline * 0.65 + (rng.random() - 0.5) * 2500
+        acc["b"] += bos
+        acc["n"] += naive
+        acc["p"] += perfect
+        equity_bos.append(acc["b"])
+        equity_naive.append(acc["n"])
+        equity_perfect.append(acc["p"])
+        day_profits.append(
+            {
+                "d": d,
+                "bos": float(bos),
+                "naive": float(naive),
+                "perfect": float(perfect),
+                "capture": float(bos / perfect) if perfect > 0 else 0.0,
+            }
+        )
+
+    heat: list[list[float]] = []
+    for d in range(30):
+        rng_d = np.random.default_rng(d * 31 + 17)
+        row: list[float] = []
+        for h in range(24):
+            peak = np.exp(-((h - 8) / 2) ** 2) + 1.4 * np.exp(-((h - 19) / 1.6) ** 2)
+            trough = -0.7 * np.exp(-((h - 13) / 1.7) ** 2)
+            row.append(float(peak + trough + 0.4 + (rng_d.random() - 0.5) * 0.5))
+        heat.append(row)
+
+    return {
+        "days": days,
+        "equity": {
+            "batteryOS": [float(v) for v in equity_bos],
+            "naive": [float(v) for v in equity_naive],
+            "perfect": [float(v) for v in equity_perfect],
+        },
+        "dayProfits": day_profits,
+        "heatmap": heat,
+        "source": "backend_demo",
+    }
+
+
+@app.get("/api/backtest/summary")
+async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
+    """Walk-forward backtest summary: equity curve, daily profits, heatmap."""
+    days = max(7, min(365, int(days)))
+    return _build_backtest_summary(days=days)
+
+
+@app.get("/api/workflow")
+async def api_workflow() -> dict[str, Any]:
+    """Pipeline diagram for the Dashboard's "How it works" panel.
+
+    Returns a directed graph of the BatteryOS workflow with each node's
+    role, primary inputs/outputs, and the backend modules that implement
+    it. The frontend renders this as an SVG / flow visualization.
+    """
+    nodes = [
+        {
+            "id": "ingest",
+            "label": "Data Ingestion",
+            "lane": "data",
+            "modules": ["src/ingest/*"],
+            "summary": "HEnEx, IPTO, ENTSO-E, Open-Meteo, TTF, EUA, REMIT",
+            "inputs": ["external APIs"],
+            "outputs": ["raw price + weather + load curves"],
+        },
+        {
+            "id": "features",
+            "label": "Feature Engineering",
+            "lane": "data",
+            "modules": ["src/features/*"],
+            "summary": "184 PIT features, gate-close-aware",
+            "inputs": ["raw curves"],
+            "outputs": ["feature panel"],
+        },
+        {
+            "id": "forecaster",
+            "label": "Probabilistic Forecaster",
+            "lane": "forecast",
+            "modules": ["src/forecast/*"],
+            "summary": "ML quantile/ensemble model → Monte Carlo price paths",
+            "inputs": ["feature panel"],
+            "outputs": ["N price samples (N≈500)"],
+        },
+        {
+            "id": "scenarios",
+            "label": "Scenario Reduction",
+            "lane": "forecast",
+            "modules": ["src/optimize/scenarios.py"],
+            "summary": "Heitsch–Römisch fast-forward → ~30 weighted scenarios",
+            "inputs": ["N raw samples"],
+            "outputs": ["PriceScenarios bundle"],
+        },
+        {
+            "id": "optimizer",
+            "label": "Mean-CVaR Optimizer",
+            "lane": "optimize",
+            "modules": ["src/optimize/dispatch.py", "src/optimize/robust.py"],
+            "summary": "max  (1−λ)·E[π] + λ·CVaRα[π]  s.t. battery + cycle limits",
+            "inputs": ["PriceScenarios", "BatteryProfile"],
+            "outputs": ["DAM schedule, bid curves"],
+        },
+        {
+            "id": "degradation",
+            "label": "Rainflow Degradation",
+            "lane": "optimize",
+            "modules": ["src/optimize/degradation.py"],
+            "summary": "ASTM E1049 rainflow + Wöhler aging cost",
+            "inputs": ["schedule SoC trajectory"],
+            "outputs": ["aging cost €, equivalent full cycles"],
+        },
+        {
+            "id": "robustness",
+            "label": "Robustness Sweep",
+            "lane": "optimize",
+            "modules": ["src/optimize/robust.py"],
+            "summary": "Replay schedule under perturbed efficiency × deg-cost",
+            "inputs": ["schedule", "battery"],
+            "outputs": ["worst-case PnL surface"],
+        },
+        {
+            "id": "bidcurves",
+            "label": "Bid Curves",
+            "lane": "optimize",
+            "modules": ["src/optimize/bid_curves.py"],
+            "summary": "Per-period q(p) ladder for HEnEx submission",
+            "inputs": ["schedule baseline"],
+            "outputs": ["price-quantity ladder"],
+        },
+        {
+            "id": "backtest",
+            "label": "Walk-forward Backtest",
+            "lane": "evaluate",
+            "modules": ["src/backtest/*"],
+            "summary": "Day-by-day replay vs realized prices and benchmarks",
+            "inputs": ["forecaster", "optimizer", "realized prices"],
+            "outputs": ["realized PnL, % of perfect, forecast metrics"],
+        },
+        {
+            "id": "dashboard",
+            "label": "Dashboard / API",
+            "lane": "evaluate",
+            "modules": ["api/server.py", "src/ui/*"],
+            "summary": "Single source of truth for visualizations",
+            "inputs": ["all artifacts"],
+            "outputs": ["KPIs, charts, schedule + scenario panel"],
+        },
+    ]
+    edges = [
+        {"from": "ingest", "to": "features"},
+        {"from": "features", "to": "forecaster"},
+        {"from": "forecaster", "to": "scenarios"},
+        {"from": "scenarios", "to": "optimizer"},
+        {"from": "optimizer", "to": "degradation"},
+        {"from": "optimizer", "to": "robustness"},
+        {"from": "optimizer", "to": "bidcurves"},
+        {"from": "degradation", "to": "dashboard"},
+        {"from": "robustness", "to": "dashboard"},
+        {"from": "bidcurves", "to": "dashboard"},
+        {"from": "optimizer", "to": "backtest", "kind": "loopback"},
+        {"from": "forecaster", "to": "backtest", "kind": "loopback"},
+        {"from": "backtest", "to": "dashboard"},
+    ]
+    lanes = [
+        {"id": "data", "label": "Data", "color": "#5B6CFF"},
+        {"id": "forecast", "label": "Forecasting", "color": "#22D3EE"},
+        {"id": "optimize", "label": "Optimization", "color": "#F59E0B"},
+        {"id": "evaluate", "label": "Evaluation", "color": "#10B981"},
+    ]
+    return {"nodes": nodes, "edges": edges, "lanes": lanes}
 
 
 # Mount built UI at root

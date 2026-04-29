@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -m pytest tests/test_optimize.py -v --tb=short)"
+      "Bash(python3 -m pytest tests/test_optimize.py -v --tb=short)",
+      "Bash(grep -n \"</div>$\\\\|return \\(\\\\|</PageDashboard\\\\|^}$\" \"/Users/vafentoulidis/Personal Stuff/Hackathon-ETW/BatteryOS/src/ui/src/pages/Dashboard.tsx\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
