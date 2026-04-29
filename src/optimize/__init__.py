@@ -1,4 +1,4 @@
-from .battery import BatteryProfile, load_profile
+from .battery import BatteryProfile, load_profile, list_profiles, save_profile
 from .schedule import Schedule, SCHEDULE_COLUMNS
 from .scenarios import (
     PriceScenarios,
@@ -31,6 +31,8 @@ from .bid_curves import (
 __all__ = [
     "BatteryProfile",
     "load_profile",
+    "list_profiles",
+    "save_profile",
     "Schedule",
     "SCHEDULE_COLUMNS",
     "PriceScenarios",
