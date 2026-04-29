@@ -52,3 +52,13 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# EnExGroup DAM datasets (large raw + processed files)
+*_EL-DAM*.zip
+*_EL-DAM-*.zip
+*_archive.zip
+combined_dam_results.xlsx
+cleaned_dam_results.xlsx
+downloaded_dam_results/
+extracted_dam_results/
+*_EL-DAM_Results_EN_v*.xlsx
