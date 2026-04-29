@@ -85,10 +85,10 @@ export default function WorkflowDiagram() {
   return (
     <Card
       title="Pipeline workflow"
-      meta="forecaster → optimizer → backtest · live from /api/workflow"
+      meta="forecaster → optimizer → backtest"
     >
       {isLoading && <div className="font-mono-tnum text-[11px] text-fg-3">Loading pipeline diagram…</div>}
-      {isError && <div className="font-mono-tnum text-[11px] text-red">Could not load /api/workflow.</div>}
+      {isError && <div className="font-mono-tnum text-[11px] text-red">Pipeline diagram unavailable.</div>}
       {data && (
         <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0,1fr) 320px" }}>
           <div className="overflow-x-auto">

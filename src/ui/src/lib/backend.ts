@@ -118,8 +118,9 @@ async function readJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchBackendArtifacts(): Promise<BackendArtifacts> {
-  const res = await fetch("/api/artifacts");
+export async function fetchBackendArtifacts(batteryId?: string): Promise<BackendArtifacts> {
+  const url = batteryId ? `/api/artifacts?battery=${encodeURIComponent(batteryId)}` : "/api/artifacts";
+  const res = await fetch(url);
   if (res.ok) return unwrapArtifacts(await res.json());
 
   return {

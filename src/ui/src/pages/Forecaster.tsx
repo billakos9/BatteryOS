@@ -98,7 +98,7 @@ export default function PageForecaster() {
           <div className="eyebrow mb-2">Analytics · Forecaster</div>
           <h1 className="h-display">Price <em>forecasting</em> for the Greek DAM</h1>
           <div className="mt-2 max-w-[72ch] text-[13px] text-fg-2">
-            Local backend forecast diagnostics, quantile curves and model context. This page now reads from the BatteryOS API instead of the external Supabase demo.
+            Day-ahead price forecast diagnostics, quantile curves and model context for the Greek DAM.
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -111,7 +111,7 @@ export default function PageForecaster() {
 
       {err && (
         <div className="bos-callout mb-4 border-red/40 text-red">
-          Forecast backend request failed: {err}
+          Forecast request failed: {err}
         </div>
       )}
 
@@ -133,7 +133,7 @@ export default function PageForecaster() {
             { n: 1, t: "Ingest", d: "7 sources, point-in-time joined", x: "asof_ts ≤ gate_close(D−1)" },
             { n: 2, t: "Features", d: "Calendar + lags + residual load + fuel + cross-border", x: "184 features · leakage-safe" },
             { n: 3, t: "Validate", d: "Time-series CV, no shuffle", x: "5 folds · 30-day window" },
-            { n: 4, t: "Train", d: "LightGBM, quantile loss", x: "q10 / q50 / q90 · backend contract" },
+            { n: 4, t: "Train", d: "LightGBM, quantile loss", x: "q10 / q50 / q90" },
             { n: 5, t: "Predict", d: "96 or 192 quarter-hourly prices", x: "point + uncertainty" },
             { n: 6, t: "Score", d: "MAE / RMSE / pinball + decision-aware", x: "profit vs perfect foresight" },
           ].map((s, i) => (

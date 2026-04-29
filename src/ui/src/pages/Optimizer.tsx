@@ -23,7 +23,20 @@ const emptyArtifacts: BackendArtifacts = {
 export default function PageOptimizer() {
   const navigate = useNavigate();
   const { assets, selectedAssetId, optimizer, setOptimizer, setSelectedAsset, resetOptimizer, recordRun } = useBosStore();
-  const asset = assets.find((a) => a.id === selectedAssetId) ?? assets[0];
+  const asset =
+    assets.find((a) => a.id === selectedAssetId) ?? assets[0] ?? {
+      id: "—",
+      tech: "Li-Ion" as const,
+      power: 0,
+      energy: 0,
+      eff: 1,
+      socMinPct: 0,
+      socMaxPct: 1,
+      cyclesPerDay: 0,
+      agingCost: 0,
+      status: "active" as const,
+      utilization: 0,
+    };
   const [solving, setSolving] = useState(false);
   const [artifacts, setArtifacts] = useState<BackendArtifacts | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,8 +116,8 @@ export default function PageOptimizer() {
           <div className="eyebrow mb-2">Analytics · Optimizer</div>
           <h1 className="h-display">Mean-CVaR <em>dispatch</em> with rainflow aging</h1>
           <div className="mt-2 max-w-[72ch] text-[13px] text-fg-2">
-            This page calls the backend Optimizer V1. The React UI only sends the selected profile, λ, α and robustness flag,
-            then visualizes the artifacts returned by FastAPI.
+            Choose a battery profile and a risk preset, then solve to see the dispatch schedule, profit
+            waterfall, rainflow aging and robustness checks for the next delivery day.
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -117,7 +130,7 @@ export default function PageOptimizer() {
 
       {error && (
         <div className="bos-callout mb-4 border-red/40 text-red">
-          Backend request failed: {error}
+          Optimizer request failed: {error}
         </div>
       )}
 
@@ -134,7 +147,7 @@ export default function PageOptimizer() {
 
       <div className="mb-4 grid grid-cols-12 gap-4">
         <div className="col-span-4">
-          <Card title="Parameters" meta="backend solve"
+          <Card title="Parameters" meta="risk · battery"
             actions={<button className="bos-btn sm ghost" onClick={resetOptimizer}>Reset</button>}>
 
             <div className="eyebrow mb-2">Battery asset</div>
@@ -173,10 +186,10 @@ export default function PageOptimizer() {
               <Slider min={0.05} max={0.5} step={0.05} value={optimizer.alpha} onChange={(v) => setOptimizer({ alpha: v, riskProfile: "custom" })} />
             </ParamRow>
             <div className="mt-2 font-mono-tnum text-[10px] text-fg-3">
-              {optimizer.riskProfile === "custom" ? "Custom mode: sliders define the backend tuple." : "Preset mode: backend tuple is fixed by the selected category."}
+              {optimizer.riskProfile === "custom" ? "Custom mode: sliders define the risk tuple." : "Preset mode: risk tuple is fixed by the selected category."}
             </div>
 
-            <div className="eyebrow mb-1 mt-3">Backend profile values</div>
+            <div className="eyebrow mb-1 mt-3">Battery profile</div>
             <ReadOnlyRow label="Power" value={`${(artifacts?.run_metadata.battery_profile?.power_mw ?? asset.power).toFixed(0)} MW`} />
             <ReadOnlyRow label="Energy" value={`${(artifacts?.run_metadata.battery_profile?.energy_mwh ?? asset.energy).toFixed(0)} MWh`} />
             <ReadOnlyRow label="Round-trip η" value={`${((artifacts?.run_metadata.battery_profile?.eta_rt ?? asset.eff * asset.eff) * 100).toFixed(1)}%`} />
@@ -193,7 +206,7 @@ export default function PageOptimizer() {
           <Card title="Optimized dispatch · live" meta={`${asset.power} MW / ${asset.energy} MWh`}>
             <DispatchChart data={data} height={300} showSoc />
             <div className="mt-3 flex items-center gap-4 border-t border-line pt-3 font-mono-tnum text-[10px] text-fg-3">
-              <span>optimizer: {artifacts?.run_metadata.optimizer_display_name ?? "Optimizer V1"} · {result.solveMs}ms · status: {result.status}</span>
+              <span>{artifacts?.run_metadata.optimizer_display_name ?? "Mean-CVaR optimizer"} · {result.solveMs}ms · {result.status}</span>
               <span className="ml-auto">{artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} scenarios · {result.riskProfileLabel}</span>
             </div>
           </Card>
@@ -209,11 +222,11 @@ export default function PageOptimizer() {
           <Card title="Solver workflow" meta="10 steps · auditable">
             <div className="bos-steps">
               {[
-                { t: "External scenarios", d: `${artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} price paths loaded from backend artifact`, x: "forecaster contract" },
+                { t: "Price scenarios", d: `${artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} probabilistic price paths from the forecaster`, x: "forecaster input" },
                 { t: "Battery constraints", d: "power, energy, η, SoC bounds", x: `P≤${asset.power} · E≤${asset.energy}` },
                 { t: "Cycle envelope", d: "daily cycle cap from selected storage profile", x: `max ${result.cyclesCap.toFixed(1)} eq. cycles` },
                 { t: "Mean-CVaR objective", d: "(1−λ)·E[π] + λ·CVaR_α[π]", x: `${result.riskProfileLabel} · λ=${result.riskLambda.toFixed(2)} · α=${result.riskAlpha.toFixed(2)}` },
-                { t: "LP / MILP solve", d: "backend optimizer call", x: `${result.solveMs} ms · ${result.status}` },
+                { t: "LP / MILP solve", d: "optimizer engine", x: `${result.solveMs} ms · ${result.status}` },
                 { t: "Feasibility check", d: "SoC, power, simultaneity, cycles", x: artifacts?.run_metadata.feasibility?.feasible === false ? "violations reported" : "feasible" },
                 { t: "Period economics", d: "profit per MTU at realized price", x: `Σ = ${fmtEur(result.expected)}` },
                 { t: "Rainflow aging", d: "ASTM E1049 + Wöhler", x: `${fmtEur(result.agingCostTotal)} cost` },
@@ -248,8 +261,8 @@ export default function PageOptimizer() {
 
       <div className="bos-callout">
         <div className="eyebrow mb-1 text-acc">Decision-aware insight</div>
-        Under the {result.riskProfileLabel} profile, the backend optimizer chooses one feasible schedule from the scenario bundle.
-        The UI is displaying schedule, profit, rainflow aging and robustness artifacts returned by that solve. Same code path can be backtested on{" "}
+        Under the {result.riskProfileLabel} profile, the optimizer chooses one feasible schedule from the scenario bundle.
+        Schedule, profit, rainflow aging and robustness checks are shown above. The same logic can be replayed on{" "}
         <button className="bos-btn sm ghost inline-flex" onClick={() => navigate("/backtest")}>90 historical days <Icon name="chevR" size={11} /></button>.
       </div>
     </div>

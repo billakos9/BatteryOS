@@ -48,8 +48,8 @@ export default function PageBacktest() {
           delta={{ tone: "neu", text: "no losing days · 90/90" }} />
       </div>
 
-      {isLoading && <div className="mb-4 font-mono-tnum text-[11px] text-fg-3">Loading walk-forward summary from /api/backtest/summary…</div>}
-      {isError && <div className="mb-4 font-mono-tnum text-[11px] text-red">Backend /api/backtest/summary unavailable.</div>}
+      {isLoading && <div className="mb-4 font-mono-tnum text-[11px] text-fg-3">Loading walk-forward summary…</div>}
+      {isError && <div className="mb-4 font-mono-tnum text-[11px] text-red">Walk-forward summary unavailable.</div>}
       <Card title="Equity curve" meta={`walk-forward · ${days} days`}
         actions={<Legend items={[
           { color: "hsl(var(--acc))", label: "BatteryOS" },

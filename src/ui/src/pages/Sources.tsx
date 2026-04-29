@@ -27,8 +27,8 @@ export default function PageSources() {
       </div>
 
       <Card title="Source registry" meta="health · latency · cadence" flush>
-        {isLoading && <div className="px-4 py-3 font-mono-tnum text-[11px] text-fg-3">Loading sources from /api/sources…</div>}
-        {isError && <div className="px-4 py-3 font-mono-tnum text-[11px] text-red">Backend /api/sources unavailable.</div>}
+        {isLoading && <div className="px-4 py-3 font-mono-tnum text-[11px] text-fg-3">Loading sources…</div>}
+        {isError && <div className="px-4 py-3 font-mono-tnum text-[11px] text-red">Sources unavailable.</div>}
         <table className="bos-tbl">
           <thead><tr>
             <th>Source</th><th>Description</th><th>Status</th><th>Latency</th>

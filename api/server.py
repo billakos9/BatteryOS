@@ -434,7 +434,7 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
     runtime_ms = int((time.time() - t0) * 1000)
     artifacts = _write_artifacts(result, runtime_ms)
 
-    return {
+    payload = {
         "ok": True,
         "runtime_ms": runtime_ms,
         "battery_profile": battery.name,
@@ -444,6 +444,10 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
         "risk_alpha": risk_alpha,
         "artifacts": artifacts,
     }
+    # Refresh the per-battery dashboard cache so the dashboard reflects
+    # the most recent re-tune from the optimizer page.
+    _DASHBOARD_CACHE[battery.name] = payload
+    return payload
 
 
 @app.get("/api/health")
@@ -463,28 +467,76 @@ async def forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
     return _build_demo_forecast_overview(horizon_h=horizon_h)
 
 
-@app.get("/api/artifacts")
-async def api_artifacts() -> dict[str, Any]:
-    """Return the latest artifacts, generating the demo run when none exist."""
-    if not SCHEDULE_PATH.exists():
-        req = OptimizeRequest()
-        return await api_optimize(req)
+_DASHBOARD_CACHE: dict[str, dict[str, Any]] = {}
 
-    def read_json(path: Path, fallback: Any) -> Any:
-        if not path.exists():
-            return fallback
-        with open(path, "r") as f:
-            return json.load(f)
 
-    return {
+def _build_dashboard_for_battery(battery_name: str) -> dict[str, Any]:
+    """Run the unified optimizer for a single battery profile and return
+    artifacts in the same shape `/api/optimize` produces. Result cached
+    per battery name so repeat dashboard loads are instant.
+    """
+    if battery_name in _DASHBOARD_CACHE:
+        return _DASHBOARD_CACHE[battery_name]
+
+    t0 = time.time()
+    try:
+        battery = load_profile(ROOT / "config" / "storage_profiles.yaml", battery_name)
+    except KeyError:
+        # Custom assets created in the UI are not persisted server-side yet.
+        # Fall back to a sane Li-ion default so the page never breaks.
+        battery = BatteryProfile.custom(
+            name=battery_name,
+            power_mw=100,
+            energy_mwh=200,
+            round_trip_efficiency=0.90,
+        )
+
+    risk_profile_key, risk_profile_label, risk_lambda, risk_alpha, risk_profile_description = (
+        resolve_risk_profile(None, None, None)
+    )
+
+    ps = _read_scenario_panel(SCENARIO_PANEL_PATH)
+    result: DispatchResult = optimize_dispatch(
+        scenarios=ps,
+        battery=battery,
+        alpha=risk_alpha,
+        risk_aversion=risk_lambda,
+        build_bid_curves=False,
+        run_robustness_sweep=True,
+    )
+    result.schedule.metadata.update(
+        {
+            "risk_profile": risk_profile_key,
+            "risk_profile_label": risk_profile_label,
+            "risk_profile_description": risk_profile_description,
+        }
+    )
+    runtime_ms = int((time.time() - t0) * 1000)
+    artifacts = _build_artifacts(result, runtime_ms)
+    payload = {
         "ok": True,
-        "artifacts": {
-            "schedule": read_json(PUBLIC_DATA / "schedule.json", []),
-            "scenario_panel": read_json(PUBLIC_DATA / "scenario_panel.json", []),
-            "run_metadata": read_json(PUBLIC_DATA / "run_metadata.json", {}),
-            "robustness_sweep": read_json(PUBLIC_DATA / "robustness_sweep.json", []),
-        },
+        "runtime_ms": runtime_ms,
+        "battery_profile": battery.name,
+        "risk_profile": risk_profile_key,
+        "risk_profile_label": risk_profile_label,
+        "risk_lambda": risk_lambda,
+        "risk_alpha": risk_alpha,
+        "artifacts": artifacts,
     }
+    _DASHBOARD_CACHE[battery_name] = payload
+    return payload
+
+
+@app.get("/api/artifacts")
+async def api_artifacts(battery: Optional[str] = None) -> dict[str, Any]:
+    """Return per-asset dashboard artifacts.
+
+    Each battery profile gets its own dispatch run (cached after the
+    first request). Pass `?battery=<id>` from the frontend to switch
+    which asset's dashboard is rendered.
+    """
+    battery_name = battery or "liion_100_2h"
+    return _build_dashboard_for_battery(battery_name)
 
 
 @app.get("/api/sources")
