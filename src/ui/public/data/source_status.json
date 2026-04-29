@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-04-30T02:02:40.518297+03:00",
+  "source": "backend_demo",
+  "sources": [
+    {
+      "id": "henex",
+      "name": "HEnEx DAM",
+      "desc": "Day-ahead clearing prices, market curves",
+      "status": "ok",
+      "latency": "8 min",
+      "rows": "2.4M",
+      "lastSync": "12:42",
+      "latency_minutes": 8,
+      "rows_24h": 2400000,
+      "last_sync_iso": "2026-04-30T12:42:00+03:00",
+      "feature_freshness_minutes": 8
+    },
+    {
+      "id": "ipto",
+      "name": "IPTO / ADMIE",
+      "desc": "Greek load + RES forecasts, ATC, system data",
+      "status": "ok",
+      "latency": "21 min",
+      "rows": "1.1M",
+      "lastSync": "12:42",
+      "latency_minutes": 21,
+      "rows_24h": 1100000,
+      "last_sync_iso": "2026-04-30T12:42:00+03:00",
+      "feature_freshness_minutes": 11
+    },
+    {
+      "id": "openmeteo",
+      "name": "Open-Meteo",
+      "desc": "Weather: temp, wind, irradiance, clouds",
+      "status": "ok",
+      "latency": "4 min",
+      "rows": "640k",
+      "lastSync": "12:43",
+      "latency_minutes": 4,
+      "rows_24h": 640000,
+      "last_sync_iso": "2026-04-30T12:43:00+03:00",
+      "feature_freshness_minutes": 4
+    },
+    {
+      "id": "entsoe",
+      "name": "ENTSO-E",
+      "desc": "Pan-European load, generation, cross-border",
+      "status": "ok",
+      "latency": "33 min",
+      "rows": "8.2M",
+      "lastSync": "12:34",
+      "latency_minutes": 33,
+      "rows_24h": 8200000,
+      "last_sync_iso": "2026-04-30T12:34:00+03:00",
+      "feature_freshness_minutes": 18
+    },
+    {
+      "id": "ttf",
+      "name": "TTF Gas",
+      "desc": "Dutch TTF gas benchmark",
+      "status": "warn",
+      "latency": "2 h 04m",
+      "rows": "12k",
+      "lastSync": "10:42",
+      "latency_minutes": 124,
+      "rows_24h": 12000,
+      "last_sync_iso": "2026-04-30T10:42:00+03:00",
+      "feature_freshness_minutes": 124
+    },
+    {
+      "id": "eua",
+      "name": "EEX EUA Carbon",
+      "desc": "EU carbon allowance prices",
+      "status": "ok",
+      "latency": "55 min",
+      "rows": "9.8k",
+      "lastSync": "12:00",
+      "latency_minutes": 55,
+      "rows_24h": 9800,
+      "last_sync_iso": "2026-04-30T12:00:00+03:00",
+      "feature_freshness_minutes": 55
+    },
+    {
+      "id": "remit",
+      "name": "REMIT Outages",
+      "desc": "Plant outage notifications",
+      "status": "err",
+      "latency": "\u2014",
+      "rows": "\u2014",
+      "lastSync": "yest. 18:11",
+      "latency_minutes": null,
+      "rows_24h": null,
+      "last_sync_iso": "2026-04-29T18:11:00+03:00",
+      "feature_freshness_minutes": null
+    }
+  ]
+}

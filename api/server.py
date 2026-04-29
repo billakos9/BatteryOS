@@ -1,7 +1,10 @@
 """BatteryOS API server.
 
-Serves the built UI from src/ui/dist/ and exposes a single endpoint
-POST /api/optimize that re-runs the optimizer with user-selected parameters.
+Serves the built UI from src/ui/dist/ and exposes endpoints for:
+- Receiving forecaster uploads (POST /api/forecast/upload)
+- Serving forecast overview (GET /api/forecast/overview)
+- Running the optimizer (POST /api/optimize)
+- Serving dashboard artifacts (GET /api/artifacts)
 """
 from __future__ import annotations
 
@@ -27,15 +30,9 @@ from src.optimize import (  # noqa: E402
     BatteryProfile,
     DispatchResult,
     PriceScenarios,
-    scenarios_from_quantiles,
     resolve_risk_profile,
     load_profile,
     optimize_dispatch,
-)
-from src.backtest.metrics import (  # noqa: E402
-    perfect_foresight_pnl,
-    point_metrics,
-    quantile_pinball_score,
 )
 
 app = FastAPI(title="BatteryOS API")
@@ -53,6 +50,13 @@ PUBLIC_DATA = ROOT / "src" / "ui" / "public" / "data"
 DIST_DATA = ROOT / "src" / "ui" / "dist" / "data"
 SCENARIO_PANEL_PATH = PUBLIC_DATA / "scenario_panel.json"
 SCHEDULE_PATH = PUBLIC_DATA / "schedule.json"
+SOURCE_STATUS_PATH = PUBLIC_DATA / "source_status.json"
+OUTPUTS_DIR = ROOT / "outputs"
+
+# ---------------------------------------------------------------------------
+# In-memory forecast cache
+# ---------------------------------------------------------------------------
+_FORECAST_CACHE: dict[str, Any] = {}
 
 
 def _json_safe(value: Any) -> Any:
@@ -70,63 +74,84 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
-def _demo_price_at(i: int) -> float:
-    """Synthetic Greek DAM-shaped curve used only when no forecaster file exists."""
-    h = i / 4
-    price = 80.0
-    price += -10 * np.exp(-((h - 3.5) / 2.4) ** 2)
-    price += 60 * np.exp(-((h - 7.8) / 1.4) ** 2)
-    price += -42 * np.exp(-((h - 13) / 1.6) ** 2)
-    price += 18 * np.exp(-((h - 16) / 2.4) ** 2)
-    price += 95 * np.exp(-((h - 19.5) / 1.5) ** 2)
-    price += -8 * np.exp(-((h - 23) / 2.0) ** 2)
-    price += np.sin(i * 0.71) * 2.4 + np.cos(i * 0.31) * 1.7
-    return float(max(28, price))
+def _load_forecast_from_disk() -> dict[str, Any] | None:
+    """Load the most recent forecast payload from outputs/forecast_*.json."""
+    if not OUTPUTS_DIR.exists():
+        return None
+    files = sorted(OUTPUTS_DIR.glob("forecast_*.json"))
+    if not files:
+        return None
+    latest = files[-1]
+    try:
+        with open(latest, "r") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
-def _demo_scenarios() -> PriceScenarios:
-    """Create the temporary 20-scenario optimizer input until the forecaster ships."""
-    timestamps = pd.date_range("2026-04-29", periods=96, freq="15min").astype(str).tolist()
-    realized = np.array([_demo_price_at(i) for i in range(96)], dtype=float)
-    forecast = np.array(
-        [
-            v * (0.96 + 0.04 * np.cos(i * 0.21)) + np.sin(i * 0.5) * 1.5
-            for i, v in enumerate(realized)
-        ],
-        dtype=float,
-    )
-    paths = []
-    for k in range(20):
-        rng = np.random.default_rng(7 * (k + 1) + 13)
-        bias = (rng.random() - 0.5) * 16
-        path = []
-        for i in range(96):
-            drift = np.sin(i * 0.1 + k * 0.3) * 6
-            path.append(forecast[i] + bias + drift + (rng.random() - 0.5) * 12)
-        paths.append(path)
-    return PriceScenarios(
-        timestamps=timestamps,
-        prices=np.asarray(paths, dtype=float),
-        weights=np.full(20, 1 / 20),
-        labels=[f"ff{i}" for i in range(20)],
-    )
+def _warm_forecast_cache() -> None:
+    """Hydrate the in-memory cache from disk on startup."""
+    global _FORECAST_CACHE
+    payload = _load_forecast_from_disk()
+    if payload:
+        _FORECAST_CACHE = payload
+        print(f"[API] Warmed forecast cache from {payload.get('target_date', 'unknown')}")
+
+
+# Warm cache immediately on module load
+_warm_forecast_cache()
+
+
+def _write_scenario_panel_from_payload(payload: dict[str, Any]) -> None:
+    """Convert uploaded quantiles to flat scenario_panel.json format."""
+    timestamps = payload["timestamps"]
+    p10 = payload["p10"]
+    p50 = payload["p50"]
+    p90 = payload["p90"]
+
+    rows = []
+    for t_idx, ts in enumerate(timestamps):
+        rows.append({
+            "timestamp": ts,
+            "scenario_label": "p10",
+            "scenario_weight": 0.2,
+            "price_eur_per_mwh": float(p10[t_idx]),
+        })
+        rows.append({
+            "timestamp": ts,
+            "scenario_label": "p50",
+            "scenario_weight": 0.6,
+            "price_eur_per_mwh": float(p50[t_idx]),
+        })
+        rows.append({
+            "timestamp": ts,
+            "scenario_label": "p90",
+            "scenario_weight": 0.2,
+            "price_eur_per_mwh": float(p90[t_idx]),
+        })
+
+    for target_dir in (PUBLIC_DATA, DIST_DATA):
+        target_dir.mkdir(parents=True, exist_ok=True)
+        with open(target_dir / "scenario_panel.json", "w") as f:
+            json.dump(_json_safe(rows), f, indent=2)
 
 
 def _read_scenario_panel(path: Path) -> PriceScenarios:
-    """Reconstruct PriceScenarios from the flat scenario_panel JSON."""
+    """Reconstruct PriceScenarios from the flat scenario_panel JSON.
+
+    Raises FileNotFoundError if the file does not exist.
+    """
     if not path.exists():
-        return _demo_scenarios()
+        raise FileNotFoundError(f"Scenario panel not found at {path}")
 
     with open(path, "r") as f:
         rows = json.load(f)
 
     df = pd.DataFrame(rows)
-    # Pivot to (scenario_label, timestamp) -> price
     pivot = df.pivot(index="scenario_label", columns="timestamp", values="price_eur_per_mwh")
     timestamps = list(pivot.columns)
     prices = pivot.to_numpy(dtype=float)
 
-    # Extract weights per scenario (take first row per label)
     weights_df = df.groupby("scenario_label")["scenario_weight"].first()
     weights = weights_df.reindex(pivot.index).to_numpy(dtype=float)
     weights = weights / weights.sum()
@@ -143,7 +168,6 @@ def _read_scenario_panel(path: Path) -> PriceScenarios:
 def _extract_schedule_json(result: DispatchResult) -> list[dict]:
     """Convert Schedule DataFrame to the frontend schedule.json format."""
     df = result.schedule.df.copy()
-    # Ensure realized_price column exists (frontend expects it)
     if "realized_price_eur_per_mwh" not in df.columns:
         df["realized_price_eur_per_mwh"] = df["forecast_price_eur_per_mwh"]
     if "timestamp" in df.columns:
@@ -250,102 +274,18 @@ def _build_artifacts(result: DispatchResult, runtime_ms: float) -> dict[str, Any
     }
 
 
-def _demo_feature_importance() -> list[dict[str, Any]]:
-    return [
-        {"name": "residual_load_forecast", "group": "Fundamentals", "imp": 0.184},
-        {"name": "price_lag_1d_same_hour", "group": "Market Memory", "imp": 0.142},
-        {"name": "gas_price", "group": "Fuel & Carbon", "imp": 0.108},
-        {"name": "DE_residual_load", "group": "Cross-border", "imp": 0.094},
-        {"name": "rolling_volatility_7d", "group": "Market Memory", "imp": 0.078},
-        {"name": "solar_irradiance_fc", "group": "Weather", "imp": 0.072},
-        {"name": "carbon_price", "group": "Fuel & Carbon", "imp": 0.061},
-        {"name": "hour_of_day", "group": "Calendar", "imp": 0.058},
-        {"name": "wind_speed_fc", "group": "Weather", "imp": 0.044},
-        {"name": "GR_IT_atc", "group": "Cross-border", "imp": 0.041},
-        {"name": "weekend_flag", "group": "Calendar", "imp": 0.034},
-        {"name": "price_lag_7d", "group": "Market Memory", "imp": 0.029},
-        {"name": "BG_residual_load", "group": "Cross-border", "imp": 0.024},
-        {"name": "temperature_fc", "group": "Weather", "imp": 0.021},
-        {"name": "holiday_flag", "group": "Calendar", "imp": 0.012},
-    ]
+def _write_json_to_targets(filename: str, payload: Any) -> None:
+    for target_dir in (PUBLIC_DATA, DIST_DATA):
+        target_dir.mkdir(parents=True, exist_ok=True)
+        with open(target_dir / filename, "w") as f:
+            json.dump(_json_safe(payload), f, indent=2)
 
 
-def _demo_model_ladder() -> list[dict[str, Any]]:
-    return [
-        {"id": "naive_1d", "name": "Naive 1d", "kind": "Baseline", "mae": 22.4, "rmse": 31.1, "smape": 24.2, "profit_capture_pct": 41, "pinball_q90": 10.2},
-        {"id": "naive_7d", "name": "Naive 7d", "kind": "Baseline", "mae": 18.9, "rmse": 27.3, "smape": 21.6, "profit_capture_pct": 48, "pinball_q90": 8.8},
-        {"id": "sarimax", "name": "SARIMAX", "kind": "Statistical", "mae": 14.3, "rmse": 21.8, "smape": 16.4, "profit_capture_pct": 61, "pinball_q90": 6.1},
-        {"id": "lgbm", "name": "LightGBM-q50", "kind": "ML", "mae": 9.8, "rmse": 15.2, "smape": 11.7, "profit_capture_pct": 72, "pinball_q90": 3.8},
-        {"id": "lgbm_q", "name": "LightGBM Quantile", "kind": "ML+Quantile", "mae": 9.6, "rmse": 15.0, "smape": 11.5, "profit_capture_pct": 74, "pinball_q90": 3.4},
-    ]
-
-
-def _build_demo_forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
-    n_periods = max(24, horizon_h) * 4
-    timestamps = pd.date_range("2026-04-30", periods=n_periods, freq="15min")
-    realized = np.array([_demo_price_at(i % 96) + 3.5 * np.sin(i / 19.0) for i in range(n_periods)], dtype=float)
-    p50 = np.array(
-        [
-            realized[i] * (0.965 + 0.03 * np.cos(i * 0.18)) + np.sin(i * 0.33) * 1.8
-            for i in range(n_periods)
-        ],
-        dtype=float,
-    )
-    p10 = np.array([v - 8 - 5 * abs(np.sin(i * 0.17)) for i, v in enumerate(p50)], dtype=float)
-    p90 = np.array([v + 9 + 6 * abs(np.cos(i * 0.21)) for i, v in enumerate(p50)], dtype=float)
-
-    scenarios = scenarios_from_quantiles(timestamps, p10, p50, p90)
-    metrics = point_metrics(p50, realized)
-    pinball = quantile_pinball_score(scenarios, realized)
-    battery = load_profile(ROOT / "config" / "storage_profiles.yaml", "liion_100_2h")
-    result = optimize_dispatch(
-        scenarios,
-        battery,
-        alpha=0.10,
-        risk_aversion=0.35,
-        build_bid_curves=False,
-        run_robustness_sweep=False,
-        realized_prices=realized,
-    )
-    perfect = perfect_foresight_pnl(realized, battery, timestamps=timestamps)
-    perfect_profit = float(perfect["perfect_foresight_profit_eur"])
-    realized_profit = float(result.realized_evaluation["realized_profit_eur"]) if result.realized_evaluation else 0.0
-    profit_capture_pct = 100.0 * realized_profit / perfect_profit if perfect_profit > 0 else 0.0
-
-    residuals = (p50 - realized).astype(float)
-    q95 = float(np.percentile(np.abs(residuals), 95))
-
-    return {
-        "source": "backend_demo",
-        "market": "Greek DAM",
-        "unit": "EUR/MWh",
-        "resolution_minutes": 15,
-        "generated_at": pd.Timestamp.utcnow().isoformat(),
-        "quantiles": {
-            "timestamps": [ts.isoformat() for ts in timestamps],
-            "p10": p10.tolist(),
-            "p50": p50.tolist(),
-            "p90": p90.tolist(),
-            "realized": realized.tolist(),
-        },
-        "diagnostics": {
-            "mae_eur_per_mwh": float(metrics["mae_eur_per_mwh"]),
-            "rmse_eur_per_mwh": float(metrics["rmse_eur_per_mwh"]),
-            "profit_capture_pct": float(profit_capture_pct),
-            "pinball_q90_eur_per_mwh": float(pinball["pinball_q90"]),
-            "bias_eur_per_mwh": float(metrics["bias_eur_per_mwh"]),
-            "sigma_eur_per_mwh": float(np.std(residuals)),
-            "p95_abs_error_eur_per_mwh": q95,
-            "skew": float(pd.Series(residuals).skew()),
-        },
-        "models": _demo_model_ladder(),
-        "features": _demo_feature_importance(),
-        "residuals": residuals.tolist(),
-        "calibration": {
-            "nominal": [0.1, 0.3, 0.5, 0.7, 0.9],
-            "empirical": [0.12, 0.31, 0.52, 0.68, 0.86],
-        },
-    }
+def _read_json(path: Path, fallback: Any) -> Any:
+    if not path.exists():
+        return fallback
+    with open(path, "r") as f:
+        return json.load(f)
 
 
 def _write_artifacts(
@@ -378,6 +318,10 @@ def _write_artifacts(
     return artifacts
 
 
+# ---------------------------------------------------------------------------
+# Pydantic models
+# ---------------------------------------------------------------------------
+
 class OptimizeRequest(BaseModel):
     battery_profile_name: str = "liion_100_2h"
     risk_profile: Optional[str] = None
@@ -386,6 +330,41 @@ class OptimizeRequest(BaseModel):
     build_bid_curves: bool = False
     run_robustness_sweep: bool = True
 
+
+class SourceStatusRow(BaseModel):
+    id: str
+    name: str
+    desc: str
+    status: str
+    latency: str
+    rows: str
+    lastSync: str
+    latency_minutes: Optional[float] = None
+    rows_24h: Optional[int] = None
+    last_sync_iso: Optional[str] = None
+    feature_freshness_minutes: Optional[float] = None
+
+
+class SourceStatusPayload(BaseModel):
+    generated_at: Optional[str] = None
+    source: str = "pipeline_post"
+    sources: list[SourceStatusRow]
+
+
+class ForecastUploadRequest(BaseModel):
+    target_date: str
+    timestamps: list[str]
+    p10: list[float]
+    p50: list[float]
+    p90: list[float]
+    diagnostics: dict[str, Any] = {}
+    features: list[dict[str, Any]] = []
+    models: list[dict[str, Any]] = []
+
+
+# ---------------------------------------------------------------------------
+# API endpoints
+# ---------------------------------------------------------------------------
 
 @app.post("/api/optimize")
 async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
@@ -403,7 +382,6 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
     try:
         battery = load_profile(ROOT / "config" / "storage_profiles.yaml", req.battery_profile_name)
     except KeyError:
-        # Fallback: try custom
         battery = BatteryProfile.custom(
             name=req.battery_profile_name,
             power_mw=100,
@@ -412,7 +390,13 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
         )
 
     # Reconstruct scenarios from current artifact
-    ps = _read_scenario_panel(SCENARIO_PANEL_PATH)
+    try:
+        ps = _read_scenario_panel(SCENARIO_PANEL_PATH)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=503,
+            detail="No forecast scenario panel available. Run the forecaster pipeline or POST to /api/forecast/upload.",
+        )
 
     # Run optimizer
     result: DispatchResult = optimize_dispatch(
@@ -444,8 +428,6 @@ async def api_optimize(req: OptimizeRequest) -> dict[str, Any]:
         "risk_alpha": risk_alpha,
         "artifacts": artifacts,
     }
-    # Refresh the per-battery dashboard cache so the dashboard reflects
-    # the most recent re-tune from the optimizer page.
     _DASHBOARD_CACHE[battery.name] = payload
     return payload
 
@@ -455,16 +437,100 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.post("/api/forecast/upload")
+async def api_forecast_upload(req: ForecastUploadRequest) -> dict[str, Any]:
+    """Receive a new forecast from the forecaster pipeline.
+
+    Validates, caches in memory, writes scenario_panel.json, and persists
+    the full payload to disk.
+    """
+    if not (req.timestamps and req.p10 and req.p50 and req.p90):
+        raise HTTPException(status_code=400, detail="timestamps, p10, p50, p90 are all required.")
+
+    n = len(req.timestamps)
+    if not (len(req.p10) == n and len(req.p50) == n and len(req.p90) == n):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Length mismatch: timestamps={n}, p10={len(req.p10)}, p50={len(req.p50)}, p90={len(req.p90)}.",
+        )
+
+    # Build cache payload
+    payload = {
+        "target_date": req.target_date,
+        "source": "forecaster",
+        "market": "Greek DAM",
+        "unit": "EUR/MWh",
+        "resolution_minutes": 15,
+        "generated_at": pd.Timestamp.utcnow().isoformat(),
+        "timestamps": req.timestamps,
+        "p10": req.p10,
+        "p50": req.p50,
+        "p90": req.p90,
+        "diagnostics": req.diagnostics,
+        "models": req.models,
+        "features": req.features,
+    }
+
+    global _FORECAST_CACHE
+    _FORECAST_CACHE = payload
+
+    # Write scenario panel for optimizer consumption
+    _write_scenario_panel_from_payload(payload)
+
+    # Persist full payload
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    forecast_path = OUTPUTS_DIR / f"forecast_{req.target_date}.json"
+    with open(forecast_path, "w") as f:
+        json.dump(_json_safe(payload), f, indent=2)
+
+    return {"ok": True, "target_date": req.target_date, "intervals": n}
+
+
 @app.get("/api/forecast/overview")
 async def forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
-    """Return forecaster diagnostics and quantiles from the local backend.
+    """Return the latest forecaster quantiles and metadata.
 
-    Until the real forecaster artifact pipeline is persisted to disk, this
-    endpoint serves a backend-generated demo payload with the same shape the
-    frontend expects.
+    Serves from in-memory cache. Falls back to disk if cache is empty.
+    Returns 503 if no forecast has ever been uploaded.
     """
-    horizon_h = 48 if horizon_h >= 48 else 24
-    return _build_demo_forecast_overview(horizon_h=horizon_h)
+    global _FORECAST_CACHE
+
+    if not _FORECAST_CACHE:
+        _FORECAST_CACHE = _load_forecast_from_disk() or {}
+
+    if not _FORECAST_CACHE:
+        raise HTTPException(
+            status_code=503,
+            detail="No forecast available. Run the forecaster pipeline or POST to /api/forecast/upload.",
+        )
+
+    # Slice to requested horizon (default 24h = 96 intervals, 48h = 192)
+    max_intervals = max(24, horizon_h) * 4
+    timestamps = _FORECAST_CACHE.get("timestamps", [])
+    n = min(len(timestamps), max_intervals)
+
+    return {
+        "source": _FORECAST_CACHE.get("source", "forecaster"),
+        "market": _FORECAST_CACHE.get("market", "Greek DAM"),
+        "unit": _FORECAST_CACHE.get("unit", "EUR/MWh"),
+        "resolution_minutes": 15,
+        "generated_at": _FORECAST_CACHE.get("generated_at", ""),
+        "quantiles": {
+            "timestamps": timestamps[:n],
+            "p10": _FORECAST_CACHE.get("p10", [])[:n],
+            "p50": _FORECAST_CACHE.get("p50", [])[:n],
+            "p90": _FORECAST_CACHE.get("p90", [])[:n],
+            "realized": [],  # no realized prices until delivery day ends
+        },
+        "diagnostics": _FORECAST_CACHE.get("diagnostics", {}),
+        "models": _FORECAST_CACHE.get("models", []),
+        "features": _FORECAST_CACHE.get("features", []),
+        "residuals": [],
+        "calibration": {
+            "nominal": [],
+            "empirical": [],
+        },
+    }
 
 
 _DASHBOARD_CACHE: dict[str, dict[str, Any]] = {}
@@ -482,8 +548,6 @@ def _build_dashboard_for_battery(battery_name: str) -> dict[str, Any]:
     try:
         battery = load_profile(ROOT / "config" / "storage_profiles.yaml", battery_name)
     except KeyError:
-        # Custom assets created in the UI are not persisted server-side yet.
-        # Fall back to a sane Li-ion default so the page never breaks.
         battery = BatteryProfile.custom(
             name=battery_name,
             power_mw=100,
@@ -495,7 +559,14 @@ def _build_dashboard_for_battery(battery_name: str) -> dict[str, Any]:
         resolve_risk_profile(None, None, None)
     )
 
-    ps = _read_scenario_panel(SCENARIO_PANEL_PATH)
+    try:
+        ps = _read_scenario_panel(SCENARIO_PANEL_PATH)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=503,
+            detail="No forecast scenario panel available. Run the forecaster pipeline or POST to /api/forecast/upload.",
+        )
+
     result: DispatchResult = optimize_dispatch(
         scenarios=ps,
         battery=battery,
@@ -527,6 +598,106 @@ def _build_dashboard_for_battery(battery_name: str) -> dict[str, Any]:
     return payload
 
 
+def _demo_source_status_payload() -> dict[str, Any]:
+    return {
+        "generated_at": pd.Timestamp.now(tz="Europe/Athens").isoformat(),
+        "source": "backend_demo",
+        "sources": [
+            {
+                "id": "henex",
+                "name": "HEnEx DAM",
+                "desc": "Day-ahead clearing prices, market curves",
+                "status": "ok",
+                "latency": "8 min",
+                "rows": "2.4M",
+                "lastSync": "12:42",
+                "latency_minutes": 8,
+                "rows_24h": 2_400_000,
+                "last_sync_iso": "2026-04-30T12:42:00+03:00",
+                "feature_freshness_minutes": 8,
+            },
+            {
+                "id": "ipto",
+                "name": "IPTO / ADMIE",
+                "desc": "Greek load + RES forecasts, ATC, system data",
+                "status": "ok",
+                "latency": "21 min",
+                "rows": "1.1M",
+                "lastSync": "12:42",
+                "latency_minutes": 21,
+                "rows_24h": 1_100_000,
+                "last_sync_iso": "2026-04-30T12:42:00+03:00",
+                "feature_freshness_minutes": 11,
+            },
+            {
+                "id": "openmeteo",
+                "name": "Open-Meteo",
+                "desc": "Weather: temp, wind, irradiance, clouds",
+                "status": "ok",
+                "latency": "4 min",
+                "rows": "640k",
+                "lastSync": "12:43",
+                "latency_minutes": 4,
+                "rows_24h": 640_000,
+                "last_sync_iso": "2026-04-30T12:43:00+03:00",
+                "feature_freshness_minutes": 4,
+            },
+            {
+                "id": "entsoe",
+                "name": "ENTSO-E",
+                "desc": "Pan-European load, generation, cross-border",
+                "status": "ok",
+                "latency": "33 min",
+                "rows": "8.2M",
+                "lastSync": "12:34",
+                "latency_minutes": 33,
+                "rows_24h": 8_200_000,
+                "last_sync_iso": "2026-04-30T12:34:00+03:00",
+                "feature_freshness_minutes": 18,
+            },
+            {
+                "id": "ttf",
+                "name": "TTF Gas",
+                "desc": "Dutch TTF gas benchmark",
+                "status": "warn",
+                "latency": "2 h 04m",
+                "rows": "12k",
+                "lastSync": "10:42",
+                "latency_minutes": 124,
+                "rows_24h": 12_000,
+                "last_sync_iso": "2026-04-30T10:42:00+03:00",
+                "feature_freshness_minutes": 124,
+            },
+            {
+                "id": "eua",
+                "name": "EEX EUA Carbon",
+                "desc": "EU carbon allowance prices",
+                "status": "ok",
+                "latency": "55 min",
+                "rows": "9.8k",
+                "lastSync": "12:00",
+                "latency_minutes": 55,
+                "rows_24h": 9_800,
+                "last_sync_iso": "2026-04-30T12:00:00+03:00",
+                "feature_freshness_minutes": 55,
+            },
+            {
+                "id": "remit",
+                "name": "REMIT Outages",
+                "desc": "Plant outage notifications",
+                "status": "err",
+                "latency": "—",
+                "rows": "—",
+                "lastSync": "yest. 18:11",
+                "latency_minutes": None,
+                "rows_24h": None,
+                "last_sync_iso": "2026-04-29T18:11:00+03:00",
+                "feature_freshness_minutes": None,
+            },
+        ],
+    }
+
+
 @app.get("/api/artifacts")
 async def api_artifacts(battery: Optional[str] = None) -> dict[str, Any]:
     """Return per-asset dashboard artifacts.
@@ -540,76 +711,27 @@ async def api_artifacts(battery: Optional[str] = None) -> dict[str, Any]:
 
 
 @app.get("/api/sources")
-async def api_sources() -> list[dict[str, Any]]:
+async def api_sources() -> dict[str, Any]:
     """Health and freshness of every data ingestion feed.
 
-    The frontend renders the Sources page exclusively from this payload.
+    Returns the latest posted source-status artifact. If no pipeline has
+    posted one yet, serves a demo payload in the same contract shape.
     """
-    return [
-        {
-            "id": "henex",
-            "name": "HEnEx DAM",
-            "desc": "Day-ahead clearing prices, market curves",
-            "status": "ok",
-            "latency": "8 min",
-            "rows": "2.4M",
-            "lastSync": "12:42",
-        },
-        {
-            "id": "ipto",
-            "name": "IPTO / ADMIE",
-            "desc": "Greek load + RES forecasts, ATC, system data",
-            "status": "ok",
-            "latency": "21 min",
-            "rows": "1.1M",
-            "lastSync": "12:42",
-        },
-        {
-            "id": "openmeteo",
-            "name": "Open-Meteo",
-            "desc": "Weather: temp, wind, irradiance, clouds",
-            "status": "ok",
-            "latency": "4 min",
-            "rows": "640k",
-            "lastSync": "12:43",
-        },
-        {
-            "id": "entsoe",
-            "name": "ENTSO-E",
-            "desc": "Pan-European load, generation, cross-border",
-            "status": "ok",
-            "latency": "33 min",
-            "rows": "8.2M",
-            "lastSync": "12:34",
-        },
-        {
-            "id": "ttf",
-            "name": "TTF Gas",
-            "desc": "Dutch TTF gas benchmark",
-            "status": "warn",
-            "latency": "2 h 04m",
-            "rows": "12k",
-            "lastSync": "10:42",
-        },
-        {
-            "id": "eua",
-            "name": "EEX EUA Carbon",
-            "desc": "EU carbon allowance prices",
-            "status": "ok",
-            "latency": "55 min",
-            "rows": "9.8k",
-            "lastSync": "12:00",
-        },
-        {
-            "id": "remit",
-            "name": "REMIT Outages",
-            "desc": "Plant outage notifications",
-            "status": "err",
-            "latency": "—",
-            "rows": "—",
-            "lastSync": "yest. 18:11",
-        },
-    ]
+    return _json_safe(_read_json(SOURCE_STATUS_PATH, _demo_source_status_payload()))
+
+
+@app.post("/api/sources/update")
+async def api_sources_update(payload: SourceStatusPayload) -> dict[str, Any]:
+    """Ingestion pipeline write path for source freshness / health metadata."""
+    normalized = payload.model_dump()
+    if not normalized.get("generated_at"):
+        normalized["generated_at"] = pd.Timestamp.now(tz="Europe/Athens").isoformat()
+    _write_json_to_targets("source_status.json", normalized)
+    return {
+        "ok": True,
+        "generated_at": normalized["generated_at"],
+        "sources_updated": len(normalized["sources"]),
+    }
 
 
 def _profile_to_asset(name: str, raw: dict) -> dict[str, Any]:
@@ -685,67 +807,17 @@ async def api_ticker() -> list[dict[str, Any]]:
     ]
 
 
-def _build_backtest_summary(days: int = 90) -> dict[str, Any]:
-    """Synthetic walk-forward summary served by the API.
-
-    Will be replaced by `run_walk_forward_backtest` outputs once we have
-    persisted historical price data on disk.
-    """
-    rng = np.random.default_rng(42)
-    equity_bos: list[float] = []
-    equity_naive: list[float] = []
-    equity_perfect: list[float] = []
-    day_profits: list[dict[str, Any]] = []
-    acc = {"b": 0.0, "n": 0.0, "p": 0.0}
-    for d in range(days):
-        baseline = 22000.0 + np.sin(d * 0.21) * 3000 + (rng.random() - 0.5) * 4000
-        perfect = baseline * 1.45 + (rng.random() - 0.5) * 1500
-        bos = baseline * 1.05 + (rng.random() - 0.5) * 2200
-        naive = baseline * 0.65 + (rng.random() - 0.5) * 2500
-        acc["b"] += bos
-        acc["n"] += naive
-        acc["p"] += perfect
-        equity_bos.append(acc["b"])
-        equity_naive.append(acc["n"])
-        equity_perfect.append(acc["p"])
-        day_profits.append(
-            {
-                "d": d,
-                "bos": float(bos),
-                "naive": float(naive),
-                "perfect": float(perfect),
-                "capture": float(bos / perfect) if perfect > 0 else 0.0,
-            }
-        )
-
-    heat: list[list[float]] = []
-    for d in range(30):
-        rng_d = np.random.default_rng(d * 31 + 17)
-        row: list[float] = []
-        for h in range(24):
-            peak = np.exp(-((h - 8) / 2) ** 2) + 1.4 * np.exp(-((h - 19) / 1.6) ** 2)
-            trough = -0.7 * np.exp(-((h - 13) / 1.7) ** 2)
-            row.append(float(peak + trough + 0.4 + (rng_d.random() - 0.5) * 0.5))
-        heat.append(row)
-
-    return {
-        "days": days,
-        "equity": {
-            "batteryOS": [float(v) for v in equity_bos],
-            "naive": [float(v) for v in equity_naive],
-            "perfect": [float(v) for v in equity_perfect],
-        },
-        "dayProfits": day_profits,
-        "heatmap": heat,
-        "source": "backend_demo",
-    }
-
-
 @app.get("/api/backtest/summary")
 async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
-    """Walk-forward backtest summary: equity curve, daily profits, heatmap."""
-    days = max(7, min(365, int(days)))
-    return _build_backtest_summary(days=days)
+    """Walk-forward backtest summary.
+
+    Not yet implemented. Requires historical realized prices and
+    walk-forward backtest results.
+    """
+    raise HTTPException(
+        status_code=501,
+        detail="Backtest not yet implemented. Historical walk-forward data required.",
+    )
 
 
 @app.get("/api/workflow")

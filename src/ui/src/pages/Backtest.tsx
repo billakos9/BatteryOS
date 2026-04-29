@@ -4,12 +4,14 @@ import { Spark, EquityChart, Heatmap, Histogram } from "@/components/bos/Charts"
 import { useBacktestSummary } from "@/lib/api";
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
+import { downloadCsv } from "@/lib/export";
+import { toast } from "sonner";
 
 export default function PageBacktest() {
   const [period, setPeriod] = useState<"30" | "90" | "365">("90");
   const { selectedAssetId } = useBosStore();
   const days = period === "30" ? 30 : period === "365" ? 365 : 90;
-  const { data, isLoading, isError } = useBacktestSummary(days);
+  const { data, isLoading, isError, refetch } = useBacktestSummary(days);
   const equity = data?.equity ?? { batteryOS: [], naive: [], perfect: [] };
   const dayProfits = data?.dayProfits ?? [];
   const heat = data?.heatmap ?? [];
@@ -31,8 +33,39 @@ export default function PageBacktest() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Seg value={period} onChange={(v) => setPeriod(v)} options={[{ v: "30", l: "30D" }, { v: "90", l: "90D" }, { v: "365", l: "1Y" }]} />
-          <button className="bos-btn"><Icon name="download" size={12} />CSV</button>
-          <button className="bos-btn primary"><Icon name="play" size={12} />Re-run</button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              if (!dayProfits.length) {
+                toast.error("No backtest rows available to export");
+                return;
+              }
+              downloadCsv(
+                `backtest_${days}d.csv`,
+                dayProfits.map((d, i) => ({
+                  day: `D${d.d + 1}`,
+                  date: new Date(2026, 3, 29 - i).toISOString().slice(0, 10),
+                  bos_profit_eur: d.bos,
+                  naive_profit_eur: d.naive,
+                  perfect_profit_eur: d.perfect,
+                  capture_pct: Number((d.capture * 100).toFixed(2)),
+                }))
+              );
+              toast.success("Backtest CSV exported");
+            }}
+          >
+            <Icon name="download" size={12} />CSV
+          </button>
+          <button
+            className="bos-btn primary"
+            onClick={() => {
+              void refetch()
+                .then(() => toast.success(`Backtest refreshed for ${days} days`))
+                .catch((err) => toast.error(err instanceof Error ? err.message : "Backtest refresh failed"));
+            }}
+          >
+            <Icon name="play" size={12} />Re-run
+          </button>
         </div>
       </div>
 

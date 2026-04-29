@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, KPI, Tag, Icon, Legend } from "@/components/bos/Primitives";
 import { Spark, DispatchChart, ProfitChart, BatteryGauge } from "@/components/bos/Charts";
@@ -6,6 +6,7 @@ import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
 import { artifactsToDispatchView, fetchBackendArtifacts, type BackendArtifacts } from "@/lib/backend";
 import WorkflowDiagram from "@/components/bos/WorkflowDiagram";
+import { toast } from "sonner";
 
 const emptyArtifacts: BackendArtifacts = {
   schedule: [],
@@ -60,15 +61,21 @@ export default function PageDashboard() {
   const headerTimestamp = useMemo(() => formatAthensHeader(athensNow), [athensNow]);
   const gateCloseCountdown = useMemo(() => formatGateCloseCountdown(athensNow, optimizer.gateCloseHour), [athensNow, optimizer.gateCloseHour]);
 
+  const loadArtifacts = useCallback(async (batteryId: string) => {
+    setArtifacts(null);
+    const next = await fetchBackendArtifacts(batteryId);
+    setArtifacts(next);
+    setError(null);
+    return next;
+  }, []);
+
   useEffect(() => {
     if (!asset.id || asset.id === "—") return;
     let cancelled = false;
-    setArtifacts(null);
-    fetchBackendArtifacts(asset.id)
+    loadArtifacts(asset.id)
       .then((next) => {
         if (!cancelled) {
           setArtifacts(next);
-          setError(null);
         }
       })
       .catch((err) => {
@@ -77,7 +84,7 @@ export default function PageDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [asset.id]);
+  }, [asset.id, loadArtifacts]);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -107,7 +114,17 @@ export default function PageDashboard() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="bos-pill"><span className="dot" />LIVE · gate close {gateCloseCountdown}</div>
-          <button className="bos-btn"><Icon name="refresh" size={12} />Refresh</button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              if (!asset.id || asset.id === "—") return;
+              void loadArtifacts(asset.id)
+                .then(() => toast.success(`Dashboard refreshed for ${asset.id}`))
+                .catch((err) => toast.error(err instanceof Error ? err.message : "Refresh failed"));
+            }}
+          >
+            <Icon name="refresh" size={12} />Refresh
+          </button>
           <button className="bos-btn primary" onClick={() => navigate("/optimizer")}><Icon name="play" size={12} />Run optimizer</button>
         </div>
       </div>

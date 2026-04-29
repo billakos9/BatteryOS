@@ -5,6 +5,7 @@ import { DispatchChart, ProfitChart, ScenarioChart } from "@/components/bos/Char
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
 import { getRiskProfile, riskProfiles } from "@/lib/riskProfiles";
+import { downloadCsv } from "@/lib/export";
 import {
   artifactsToDispatchView,
   fetchBackendArtifacts,
@@ -12,6 +13,7 @@ import {
   runBackendOptimizer,
   type BackendArtifacts,
 } from "@/lib/backend";
+import { toast } from "sonner";
 
 const emptyArtifacts: BackendArtifacts = {
   schedule: [],
@@ -100,7 +102,9 @@ export default function PageOptimizer() {
         status: nextResult.status,
         capture: nextResult.capture,
       });
+      toast.success(`Optimizer run completed for ${asset.id}`);
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSolving(false);
@@ -121,7 +125,20 @@ export default function PageOptimizer() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button className="bos-btn"><Icon name="download" size={12} />Export schedule</button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              const rows = artifacts?.schedule ?? [];
+              if (!rows.length) {
+                toast.error("No schedule available to export");
+                return;
+              }
+              downloadCsv(`schedule_${asset.id}.csv`, rows as Array<Record<string, unknown>>);
+              toast.success("Schedule exported");
+            }}
+          >
+            <Icon name="download" size={12} />Export schedule
+          </button>
           <button className="bos-btn primary" onClick={onSolve}>
             {solving ? <><span className="sdot ok" />Solving…</> : <><Icon name="play" size={12} />Solve</>}
           </button>

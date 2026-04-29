@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, KPI, Tag, Seg, Toggle, Icon, Legend } from "@/components/bos/Primitives";
 import { FanChart, Histogram, BulletBar } from "@/components/bos/Charts";
 import { useSize } from "@/components/bos/Primitives";
+import { downloadJson } from "@/lib/export";
+import { toast } from "sonner";
 
 const groupColors: Record<string, string> = {
   Fundamentals: "hsl(var(--acc))",
@@ -102,7 +104,19 @@ export default function PageForecaster() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button className="bos-btn"><Icon name="download" size={12} />Export forecast</button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              if (!overview) {
+                toast.error("No forecast payload loaded");
+                return;
+              }
+              downloadJson(`forecast_overview_${horizon}h.json`, overview);
+              toast.success("Forecast payload exported");
+            }}
+          >
+            <Icon name="download" size={12} />Export forecast
+          </button>
           <button className="bos-btn primary" onClick={fetchOverview} disabled={loading}>
             <Icon name="refresh" size={12} />{loading ? "Loading…" : "Refresh"}
           </button>

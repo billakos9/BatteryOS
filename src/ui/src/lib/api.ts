@@ -13,6 +13,16 @@ export interface SourceRow {
   latency: string;
   rows: string;
   lastSync: string;
+  latency_minutes?: number | null;
+  rows_24h?: number | null;
+  last_sync_iso?: string | null;
+  feature_freshness_minutes?: number | null;
+}
+
+export interface SourcesPayload {
+  generated_at?: string;
+  source?: string;
+  sources: SourceRow[];
 }
 
 export interface TickerRow {
@@ -66,10 +76,10 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export function useSources(): UseQueryResult<SourceRow[]> {
+export function useSources(): UseQueryResult<SourcesPayload> {
   return useQuery({
     queryKey: ["api", "sources"],
-    queryFn: () => getJson<SourceRow[]>("/api/sources"),
+    queryFn: () => getJson<SourcesPayload>("/api/sources"),
     staleTime: 60_000,
   });
 }

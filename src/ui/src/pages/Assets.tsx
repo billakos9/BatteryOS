@@ -5,10 +5,14 @@ import { AssetEditor } from "@/components/bos/AssetEditor";
 import { useBosStore } from "@/lib/store";
 import { fmtEur } from "@/lib/dispatch";
 import type { BatteryAsset } from "@/lib/types";
+import { useBatteries } from "@/lib/api";
+import { batteryAssetsToYaml, downloadText } from "@/lib/export";
+import { toast } from "sonner";
 
 export default function PageAssets() {
   const navigate = useNavigate();
-  const { assets, upsertAsset, removeAsset, toggleAssetStatus, setSelectedAsset, resetAssets } = useBosStore();
+  const { assets, upsertAsset, removeAsset, toggleAssetStatus, setSelectedAsset, hydrateAssets } = useBosStore();
+  const { refetch: refetchBatteries } = useBatteries();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<BatteryAsset | undefined>(undefined);
 
@@ -28,8 +32,33 @@ export default function PageAssets() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button className="bos-btn ghost" onClick={resetAssets} title="Reset to defaults"><Icon name="refresh" size={12} />Reset</button>
-          <button className="bos-btn"><Icon name="download" size={12} />Export YAML</button>
+          <button
+            className="bos-btn ghost"
+            onClick={() => {
+              void refetchBatteries()
+                .then((res) => {
+                  if (res.data?.length) {
+                    hydrateAssets(res.data);
+                    toast.success("Assets reset from backend catalog");
+                  } else {
+                    toast.error("No backend asset catalog available");
+                  }
+                })
+                .catch((err) => toast.error(err instanceof Error ? err.message : "Reset failed"));
+            }}
+            title="Reset to defaults"
+          >
+            <Icon name="refresh" size={12} />Reset
+          </button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              downloadText("storage_profiles.export.yaml", batteryAssetsToYaml(assets), "application/x-yaml;charset=utf-8");
+              toast.success("Asset catalog exported");
+            }}
+          >
+            <Icon name="download" size={12} />Export YAML
+          </button>
           <button className="bos-btn primary" onClick={startAdd}><Icon name="plus" size={12} />Add asset</button>
         </div>
       </div>

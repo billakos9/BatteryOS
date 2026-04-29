@@ -23,6 +23,7 @@ import holidays
 import joblib
 import numpy as np
 import pandas as pd
+import requests
 
 # Resolve repo root
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -255,7 +256,52 @@ result_df.to_csv(dated_path)
 print(f"  -> Saved: {dated_path}")
 
 # ---------------------------------------------------------------------------
-# 8. Summary
+# 8. Push forecast to API
+# ---------------------------------------------------------------------------
+print("\n[8/8] Pushing forecast to API ...")
+
+# Load model metadata for diagnostics and feature importance
+metadata_path = REPO_ROOT / "models" / "model_metadata.json"
+metadata = {}
+if metadata_path.exists():
+    with open(metadata_path) as f:
+        metadata = json.load(f)
+
+payload = {
+    "target_date": str(target_date),
+    "timestamps": result_df.index.astype(str).tolist(),
+    "p10": result_df["Pred_p10"].tolist(),
+    "p50": result_df["Pred_p50"].tolist(),
+    "p90": result_df["Pred_p90"].tolist(),
+    "diagnostics": metadata.get("training_metrics", {}),
+    "features": metadata.get("feature_importance", []),
+    "models": [
+        {
+            "id": "lgbm_q",
+            "name": "LightGBM Quantile",
+            "kind": "ML+Quantile",
+            "mae": metadata.get("training_metrics", {}).get("test_mae_p50"),
+            "rmse": None,
+            "smape": None,
+            "profit_capture_pct": None,
+            "pinball_q90": None,
+        }
+    ],
+}
+
+try:
+    resp = requests.post(
+        "http://localhost:8000/api/forecast/upload",
+        json=payload,
+        timeout=30,
+    )
+    resp.raise_for_status()
+    print(f"  -> API acknowledged: {resp.json()}")
+except Exception as exc:
+    print(f"  WARNING: API push failed ({exc}). Forecast is saved locally but the API may be stale.")
+
+# ---------------------------------------------------------------------------
+# 9. Summary
 # ---------------------------------------------------------------------------
 print("\n" + "=" * 70)
 print("DAILY INFERENCE COMPLETE")

@@ -1,8 +1,31 @@
 import { Card, KPI, Tag, Icon } from "@/components/bos/Primitives";
 import { useSources } from "@/lib/api";
+import { downloadJson } from "@/lib/export";
+import { toast } from "sonner";
 
 export default function PageSources() {
-  const { data: sources = [], isLoading, isError } = useSources();
+  const { data, isLoading, isError, refetch } = useSources();
+  const sources = data?.sources ?? [];
+  const okCount = sources.filter((s) => s.status === "ok").length;
+  const rows24h = sources.reduce((sum, s) => sum + (s.rows_24h ?? 0), 0);
+  const freshnessValues = sources
+    .map((s) => s.feature_freshness_minutes ?? s.latency_minutes)
+    .filter((v): v is number => typeof v === "number");
+  const freshnessMedian = freshnessValues.length
+    ? median(freshnessValues)
+    : null;
+  const generatedAt = data?.generated_at ? new Date(data.generated_at) : null;
+  const generatedTime = generatedAt
+    ? generatedAt.toLocaleTimeString("en-GB", {
+        timeZone: "Europe/Athens",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+    : "—";
+  const generatedAgoMin = generatedAt
+    ? Math.max(0, Math.round((Date.now() - generatedAt.getTime()) / 60000))
+    : null;
   return (
     <div>
       <div className="mb-6 flex items-end gap-6 border-b border-line pb-5">
@@ -14,16 +37,46 @@ export default function PageSources() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button className="bos-btn"><Icon name="refresh" size={12} />Sync all</button>
-          <button className="bos-btn primary"><Icon name="plus" size={12} />New source</button>
+          <button
+            className="bos-btn"
+            onClick={() => {
+              void refetch()
+                .then(() => toast.success("Source registry refreshed"))
+                .catch((err) => toast.error(err instanceof Error ? err.message : "Source refresh failed"));
+            }}
+          >
+            <Icon name="refresh" size={12} />Sync all
+          </button>
+
         </div>
       </div>
 
       <div className="mb-4 grid grid-cols-4 gap-4">
-        <KPI featured label="Sources online" value="6" unit="of 7" delta={{ tone: "neu", text: "REMIT outage feed degraded" }} />
-        <KPI label="Last full sync" value="12:43" unit="EEST" delta={{ tone: "up", text: "19m ago" }} />
-        <KPI label="Rows ingested · 24h" value="12.4M" unit="rows" delta={{ tone: "up", text: "+0.8%" }} />
-        <KPI label="Feature freshness" value="11 min" unit="median" delta={{ tone: "up", text: "well within gate close" }} />
+        <KPI
+          featured
+          label="Sources online"
+          value={okCount}
+          unit={`of ${sources.length}`}
+          delta={{ tone: "neu", text: `${sources.filter((s) => s.status !== "ok").length} degraded/offline` }}
+        />
+        <KPI
+          label="Last full sync"
+          value={generatedTime}
+          unit="EEST"
+          delta={{ tone: "up", text: generatedAgoMin == null ? "no posted artifact yet" : `${generatedAgoMin}m ago` }}
+        />
+        <KPI
+          label="Rows ingested · 24h"
+          value={formatCompact(rows24h)}
+          unit="rows"
+          delta={{ tone: "up", text: `${sources.length} registered feeds` }}
+        />
+        <KPI
+          label="Feature freshness"
+          value={freshnessMedian == null ? "—" : `${Math.round(freshnessMedian)} min`}
+          unit="median"
+          delta={{ tone: "up", text: data?.source === "pipeline_post" ? "posted by ingestion pipeline" : "demo artifact" }}
+        />
       </div>
 
       <Card title="Source registry" meta="health · latency · cadence" flush>
@@ -52,7 +105,18 @@ export default function PageSources() {
                 <td className="font-mono-tnum">{s.latency}</td>
                 <td className="num">{s.rows}</td>
                 <td className="font-mono-tnum">{s.lastSync}</td>
-                <td><button className="bos-btn sm ghost"><Icon name="refresh" size={11} /></button></td>
+                <td>
+                  <button
+                    className="bos-btn sm ghost"
+                    onClick={() => {
+                      void refetch()
+                        .then(() => toast.success(`${s.name} refreshed`))
+                        .catch((err) => toast.error(err instanceof Error ? err.message : "Source refresh failed"));
+                    }}
+                  >
+                    <Icon name="refresh" size={11} />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -87,4 +151,16 @@ export default function PageSources() {
       </div>
     </div>
   );
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+function formatCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
+  return String(value);
 }
