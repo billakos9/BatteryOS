@@ -20,7 +20,14 @@ class BatteryProfile:
     discharge_efficiency: float
     self_discharge_per_hour: float = 0.0
     max_cycles_per_day: float = 1.5
+    max_cycles_per_year: float = 547.5
+    lifetime_cycles_eol: float = 5000.0
+    initial_cycle_count: float = 0.0
     degradation_cost_eur_per_mwh: float = 2.0
+    transaction_cost_eur_per_mwh: float = 0.0
+    eol_soh_threshold: float = 0.80
+    soh_model: str = "linear"
+    cost_escalation_factor: float = 2.0
     terminal_soc_mwh: Optional[float] = None
 
     def __post_init__(self) -> None:
@@ -37,8 +44,22 @@ class BatteryProfile:
                 raise ValueError("efficiencies must lie in (0, 1]")
         if self.max_cycles_per_day < 0:
             raise ValueError("max_cycles_per_day must be >= 0")
+        if self.max_cycles_per_year < 0:
+            raise ValueError("max_cycles_per_year must be >= 0")
+        if self.lifetime_cycles_eol <= 0:
+            raise ValueError("lifetime_cycles_eol must be > 0")
+        if self.initial_cycle_count < 0:
+            raise ValueError("initial_cycle_count must be >= 0")
+        if not 0 < self.eol_soh_threshold <= 1.0:
+            raise ValueError("eol_soh_threshold must lie in (0, 1]")
+        if self.soh_model not in ("linear", "sqrt"):
+            raise ValueError("soh_model must be 'linear' or 'sqrt'")
+        if self.cost_escalation_factor < 1.0:
+            raise ValueError("cost_escalation_factor must be >= 1.0")
         if self.degradation_cost_eur_per_mwh < 0:
             raise ValueError("degradation_cost must be >= 0")
+        if self.transaction_cost_eur_per_mwh < 0:
+            raise ValueError("transaction_cost must be >= 0")
         if not 0 <= self.self_discharge_per_hour < 1:
             raise ValueError(
                 f"self_discharge_per_hour must lie in [0, 1), got {self.self_discharge_per_hour}"
@@ -76,7 +97,14 @@ class BatteryProfile:
             "discharge_efficiency": self.discharge_efficiency,
             "self_discharge_per_hour": self.self_discharge_per_hour,
             "max_cycles_per_day": self.max_cycles_per_day,
+            "max_cycles_per_year": self.max_cycles_per_year,
+            "lifetime_cycles_eol": self.lifetime_cycles_eol,
+            "initial_cycle_count": self.initial_cycle_count,
             "degradation_cost_eur_per_mwh": self.degradation_cost_eur_per_mwh,
+            "transaction_cost_eur_per_mwh": self.transaction_cost_eur_per_mwh,
+            "eol_soh_threshold": self.eol_soh_threshold,
+            "soh_model": self.soh_model,
+            "cost_escalation_factor": self.cost_escalation_factor,
         }
         if fractions:
             d["soc_min_frac"] = self.soc_min_mwh / self.energy_mwh
@@ -115,7 +143,14 @@ class BatteryProfile:
             discharge_efficiency=float(data["discharge_efficiency"]),
             self_discharge_per_hour=float(data.get("self_discharge_per_hour", 0.0)),
             max_cycles_per_day=float(data.get("max_cycles_per_day", 1.5)),
+            max_cycles_per_year=float(data.get("max_cycles_per_year", 547.5)),
+            lifetime_cycles_eol=float(data.get("lifetime_cycles_eol", 5000.0)),
+            initial_cycle_count=float(data.get("initial_cycle_count", 0.0)),
             degradation_cost_eur_per_mwh=float(data.get("degradation_cost_eur_per_mwh", 2.0)),
+            transaction_cost_eur_per_mwh=float(data.get("transaction_cost_eur_per_mwh", 0.0)),
+            eol_soh_threshold=float(data.get("eol_soh_threshold", 0.80)),
+            soh_model=str(data.get("soh_model", "linear")),
+            cost_escalation_factor=float(data.get("cost_escalation_factor", 2.0)),
             terminal_soc_mwh=data.get("terminal_soc_mwh"),
         )
 
@@ -138,7 +173,14 @@ class BatteryProfile:
         round_trip_efficiency: Optional[float] = None,
         self_discharge_per_hour: float = 0.0,
         max_cycles_per_day: float = 1.5,
+        max_cycles_per_year: float = 547.5,
+        lifetime_cycles_eol: float = 5000.0,
+        initial_cycle_count: float = 0.0,
         degradation_cost_eur_per_mwh: float = 2.0,
+        transaction_cost_eur_per_mwh: float = 0.0,
+        eol_soh_threshold: float = 0.80,
+        soh_model: str = "linear",
+        cost_escalation_factor: float = 2.0,
         terminal_soc_mwh: Optional[float] = None,
     ) -> "BatteryProfile":
         """Build a custom battery from named arguments.
@@ -179,7 +221,14 @@ class BatteryProfile:
             discharge_efficiency=discharge_efficiency,
             self_discharge_per_hour=self_discharge_per_hour,
             max_cycles_per_day=max_cycles_per_day,
+            max_cycles_per_year=max_cycles_per_year,
+            lifetime_cycles_eol=lifetime_cycles_eol,
+            initial_cycle_count=initial_cycle_count,
             degradation_cost_eur_per_mwh=degradation_cost_eur_per_mwh,
+            transaction_cost_eur_per_mwh=transaction_cost_eur_per_mwh,
+            eol_soh_threshold=eol_soh_threshold,
+            soh_model=soh_model,
+            cost_escalation_factor=cost_escalation_factor,
             terminal_soc_mwh=terminal_soc_mwh,
         )
 
