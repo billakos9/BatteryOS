@@ -1,22 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
   ArrowDownToLine,
-  ArrowUpFromLine,
   BatteryCharging,
-  BriefcaseBusiness,
   CheckCircle2,
   CircleDollarSign,
   Database,
   Gauge,
   GitBranch,
   LineChart as LineChartIcon,
-  Map,
+  Menu,
   Radar,
   ShieldAlert,
   SlidersHorizontal,
-  Zap,
+  X,
 } from "lucide-react";
 import {
   Area,
@@ -26,7 +24,6 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
-  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -53,348 +50,304 @@ const COLORS = {
   cyan: "#06B6D4",
 };
 
-const profiles = {
-  liion_100_2h: {
-    name: "Li-ion 100 MW / 2h",
-    power_mw: 100,
-    energy_mwh: 200,
-    eta_rt: 0.9,
-    soc_min_mwh: 20,
-    soc_max_mwh: 180,
-    max_cycles_per_day: 1.5,
-  },
-  liion_200_2h: {
-    name: "Li-ion 200 MW / 2h",
-    power_mw: 200,
-    energy_mwh: 400,
-    eta_rt: 0.9,
-    soc_min_mwh: 40,
-    soc_max_mwh: 360,
-    max_cycles_per_day: 1.5,
-  },
-  phs_100_8h: {
-    name: "Pumped hydro 100 MW / 8h",
-    power_mw: 100,
-    energy_mwh: 800,
-    eta_rt: 0.78,
-    soc_min_mwh: 40,
-    soc_max_mwh: 760,
-    max_cycles_per_day: 1,
-  },
-};
-
-const countries = {
-  GR: "Greece",
-  IT_S: "Italy South",
-  BG: "Bulgaria",
-};
-
-const featurePresets = {
-  greek: ["Greek-only"],
-  multi: ["Greek-only", "+Multi-country"],
-  domino: ["Greek-only", "+Multi-country", "+German-domino"],
-  remit: ["Greek-only", "+Multi-country", "+German-domino", "+REMIT outages"],
-};
-
-const riskSettings = {
-  balanced: {
-    label: "Balanced",
-    lambda: 0.5,
-    alpha: 0.1,
-    cvarMultiplier: 0.92,
-    perfectBoost: 0,
-  },
-  conservative: {
-    label: "Conservative",
-    lambda: 0.8,
-    alpha: 0.1,
-    cvarMultiplier: 0.98,
-    perfectBoost: 1.5,
-  },
-  aggressive: {
-    label: "Aggressive",
-    lambda: 0.2,
-    alpha: 0.1,
-    cvarMultiplier: 0.84,
-    perfectBoost: -1,
-  },
-};
-
-const zoneData = [
-  { code: "GR", name: "Greece", tier: 2, x: 62, y: 68, mtu: 15, bess: 3200, sources: 6, neighbors: "IT-S, BG" },
-  { code: "IT-S", name: "Italy South", tier: 2, x: 48, y: 63, mtu: 15, bess: 5400, sources: 5, neighbors: "GR, IT-N" },
-  { code: "BG", name: "Bulgaria", tier: 2, x: 66, y: 58, mtu: 15, bess: 1600, sources: 4, neighbors: "GR, RO" },
-  { code: "RO", name: "Romania", tier: 1, x: 68, y: 50, mtu: 15, bess: 2100, sources: 3, neighbors: "BG, HU" },
-  { code: "HU", name: "Hungary", tier: 1, x: 58, y: 48, mtu: 15, bess: 1800, sources: 3, neighbors: "RO, SK" },
-  { code: "SK", name: "Slovakia", tier: 1, x: 56, y: 42, mtu: 15, bess: 900, sources: 3, neighbors: "HU, CZ" },
-  { code: "CZ", name: "Czechia", tier: 1, x: 50, y: 40, mtu: 15, bess: 1300, sources: 3, neighbors: "SK, DE" },
-  { code: "DE", name: "Germany/Lux", tier: 2, x: 46, y: 34, mtu: 15, bess: 11200, sources: 5, neighbors: "AT, CZ, NL" },
-  { code: "AT", name: "Austria", tier: 1, x: 50, y: 48, mtu: 15, bess: 1600, sources: 3, neighbors: "DE, IT-N" },
-  { code: "CH", name: "Switzerland", tier: 1, x: 43, y: 50, mtu: 15, bess: 1200, sources: 3, neighbors: "DE, IT-N" },
-  { code: "FR", name: "France", tier: 1, x: 34, y: 45, mtu: 15, bess: 7800, sources: 3, neighbors: "DE, ES" },
-  { code: "ES", name: "Spain", tier: 1, x: 22, y: 62, mtu: 15, bess: 6200, sources: 3, neighbors: "FR, PT" },
-];
-
-const familyColors = {
-  Calendar: "#94A3B8",
-  "Lag/rolling": "#64748B",
-  "Residual load": COLORS.blue,
-  RES: "#22C55E",
-  "Fuels/EUA": COLORS.amber,
-  "Greek supply curve": COLORS.purple,
-  "Multi-country direct neighbor": COLORS.teal,
-  "German domino": COLORS.red,
-  "REMIT outage": "#F97316",
-  Hydro: COLORS.cyan,
-};
-
-const sourceFreshness = [
-  ["HEnEx", "2026-04-28 14:15", "green", "1,617"],
-  ["IPTO", "2026-04-28 11:52", "green", "384"],
-  ["ENTSO-E GR/IT/BG/DE", "2026-04-28 12:05", "green", "2,304"],
-  ["Open-Meteo", "2026-04-28 10:30", "green", "1,152"],
-  ["ICE TTF", "2026-04-28 18:00", "amber", "1"],
-  ["EEX EUA", "2026-04-28 18:10", "amber", "1"],
-  ["REMIT UMM", "2026-04-28 09:45", "green", "42"],
-  ["Hydro reservoirs", "2026-04-27 23:00", "amber", "18"],
-];
-
-const workflowSteps = [
-  ["data", "Data Sources", "HEnEx, IPTO, weather and fuel inputs arrive point-in-time.", Database],
-  ["clean", "Cleaning", "Raw DAM files are normalized into aligned 15-minute tables.", SlidersHorizontal],
-  ["features", "Feature Engineering", "Residual load, lags, fuel costs and coupling signals are assembled.", GitBranch],
-  ["forecast", "Forecasting", "The forecaster outputs p10, p50 and p90 price curves.", LineChartIcon],
-  ["optimize", "Optimization", "Battery constraints convert forecast prices into charge/discharge actions.", BatteryCharging],
-  ["economics", "Economic Evaluation", "The schedule is priced into profit, cycles, feasibility and risk.", CircleDollarSign],
-  ["backtest", "Backtesting", "Historical realized prices compare against naive and perfect foresight.", Activity],
-  ["output", "Dashboard Output", "Judges see the decision, value created and robustness in one view.", Radar],
-];
-
-function generateData(profileKey, riskSettingKey, presetKey, country) {
-  const profile = profiles[profileKey];
-  const risk = riskSettings[riskSettingKey];
-  const featureBoost = { greek: 0, multi: 0.08, domino: 0.15, remit: 0.2 }[presetKey];
-  const countryShift = { GR: 0, IT_S: -7, BG: -12 }[country] || 0;
-  const powerScale = profile.power_mw / 100;
-  let soc = profile.energy_mwh * 0.5;
-  const schedule = [];
-  const scenarioPanel = [];
-  let cumulative = 0;
-  for (let i = 0; i < 96; i++) {
-    const hour = i / 4;
-    const label = `${String(Math.floor(hour)).padStart(2, "0")}:${String((i % 4) * 15).padStart(2, "0")}`;
-    const solarDip = -55 * Math.exp(-Math.pow((hour - 13) / 3.8, 2));
-    const eveningSpike = 82 * Math.exp(-Math.pow((hour - 20) / 2.5, 2));
-    const morningSpike = 30 * Math.exp(-Math.pow((hour - 7.5) / 1.8, 2));
-    const noise = 8 * Math.sin(i * 0.72) + 5 * Math.cos(i * 0.21);
-    const p50 = 112 + countryShift + solarDip + eveningSpike + morningSpike + noise;
-    const band = 18 + 18 * Math.exp(-Math.pow((hour - 20) / 3, 2));
-    const p10 = p50 - band;
-    const p90 = p50 + band * 1.25;
-    const realized = p50 + (1 - featureBoost) * (12 * Math.sin(i * 0.5) + 8 * Math.cos(i * 0.13));
-    let charge = 0;
-    let discharge = 0;
-    if (p50 < 78 && soc < profile.soc_max_mwh - 2) charge = Math.min(profile.power_mw, (profile.soc_max_mwh - soc) / (0.25 * 0.949));
-    if (p50 > 145 && soc > profile.soc_min_mwh + 2) discharge = Math.min(profile.power_mw, (soc - profile.soc_min_mwh) * 0.949 / 0.25);
-    if (charge > 0) soc += charge * 0.949 * 0.25;
-    if (discharge > 0) soc -= (discharge / 0.949) * 0.25;
-    const periodProfit = p50 * (discharge - charge) * 0.25 - 2 * (charge + discharge) * 0.25;
-    cumulative += periodProfit;
-    schedule.push({
-      idx: i,
-      timestamp: `2026-04-29 ${label}`,
-      time: label,
-      forecast_price_eur_per_mwh: Math.round(p50 * 100) / 100,
-      p10: Math.round(p10 * 100) / 100,
-      p90: Math.round(p90 * 100) / 100,
-      bandLow: Math.round(p10 * 100) / 100,
-      bandHigh: Math.round(p90 * 100) / 100,
-      realized_price_eur_per_mwh: Math.round(realized * 100) / 100,
-      charge_mw: Math.round(charge * 10) / 10,
-      discharge_mw: Math.round(discharge * 10) / 10,
-      dispatchBar: discharge > 0 ? discharge : charge > 0 ? -charge : 0,
-      state_of_charge_mwh: Math.round(soc * 10) / 10,
-      action: charge > 0.1 ? "CHARGE" : discharge > 0.1 ? "DISCHARGE" : "IDLE",
-      actionLabel: charge > 0.1 ? "C" : discharge > 0.1 ? "D" : "",
-      period_profit_eur: Math.round(periodProfit),
-      cumulative_profit_eur: Math.round(cumulative),
-    });
-    scenarioPanel.push(
-      { timestamp: `2026-04-29 ${label}`, scenario_label: "p10", scenario_weight: 0.2, price_eur_per_mwh: p10 },
-      { timestamp: `2026-04-29 ${label}`, scenario_label: "p50", scenario_weight: 0.6, price_eur_per_mwh: p50 },
-      { timestamp: `2026-04-29 ${label}`, scenario_label: "p90", scenario_weight: 0.2, price_eur_per_mwh: p90 },
-    );
-  }
-  const throughput = schedule.reduce((s, r) => s + (r.charge_mw + r.discharge_mw) * 0.25, 0);
-  const cycles = throughput / (2 * profile.energy_mwh);
-  const realizedProfit = schedule.reduce((sum, r) => sum + r.realized_price_eur_per_mwh * (r.discharge_mw - r.charge_mw) * 0.25 - 2 * (r.charge_mw + r.discharge_mw) * 0.25, 0);
-  const perfectPct = Math.min(91, 62 + featureBoost * 120 + risk.perfectBoost);
-  const naiveDelta = realizedProfit * (0.18 + featureBoost);
-  const scenarioProfits = [
-    realizedProfit * 0.62,
-    realizedProfit * 0.94,
-    realizedProfit * 1.22,
-  ].map((v) => Math.round(v));
-  const robustness = [];
-  for (const eta of [0.85, 0.9, 0.95, 1]) {
-    for (const deg of [1, 2, 3, 5]) {
-      const penalty = (1 - eta) * 90000 * powerScale + deg * 1250 * powerScale;
-      robustness.push({
-        round_trip_efficiency: eta,
-        degradation_cost_eur_per_mwh: deg,
-        realized_profit_eur: Math.round(realizedProfit - penalty),
-        cycles_used: Math.round((cycles + (1 - eta) * 0.2) * 100) / 100,
-        cycle_violation: Math.max(0, Math.round((cycles - profile.max_cycles_per_day) * 100) / 100),
-      });
-    }
-  }
-  return {
-    schedule,
-    scenarioPanel,
-    robustness,
-    metadata: {
-      battery_profile: profile,
-      optimizer: "optimize_dispatch",
-      objective_value_eur: Math.round(realizedProfit * 0.96),
-      solver_status: "Optimal",
-      expected_profit_eur: Math.round(realizedProfit),
-      worst_profit_eur: Math.min(...robustness.map((r) => r.realized_profit_eur)),
-      cvar_eur: Math.round(scenarioProfits[0] * risk.cvarMultiplier),
-      cvar_alpha: risk.alpha,
-      cvar_lambda: risk.lambda,
-      risk_setting: risk.label,
-      scenario_profits_eur: scenarioProfits,
-      feasibility: { feasible: true },
-      feature_families_enabled: featurePresets[presetKey],
-      realized_profit_vs_perfect_pct: Math.round(perfectPct * 10) / 10,
-      realized_profit_vs_naive_pct: Math.round((18 + featureBoost * 100) * 10) / 10,
-      cycles_used: Math.round(cycles * 100) / 100,
-      naive_delta_eur: Math.round(naiveDelta),
-      perfect_delta_eur: Math.round(realizedProfit * (100 / perfectPct - 1)),
-      runtime_ms: 184,
-      scenarios_used: 3,
-    },
-  };
-}
-
 function formatEUR(value) {
   return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(value).replace(/\s/g, "\u202F") + " EUR";
 }
 
-function formatPct(value) {
-  return `${Number(value).toFixed(1)}%`;
+function formatDate(isoDate) {
+  if (!isoDate) return "from artifact";
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return isoDate;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function optimizerDisplayName(metadata) {
+  return metadata.optimizer_display_name ?? metadata.optimizer_name ?? "Optimizer V1";
+}
+
+function emptyDataset() {
+  return {
+    schedule: [],
+    scenarioPanel: [],
+    robustness: [],
+    metadata: {
+      battery_profile: {},
+      optimizer: "optimize_dispatch",
+      optimizer_display_name: "Optimizer V1",
+      solver_status: "Loading",
+      expected_profit_eur: 0,
+      realized_profit_eur: 0,
+      worst_profit_eur: 0,
+      rainflow_net_profit_eur: 0,
+      rainflow_aging_cost_eur: 0,
+      cycles_used: 0,
+      scenario_profits_eur: [],
+      feasibility: { feasible: true },
+    },
+  };
+}
+
+function withChartFields(schedule, scenarioPanel) {
+  let cumulative = 0;
+  return schedule.map((row, idx) => {
+    const timestamp = row.timestamp ?? "";
+    const time = timestamp.includes("T")
+      ? timestamp.slice(11, 16)
+      : timestamp.split(" ").at(-1)?.slice(0, 5) ?? String(idx);
+    const scenariosAtTime = scenarioPanel.filter((item) => item.timestamp === row.timestamp);
+    const scenarioPrices = scenariosAtTime.map((item) => Number(item.price_eur_per_mwh)).filter(Number.isFinite);
+    const bandLow = scenarioPrices.length ? Math.min(...scenarioPrices) : row.forecast_price_eur_per_mwh;
+    const bandHigh = scenarioPrices.length ? Math.max(...scenarioPrices) : row.forecast_price_eur_per_mwh;
+    cumulative += Number(row.period_profit_eur ?? 0);
+    return {
+      ...row,
+      idx,
+      time,
+      bandLow,
+      bandHigh,
+      realized_price_eur_per_mwh: row.realized_price_eur_per_mwh ?? row.forecast_price_eur_per_mwh,
+      dispatchBar: Number(row.discharge_mw ?? 0) > 0 ? row.discharge_mw : -Number(row.charge_mw ?? 0),
+      actionLabel: row.action === "CHARGE" ? "C" : row.action === "DISCHARGE" ? "D" : "",
+      cumulative_profit_eur: cumulative,
+    };
+  });
+}
+
+function buildScenarioChartData(scenarioPanel) {
+  const byTimestamp = new Map();
+  for (const row of scenarioPanel) {
+    const timestamp = row.timestamp ?? "";
+    if (!byTimestamp.has(timestamp)) {
+      byTimestamp.set(timestamp, {
+        timestamp,
+        time: timestamp.includes("T") ? timestamp.slice(11, 16) : timestamp.split(" ").at(-1)?.slice(0, 5) ?? "",
+      });
+    }
+    byTimestamp.get(timestamp)[row.scenario_label] = row.price_eur_per_mwh;
+  }
+  return Array.from(byTimestamp.values());
+}
+
+async function fetchJson(path, fallback) {
+  const response = await fetch(path);
+  if (!response.ok) return fallback;
+  return response.json();
+}
+
+async function loadRunArtifacts() {
+  const [scheduleRaw, metadata, scenarioPanel, robustness] = await Promise.all([
+    fetchJson("/data/schedule.json", []),
+    fetchJson("/data/run_metadata.json", {}),
+    fetchJson("/data/scenario_panel.json", []),
+    fetchJson("/data/robustness_sweep.json", []),
+  ]);
+  return {
+    schedule: withChartFields(scheduleRaw, scenarioPanel),
+    scenarioChart: buildScenarioChartData(scenarioPanel),
+    scenarioPanel,
+    robustness,
+    metadata: {
+      ...emptyDataset().metadata,
+      ...metadata,
+      battery_profile: metadata.battery_profile ?? {},
+      scenario_profits_eur: metadata.scenario_profits_eur ?? [],
+      feasibility: metadata.feasibility ?? { feasible: true },
+    },
+  };
 }
 
 function App() {
-  const initialRoute = window.location.pathname === "/analytics" ? "analytics" : window.location.pathname === "/moat" ? "moat" : window.location.pathname === "/business" ? "business" : "dashboard";
+  const path = window.location.pathname;
+  const initialRoute = path.startsWith("/analytics") ? "analytics" : "dashboard";
+  const initialAnalyticsTab = path === "/analytics/forecaster" ? "forecaster" : "optimizer";
   const [route, setRoute] = useState(initialRoute);
-  const [country, setCountry] = useState("GR");
-  const [profile, setProfile] = useState("liion_100_2h");
-  const [riskSetting, setRiskSetting] = useState("balanced");
-  const [preset, setPreset] = useState("domino");
+  const [analyticsTab, setAnalyticsTab] = useState(initialAnalyticsTab);
   const [profitMode, setProfitMode] = useState("period");
   const [selectedPeriod, setSelectedPeriod] = useState(0);
-  const dataset = useMemo(() => generateData(profile, riskSetting, preset, country), [profile, riskSetting, preset, country]);
+  const [dataset, setDataset] = useState(emptyDataset);
+  const [pendingBatteryProfile, setPendingBatteryProfile] = useState(null);
+  const [pendingRiskProfile, setPendingRiskProfile] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const riskKeys = Object.keys(riskSettings);
-    const presets = Object.keys(featurePresets);
     function onKeyDown(event) {
       if (["INPUT", "SELECT", "TEXTAREA"].includes(event.target?.tagName)) return;
       if (event.key === "ArrowRight") setSelectedPeriod((value) => Math.min(95, value + 1));
       if (event.key === "ArrowLeft") setSelectedPeriod((value) => Math.max(0, value - 1));
-      if (event.key.toLowerCase() === "r") {
-        setRiskSetting((value) => riskKeys[(riskKeys.indexOf(value) + 1) % riskKeys.length]);
-      }
-      if (event.key.toLowerCase() === "f") {
-        setPreset((value) => presets[(presets.indexOf(value) + 1) % presets.length]);
-      }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  function navigate(next) {
-    setRoute(next);
-    window.history.pushState({}, "", next === "dashboard" ? "/" : `/${next}`);
+  useEffect(() => {
+    let cancelled = false;
+    loadRunArtifacts()
+      .then((nextDataset) => {
+        if (!cancelled) {
+          setDataset(nextDataset);
+          setPendingBatteryProfile(null);
+          setPendingRiskProfile(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDataset(emptyDataset());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function rerunOptimizer(batteryProfileName, riskLambda, riskAlpha) {
+    setIsRunning(true);
+    try {
+      const res = await fetch("/api/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          battery_profile_name: batteryProfileName,
+          risk_lambda: riskLambda,
+          risk_alpha: riskAlpha,
+          build_bid_curves: false,
+          run_robustness_sweep: true,
+        }),
+      });
+      if (!res.ok) throw new Error("Optimize request failed");
+      const next = await loadRunArtifacts();
+      setDataset(next);
+      setPendingBatteryProfile(null);
+      setPendingRiskProfile(null);
+    } catch (err) {
+      console.error(err);
+      alert("Re-run failed. Is the backend server running? (python api/server.py)");
+    } finally {
+      setIsRunning(false);
+    }
   }
 
+  function navigate(next) {
+    setRoute(next);
+    const pathByRoute = {
+      dashboard: "/",
+      analytics: analyticsTab === "forecaster" ? "/analytics/forecaster" : "/analytics/optimizer",
+    };
+    window.history.pushState({}, "", pathByRoute[next] ?? "/");
+  }
+
+  function setAnalyticsSubpage(next) {
+    setAnalyticsTab(next);
+    window.history.pushState({}, "", next === "forecaster" ? "/analytics/forecaster" : "/analytics/optimizer");
+  }
+
+  const displayBattery = pendingBatteryProfile ?? dataset.metadata.battery_profile;
+  const displayRisk = pendingRiskProfile;
+
   return (
-    <div className="app">
-      <Sidebar route={route} navigate={navigate} />
+    <div className={`app ${sidebarOpen ? "" : "sidebar-closed"}`}>
+      <Sidebar route={route} navigate={navigate} isOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} />
       <main className="shell">
-        <TopBar country={country} setCountry={setCountry} profile={profile} setProfile={setProfile} riskSetting={riskSetting} setRiskSetting={setRiskSetting} />
-        {route === "dashboard" && <Dashboard data={dataset} preset={preset} setPreset={setPreset} profitMode={profitMode} setProfitMode={setProfitMode} selectedPeriod={selectedPeriod} />}
-        {route === "analytics" && <Analytics data={dataset} />}
-        {route === "moat" && <Moat preset={preset} setPreset={setPreset} />}
-        {route === "business" && <Business />}
+        <TopBar metadata={dataset.metadata} displayBattery={displayBattery} displayRisk={displayRisk} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
+        {route === "dashboard" && <Dashboard data={dataset} profitMode={profitMode} setProfitMode={setProfitMode} selectedPeriod={selectedPeriod} />}
+        {route === "analytics" && (
+          <Analytics
+            data={dataset}
+            activeTab={analyticsTab}
+            setActiveTab={setAnalyticsSubpage}
+            onBatteryProfileChange={setPendingBatteryProfile}
+            onRiskProfileChange={setPendingRiskProfile}
+            onRerun={rerunOptimizer}
+            isRunning={isRunning}
+          />
+        )}
       </main>
     </div>
   );
 }
 
-function Sidebar({ route, navigate }) {
+function Sidebar({ route, navigate, isOpen, onToggle }) {
   const items = [
     ["dashboard", "Dashboard", LineChartIcon],
     ["analytics", "Analytics", Database],
-    ["moat", "Moat", Radar],
-    ["business", "Business", BriefcaseBusiness],
   ];
   return (
-    <aside className="sidebar">
-      <div className="brand"><BatteryCharging size={22} /><span>BatteryOS</span></div>
+    <aside className={`sidebar ${isOpen ? "" : "collapsed"}`}>
+      <div className="sidebar-header">
+        <div className="brand"><BatteryCharging size={22} /><span>BatteryOS</span></div>
+        <button className="sidebar-toggle" onClick={onToggle} title={isOpen ? "Collapse sidebar" : "Expand sidebar"}>
+          {isOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+      </div>
       <nav>
         {items.map(([key, label, Icon]) => (
           <button key={key} onClick={() => navigate(key)} className={`nav-item ${route === key ? "active" : ""}`}>
-            <Icon size={17} /> {label}
+            <Icon size={17} /> {isOpen && <span>{label}</span>}
           </button>
         ))}
       </nav>
-      <div className="sidebar-foot">
-        <span>HEnEx anchor</span>
-        <strong>SDAC roadmap</strong>
-      </div>
+      {isOpen && (
+        <div className="sidebar-foot">
+          <span>Implemented backend</span>
+          <strong>HEnEx DAM optimizer</strong>
+        </div>
+      )}
     </aside>
   );
 }
 
-function TopBar({ country, setCountry, profile, setProfile, riskSetting, setRiskSetting }) {
+function TopBar({ metadata, displayBattery, displayRisk, onToggleSidebar }) {
+  const metaBattery = metadata.battery_profile ?? {};
+  const battery = displayBattery ?? metaBattery;
+
+  // Look up friendly label for the battery profile
+  const batteryEntry = BATTERY_PROFILES.find((p) => p.name === battery.name);
+  const batteryLabel = batteryEntry?.label ?? battery.name ?? metaBattery.name ?? "from backend";
+  const isBatteryPending = displayBattery && displayBattery.name !== metaBattery.name;
+
+  // Look up friendly risk label
+  const riskEntry = displayRisk
+    ? RISK_PROFILES.find((p) => p.name === displayRisk.name)
+    : null;
+  const riskLabel = riskEntry ? ` · ${riskEntry.name}` : "";
+
   return (
     <header className="topbar">
-      <div className="control">
-        <span>Country</span>
-        <select value={country} onChange={(e) => setCountry(e.target.value)}>{Object.entries(countries).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+      <button className="topbar-menu-btn" onClick={onToggleSidebar} title="Toggle sidebar">
+        <Menu size={18} />
+      </button>
+      <div className="market-pill">
+        <span>Market</span>
+        <strong>Greek HEnEx DAM</strong>
       </div>
-      <div className="control wide">
-        <span>Storage profile</span>
-        <select value={profile} onChange={(e) => setProfile(e.target.value)}>{Object.entries(profiles).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}</select>
+      <div className={`market-pill ${isBatteryPending ? "pending" : ""}`}>
+        <span>Battery profile</span>
+        <strong>{batteryLabel}</strong>
       </div>
-      <div className="control">
+      <div className="control readonly">
         <span>Delivery day</span>
-        <input type="date" defaultValue="2026-04-29" />
+        <strong>{formatDate(metadata.delivery_day)}</strong>
       </div>
       <div className="optimizer-pill">
         <span>Optimizer</span>
-        <strong>optimize_dispatch</strong>
-      </div>
-      <div className="segmented">
-        {Object.entries(riskSettings).map(([key, cfg]) => <button key={key} onClick={() => setRiskSetting(key)} className={riskSetting === key ? "active" : ""}>{cfg.label}</button>)}
+        <strong>{optimizerDisplayName(metadata)}{riskLabel}</strong>
       </div>
     </header>
   );
 }
 
-function Dashboard({ data, preset, setPreset, profitMode, setProfitMode, selectedPeriod }) {
+function Dashboard({ data, profitMode, setProfitMode, selectedPeriod }) {
   const { schedule, metadata } = data;
+  if (!schedule.length) {
+    return <div className="page"><Panel title="Loading run artifacts"><p className="caption">Fetching schedule, metadata, scenarios and robustness from /data.</p></Panel></div>;
+  }
   return (
     <div className="page dashboard-grid">
       <section className="content">
         <div className="kpis">
-          <Kpi title="Realized profit" value={formatEUR(metadata.expected_profit_eur)} sub={`+${formatEUR(metadata.naive_delta_eur)} vs naive · -${formatEUR(metadata.perfect_delta_eur)} vs perfect`} icon={CircleDollarSign} />
-          <Kpi title="Perfect foresight captured" value={formatPct(metadata.realized_profit_vs_perfect_pct)} sub="the headline number" icon={Gauge} />
-          <Kpi title="Worst-case profit" value={formatEUR(metadata.worst_profit_eur)} sub="if the battery underperforms its spec sheet" icon={ShieldAlert} />
+          <Kpi title="Expected profit" value={formatEUR(metadata.expected_profit_eur)} sub="objective schedule value" icon={CircleDollarSign} />
+          <Kpi title="Realized evaluation" value={formatEUR(metadata.realized_profit_eur)} sub="using realized DAM prices when available" icon={Gauge} />
+          <Kpi title="Worst-case profit" value={formatEUR(metadata.worst_profit_eur)} sub="scenario / robustness lower bound" icon={ShieldAlert} />
           <Kpi title="Cycles used" value={`${metadata.cycles_used} / ${metadata.battery_profile.max_cycles_per_day}`} sub={<Progress value={metadata.cycles_used / metadata.battery_profile.max_cycles_per_day} />} icon={Activity} />
-          <Kpi title={`CVaR_${metadata.cvar_alpha} profit`} value={formatEUR(metadata.cvar_eur)} sub={`tail-risk adjusted · λ ${metadata.cvar_lambda}`} icon={GitBranch} />
+          <Kpi title="Rainflow net profit" value={formatEUR(metadata.rainflow_net_profit_eur)} sub={`${formatEUR(metadata.rainflow_aging_cost_eur)} algorithmic aging cost`} icon={GitBranch} />
         </div>
         <Panel title="Live dispatch" action={<span className="caption">Selected {schedule[selectedPeriod]?.time} · 96 quarter-hour MTUs</span>}>
           <div className="chart-large">
@@ -445,7 +398,6 @@ function Dashboard({ data, preset, setPreset, profitMode, setProfitMode, selecte
             </div>
           </Panel>
         </div>
-        <FeaturePills preset={preset} setPreset={setPreset} />
       </section>
       <RunSummary data={data} />
     </div>
@@ -464,14 +416,16 @@ function Progress({ value }) {
   return <span className="progress"><i style={{ width: `${Math.min(100, Math.max(0, value * 100))}%` }} /></span>;
 }
 
-function FeaturePills({ preset, setPreset }) {
-  return <div className="feature-row">{Object.entries(featurePresets).map(([key, labels]) => <button key={key} onClick={() => setPreset(key)} className={preset === key ? "active" : ""}>{labels[labels.length - 1]}</button>)}</div>;
-}
-
 function RunSummary({ data }) {
   const { metadata } = data;
-  const rows = ["p10", "p50", "p90"].map((label, i) => ({ label, weight: [0.2, 0.6, 0.2][i], profit: metadata.scenario_profits_eur[i] }));
-  return <aside className="rail"><h2>Run summary</h2><Info label="Optimizer" value={metadata.optimizer} /><Info label="Risk setting" value={`${metadata.risk_setting} · λ ${metadata.cvar_lambda}`} /><Info label="Battery" value={metadata.battery_profile.name} /><Info label="Power / energy" value={`${metadata.battery_profile.power_mw} MW / ${metadata.battery_profile.energy_mwh} MWh`} /><Info label="η round-trip" value={`${Math.round(metadata.battery_profile.eta_rt * 100)}%`} /><Info label="Solver" value={`${metadata.solver_status} · ${metadata.runtime_ms} ms`} /><Info label="Scenarios" value={metadata.scenarios_used} /><Info label="Objective" value={formatEUR(metadata.objective_value_eur)} /><div className="feasible"><CheckCircle2 size={16} /> Feasible</div><div className="scenario-table"><h3>Scenario profits</h3>{rows.map((r, idx) => <div key={r.label} className={idx === 0 ? "tail" : ""}><span>{r.label}</span><span>{Math.round(r.weight * 100)}%</span><strong>{formatEUR(r.profit)}</strong></div>)}</div><button className="rerun"><SlidersHorizontal size={15} /> Re-run with different parameters</button></aside>;
+  const profits = metadata.scenario_profits_eur ?? [];
+  const worstProfit = Math.min(...profits);
+  const rows = profits.slice(0, 5).map((profit, i) => ({
+    label: metadata.scenario_labels?.[i] ?? `s${i}`,
+    weight: metadata.scenario_weights?.[i] ?? 0,
+    profit,
+  }));
+  return <aside className="rail"><h2>Run summary</h2><Info label="Optimizer" value={optimizerDisplayName(metadata)} /><Info label="Backend entrypoint" value={metadata.optimizer} /><Info label="Risk setting" value={`${metadata.risk_setting} · λ ${metadata.cvar_lambda}`} /><Info label="Battery" value={metadata.battery_profile.name} /><Info label="Power / energy" value={`${metadata.battery_profile.power_mw} MW / ${metadata.battery_profile.energy_mwh} MWh`} /><Info label="η round-trip" value={`${Math.round(metadata.battery_profile.eta_rt * 100)}%`} /><Info label="Solver" value={`${metadata.solver_status} · ${metadata.runtime_ms} ms`} /><Info label="Scenarios" value={metadata.scenarios_used} /><Info label="Objective" value={formatEUR(metadata.objective_value_eur)} /><div className="feasible"><CheckCircle2 size={16} /> Feasible</div><div className="scenario-table"><h3>Scenario profits sample</h3>{rows.map((r) => <div key={r.label} className={r.profit === worstProfit ? "tail" : ""}><span>{r.label}</span><span>{Math.round(r.weight * 100)}%</span><strong>{formatEUR(r.profit)}</strong></div>)}</div><button className="rerun"><SlidersHorizontal size={15} /> Re-run with different parameters</button></aside>;
 }
 
 function Info({ label, value }) {
@@ -481,193 +435,570 @@ function Info({ label, value }) {
 function DispatchTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const r = payload[0].payload;
-  return <div className="tooltip"><strong>{r.timestamp}</strong><span>p50 {r.forecast_price_eur_per_mwh} EUR/MWh</span><span>p10/p90 {r.p10} / {r.p90}</span><span>realized {r.realized_price_eur_per_mwh}</span><span>charge/discharge {r.charge_mw} / {r.discharge_mw} MW</span><span>SoC {r.state_of_charge_mwh} MWh</span><span>profit {formatEUR(r.period_profit_eur)}</span></div>;
+  return <div className="tooltip"><strong>{r.timestamp}</strong><span>expected {Number(r.forecast_price_eur_per_mwh).toFixed(2)} EUR/MWh</span><span>scenario range {Number(r.bandLow).toFixed(2)} / {Number(r.bandHigh).toFixed(2)}</span><span>realized {Number(r.realized_price_eur_per_mwh).toFixed(2)}</span><span>charge/discharge {r.charge_mw} / {r.discharge_mw} MW</span><span>SoC {r.state_of_charge_mwh} MWh</span><span>profit {formatEUR(r.period_profit_eur)}</span></div>;
 }
 function SimpleTooltip({ active, payload }) { if (!active || !payload?.length) return null; const r = payload[0].payload; return <div className="tooltip"><strong>{r.time}</strong><span>SoC {r.state_of_charge_mwh} MWh</span></div>; }
 function ProfitTooltip({ active, payload }) { if (!active || !payload?.length) return null; const r = payload[0].payload; return <div className="tooltip"><strong>{r.time}</strong><span>period {formatEUR(r.period_profit_eur)}</span><span>cumulative {formatEUR(r.cumulative_profit_eur)}</span></div>; }
 
-function Analytics({ data }) {
-  const [activeStep, setActiveStep] = useState("forecast");
-  const { schedule, metadata } = data;
-  const preview = schedule.filter((_, i) => i % 8 === 0).slice(0, 12);
-  const rawClean = schedule.map((r, i) => ({
-    ...r,
-    raw_price: Math.round((r.realized_price_eur_per_mwh + 10 * Math.sin(i * 1.7) + (i % 11 === 0 ? 24 : 0)) * 100) / 100,
-    cleaned_price: r.realized_price_eur_per_mwh,
-  }));
-  const featureRows = preview.slice(0, 7).map((r, i) => ({
-    time: r.time,
-    residual: Math.round(5200 + 900 * Math.sin(i * 0.9)),
-    lag: Math.round(r.forecast_price_eur_per_mwh + 12 * Math.cos(i)),
-    gas: Math.round(39 + i * 0.4),
-    carbon: Math.round(66 + i * 0.25),
-    weather: Math.round(18 + 6 * Math.sin(i * 0.7)),
-  }));
-  const waterfall = [
-    { name: "Gross arbitrage", value: Math.round(metadata.expected_profit_eur + 12800), fill: COLORS.green },
-    { name: "Charging cost", value: -8200, fill: COLORS.red },
-    { name: "Degradation", value: -4600, fill: COLORS.red },
-    { name: "Net profit", value: metadata.expected_profit_eur, fill: COLORS.amber },
-  ];
-
+function Analytics({ data, activeTab, setActiveTab, onBatteryProfileChange, onRiskProfileChange, onRerun, isRunning }) {
   return (
-    <div className="page analytics-grid">
-      <section className="content">
-        <Panel title="Workflow from market data to dispatch decision" action={<span className="caption">Click a step to focus the visuals</span>}>
-          <div className="workflow-strip">
-            {workflowSteps.map(([key, title, desc, Icon], idx) => (
-              <button key={key} className={`workflow-step ${activeStep === key ? "active" : ""}`} onMouseEnter={() => setActiveStep(key)} onClick={() => setActiveStep(key)}>
-                <span className="step-index">{String(idx + 1).padStart(2, "0")}</span>
-                <Icon size={16} />
-                <strong>{title}</strong>
-                <small>{desc}</small>
-                <i className="status-dot" />
-              </button>
-            ))}
-          </div>
-        </Panel>
-
-        <div className="analytics-cards">
-          <Panel title="1. Raw vs cleaned DAM price" action={<FocusBadge active={["data", "clean"].includes(activeStep)} />}>
-            <div className={`chart-mid compact ${["data", "clean"].includes(activeStep) ? "focus" : ""}`}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rawClean} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1F2937" vertical={false} />
-                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
-                  <Line dataKey="raw_price" stroke="#64748B" strokeDasharray="4 4" dot={false} />
-                  <Line dataKey="cleaned_price" stroke={COLORS.text} strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Panel>
-
-          <Panel title="2. Feature matrix preview" action={<FocusBadge active={activeStep === "features"} />}>
-            <div className={`feature-matrix ${activeStep === "features" ? "focus" : ""}`}>
-              <div className="matrix-head"><span>MTU</span><span>Residual load</span><span>Lag price</span><span>Gas</span><span>Carbon</span><span>Weather</span></div>
-              {featureRows.map((r) => (
-                <div key={r.time} className="matrix-row">
-                  <span>{r.time}</span><span>{r.residual}</span><span>{r.lag}</span><span>{r.gas}</span><span>{r.carbon}</span><span>{r.weather}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="3. Forecaster output scenarios" action={<FocusBadge active={activeStep === "forecast"} />}>
-            <div className={`chart-mid compact ${activeStep === "forecast" ? "focus" : ""}`}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1F2937" vertical={false} />
-                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
-                  <Line dataKey="p10" stroke="#64748B" dot={false} strokeDasharray="3 4" />
-                  <Line dataKey="forecast_price_eur_per_mwh" name="p50" stroke={COLORS.blue} strokeWidth={2.3} dot={false} />
-                  <Line dataKey="p90" stroke="#CBD5E1" dot={false} strokeDasharray="3 4" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Panel>
-
-          <Panel title="4. Optimizer output" action={<FocusBadge active={["optimize", "output"].includes(activeStep)} />}>
-            <div className={`chart-mid compact ${["optimize", "output"].includes(activeStep) ? "focus" : ""}`}>
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1F2937" vertical={false} />
-                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="mw" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="soc" orientation="right" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<DispatchTooltip />} />
-                  <Bar yAxisId="mw" dataKey="dispatchBar" barSize={5}>{schedule.map((r) => <Cell key={r.idx} fill={r.dispatchBar < 0 ? COLORS.blue : COLORS.amber} fillOpacity={0.75} />)}</Bar>
-                  <Line yAxisId="soc" dataKey="state_of_charge_mwh" stroke={COLORS.text} strokeWidth={1.8} dot={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </Panel>
+    <div className="page content">
+      <Panel title="Analytics" action={<span className="caption">Framework subsystems</span>}>
+        <div className="subpage-tabs">
+          <button className={activeTab === "forecaster" ? "active" : ""} onClick={() => setActiveTab("forecaster")}>
+            <LineChartIcon size={16} /> Forecaster
+          </button>
+          <button className={activeTab === "optimizer" ? "active" : ""} onClick={() => setActiveTab("optimizer")}>
+            <BatteryCharging size={16} /> Optimizer V1
+          </button>
         </div>
+      </Panel>
+      {activeTab === "forecaster" ? (
+        <ForecasterPlaceholder />
+      ) : (
+        <OptimizerAnalytics
+          data={data}
+          embedded
+          onBatteryProfileChange={onBatteryProfileChange}
+          onRiskProfileChange={onRiskProfileChange}
+          onRerun={onRerun}
+          isRunning={isRunning}
+        />
+      )}
+    </div>
+  );
+}
 
-        <Panel title="How value is created" action={<FocusBadge active={["economics", "backtest"].includes(activeStep)} />}>
-          <div className="value-grid">
-            <div className="value-flow">
-              {["forecast price", "optimizer decision", "battery schedule", "realized profit"].map((label, i) => (
-                <React.Fragment key={label}>
-                  <span className={i === 1 ? "blue" : i === 3 ? "amber" : ""}>{label}</span>
-                  {i < 3 && <ArrowDownToLine size={15} />}
-                </React.Fragment>
-              ))}
-            </div>
-            <div className="chart-mid compact">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={waterfall} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#1F2937" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(value) => formatEUR(value)} contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>{waterfall.map((r) => <Cell key={r.name} fill={r.fill} fillOpacity={0.82} />)}</Bar>
-                </BarChart>
-              </ResponsiveContainer>
+function ForecasterPlaceholder() {
+  return (
+    <div className="analytics-grid">
+      <section className="content">
+        <Panel title="Forecaster">
+          <div className="artifact-note">
+            <LineChartIcon size={18} />
+            <div>
+              <strong>Not implemented yet</strong>
+              <p>The forecaster will later own raw market data, feature engineering, model training, and price scenario generation. This page intentionally shows no fake curves or fake metrics.</p>
             </div>
           </div>
         </Panel>
       </section>
       <aside className="rail">
-        <h2>What the judge should understand</h2>
+        <h2>Forecaster contract</h2>
         <ul className="judge-list">
-          <li>We do not optimize raw data directly.</li>
-          <li>The forecaster predicts price curves.</li>
-          <li>The optimizer converts price curves into feasible battery actions.</li>
-          <li>The economic model converts actions into profit and risk metrics.</li>
-          <li>Backtesting proves whether the full system works historically.</li>
+          <li>Forecasting is separate from Optimizer V1.</li>
+          <li>When implemented, it should export `PriceScenarios`.</li>
+          <li>Optimizer V1 can already consume externally provided scenarios.</li>
         </ul>
-        <Info label="Current focus" value={workflowSteps.find(([key]) => key === activeStep)?.[1]} />
-        <Info label="Demo artifact" value="Synthetic 96-MTU day" />
-        <Info label="Integration contract" value="timestamp + forecast_price" />
+        <Info label="Status" value="Not implemented" />
+        <Info label="Future output" value="PriceScenarios" />
       </aside>
     </div>
   );
 }
 
-function FocusBadge({ active }) {
-  return <span className={`focus-badge ${active ? "active" : ""}`}>{active ? "in focus" : "linked"}</span>;
-}
+const BATTERY_PROFILES = [
+  {
+    name: "liion_100_2h",
+    label: "Li-Ion 100 MW / 2 h",
+    tech: "Lithium-Ion",
+    description: "100 MW / 200 MWh lithium-ion system. Typical 2-hour BESS with 90% round-trip efficiency.",
+  },
+  {
+    name: "liion_200_2h",
+    label: "Li-Ion 200 MW / 2 h",
+    tech: "Lithium-Ion",
+    description: "200 MW / 400 MWh lithium-ion system. Large-scale 2-hour BESS.",
+  },
+  {
+    name: "liion_300_2h",
+    label: "Li-Ion 300 MW / 2 h",
+    tech: "Lithium-Ion",
+    description: "300 MW / 600 MWh lithium-ion system. Utility-scale 2-hour BESS.",
+  },
+  {
+    name: "phs_100_8h",
+    label: "Pumped Hydro 100 MW / 8 h",
+    tech: "Pumped Hydro",
+    description: "100 MW / 800 MWh pumped-hydro storage. Long-duration, lower efficiency, very low degradation cost.",
+  },
+  {
+    name: "phs_200_8h",
+    label: "Pumped Hydro 200 MW / 8 h",
+    tech: "Pumped Hydro",
+    description: "200 MW / 1,600 MWh pumped-hydro storage. Large long-duration asset.",
+  },
+  {
+    name: "flow_100_6h",
+    label: "Flow 100 MW / 6 h",
+    tech: "Vanadium Flow",
+    description: "100 MW / 600 MWh vanadium flow battery. 6-hour duration with high cycle tolerance.",
+  },
+  {
+    name: "custom",
+    label: "Custom battery",
+    tech: "User-defined",
+    description: "Define your own power, energy, efficiency and SoC limits via the backend API.",
+  },
+];
 
-function Moat({ preset, setPreset }) {
-  const features = makeFeatures(preset);
-  return <div className="page moat-grid"><section className="content"><Panel title="SDAC zone coverage"><EuropeMap mode="tier" /></Panel><Panel title="Feature importance" action={<FeaturePills preset={preset} setPreset={setPreset} />}><div className="chart-mid"><ResponsiveContainer width="100%" height="100%"><BarChart data={features} layout="vertical" margin={{ left: 120, right: 20, top: 10, bottom: 10 }}><CartesianGrid stroke="#1F2937" horizontal={false} /><XAxis type="number" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} /><YAxis type="category" dataKey="name" tick={{ fill: COLORS.muted, fontSize: 10 }} width={118} axisLine={false} tickLine={false} /><Tooltip content={<FeatureTooltip />} /><Bar dataKey="gain" radius={[0, 4, 4, 0]}>{features.map((f) => <Cell key={f.name} fill={familyColors[f.family]} />)}<LabelList dataKey="gain" position="right" fill={COLORS.muted} fontSize={10} /></Bar></BarChart></ResponsiveContainer></div></Panel><Panel title="Coupling chain"><CouplingChain /></Panel></section><aside className="rail"><h2>Pipeline freshness</h2>{sourceFreshness.map(([name, time, status, count]) => <div className="source" key={name}><span className={`dot ${status}`} /><div><strong>{name}</strong><small>{time}</small></div><em>{count}</em></div>)}</aside></div>;
-}
+const RISK_PROFILES = [
+  {
+    name: "Risk Neutral",
+    lambda: 0.0,
+    alpha: 0.10,
+    description:
+      "Maximises expected profit only. Best when you have high risk tolerance and can absorb occasional bad days.",
+  },
+  {
+    name: "Balanced",
+    lambda: 0.5,
+    alpha: 0.10,
+    description:
+      "Equal weight on expected profit and tail protection. A good default for most battery operators.",
+  },
+  {
+    name: "Tail Defensive",
+    lambda: 0.7,
+    alpha: 0.10,
+    description:
+      "Prioritises protecting against worst-case scenarios. Useful when a single bad day hurts your P&L badly.",
+  },
+  {
+    name: "Worst-Case",
+    lambda: 1.0,
+    alpha: 0.10,
+    description:
+      "Pure CVaR optimisation. Maximises the profit you make in the worst tail of the scenario set.",
+  },
+];
 
-function makeFeatures(preset) {
-  const base = [
-    ["GR residual load forecast", "Residual load", 96],
-    ["price lag 1d same MTU", "Lag/rolling", 84],
-    ["hour x weekend", "Calendar", 62],
-    ["solar forecast", "RES", 58],
-    ["TTF implied CCGT cost", "Fuels/EUA", 55],
-    ["HEnEx supply slope", "Greek supply curve", 50],
-    ["IT-S residual load", "Multi-country direct neighbor", 44],
-    ["BG residual load", "Multi-country direct neighbor", 38],
-    ["DE wind surplus", "German domino", preset === "greek" ? 8 : preset === "multi" ? 28 : 68],
-    ["central corridor surplus", "German domino", preset === "greek" ? 6 : preset === "multi" ? 24 : 64],
-    ["REMIT gas outage MW", "REMIT outage", preset === "remit" ? 57 : 14],
-    ["Alpine reservoir index", "Hydro", 31],
+function OptimizerAnalytics({ data }) {
+  const { schedule, metadata, robustness, scenarioChart, scenarioPanel } = data;
+  const [selectedBatteryProfile, setSelectedBatteryProfile] = useState(
+    BATTERY_PROFILES.find((p) => p.name === (metadata.battery_profile?.name ?? "liion_100_2h")) ?? BATTERY_PROFILES[0]
+  );
+  const [selectedProfile, setSelectedProfile] = useState(
+    RISK_PROFILES.find((p) => Math.abs(p.lambda - (metadata.cvar_lambda ?? 0.5)) < 0.15) ?? RISK_PROFILES[1]
+  );
+
+  if (!schedule.length) {
+    return <div className="page"><Panel title="Loading optimizer artifacts"><p className="caption">Fetching backend output artifacts from /data.</p></Panel></div>;
+  }
+  const scenarioRows = scenarioPanel.slice(0, 10).map((r) => ({
+    time: r.timestamp?.slice(11, 16) ?? "",
+    scenario: r.scenario_label,
+    weight: `${Math.round(r.scenario_weight * 100)}%`,
+    price: Number(r.price_eur_per_mwh).toFixed(2),
+  }));
+  const outputRows = schedule.filter((_, i) => i % 8 === 0).slice(0, 8).map((r) => ({
+    time: r.time,
+    price: Number(r.forecast_price_eur_per_mwh).toFixed(2),
+    charge: Number(r.charge_mw).toFixed(1),
+    discharge: Number(r.discharge_mw).toFixed(1),
+    soc: Number(r.state_of_charge_mwh).toFixed(1),
+    action: r.action,
+  }));
+  const waterfall = [
+    { name: "Expected profit", value: metadata.expected_profit_eur, fill: COLORS.green },
+    { name: "Rainflow aging", value: -metadata.rainflow_aging_cost_eur, fill: COLORS.red },
+    { name: "Net profit", value: metadata.rainflow_net_profit_eur, fill: COLORS.amber },
   ];
-  return base.map(([name, family, gain]) => ({ name, family, gain })).sort((a, b) => b.gain - a.gain).slice(0, 20);
+
+  return (
+    <div className="page workflow-page">
+      <section className="workflow-main">
+        <Panel title="Optimizer V1 workflow" action={<span className="caption">Scroll through the backend process from input to result</span>}>
+          <div className="workflow-intro">
+            <BatteryCharging size={22} />
+            <div>
+              <strong>What this page shows</strong>
+              <p>Optimizer V1 does not forecast prices. It receives external `PriceScenarios` plus a `BatteryProfile`, solves a constrained dispatch problem, then reports schedule, economics, degradation, feasibility and robustness artifacts.</p>
+            </div>
+          </div>
+        </Panel>
+
+        <WorkflowStepSection
+          number="01"
+          icon={LineChartIcon}
+          title="External PriceScenarios input"
+          description="The optimizer starts from a scenario bundle produced outside this module. This demo artifact uses the validated 20-scenario input draft: each line is one full 96-period price path with its own probability weight."
+          consumes="PriceScenarios: timestamps, prices[S,T], weights[S], labels[S]"
+          produces="Expected price curve used by Optimizer V1"
+        >
+          <div className="stacked-visual">
+            <ScenarioChart scenarioChart={scenarioChart} labels={metadata.scenario_labels ?? []} />
+            <ScenarioInputTable rows={scenarioRows} />
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="02"
+          icon={BatteryCharging}
+          title="Battery profile and constraints"
+          description="The optimizer combines the scenario prices with the selected asset limits: power, energy, state-of-charge bounds, efficiency and maximum daily cycles. These constraints define what actions are physically possible."
+          consumes="BatteryProfile"
+          produces="Feasible action space"
+        >
+          <div className="profile-controls">
+            <label className="profile-label">Select battery profile</label>
+            <select
+              className="profile-select"
+              value={selectedBatteryProfile.name}
+              onChange={(e) => {
+                const p = BATTERY_PROFILES.find((x) => x.name === e.target.value) ?? BATTERY_PROFILES[0];
+                setSelectedBatteryProfile(p);
+              }}
+            >
+              {BATTERY_PROFILES.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <p className="profile-caption">{selectedBatteryProfile.description}</p>
+          </div>
+          <div className="spec-grid">
+            <Info label="Battery" value={metadata.battery_profile.name} />
+            <Info label="Power" value={`${metadata.battery_profile.power_mw} MW`} />
+            <Info label="Energy" value={`${metadata.battery_profile.energy_mwh} MWh`} />
+            <Info label="SoC band" value={`${metadata.battery_profile.soc_min_mwh} - ${metadata.battery_profile.soc_max_mwh} MWh`} />
+            <Info label="Round-trip efficiency" value={`${Math.round(metadata.battery_profile.eta_rt * 100)}%`} />
+            <Info label="Max cycles/day" value={metadata.battery_profile.max_cycles_per_day} />
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="03"
+          icon={ShieldAlert}
+          title="Mean-CVaR objective"
+          description="Optimizer V1 balances expected profit against downside risk. The CVaR term penalizes schedules that make weak profit in the bad tail of the scenario set."
+          consumes="Scenario profits across all weighted scenarios"
+          produces="Risk-aware objective value"
+        >
+          <div className="profile-controls">
+            <label className="profile-label">Select risk profile (λ)</label>
+            <select
+              className="profile-select"
+              value={selectedProfile.name}
+              onChange={(e) => {
+                const p = RISK_PROFILES.find((x) => x.name === e.target.value) ?? RISK_PROFILES[1];
+                setSelectedProfile(p);
+              }}
+            >
+              {RISK_PROFILES.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.name} (λ = {p.lambda})
+                </option>
+              ))}
+            </select>
+            <p className="profile-caption">{selectedProfile.description}</p>
+          </div>
+
+          <div className="spec-grid">
+            <Info label="Expected profit" value={formatEUR(metadata.expected_profit_eur)} />
+            <Info label={`CVaR_${metadata.cvar_alpha}`} value={formatEUR(metadata.cvar_eur)} />
+            <Info label="Risk lambda" value={metadata.cvar_lambda} />
+            <Info label="Worst scenario profit" value={formatEUR(metadata.worst_profit_eur)} />
+          </div>
+
+          <div className="metric-explanations">
+            <h4>What these metrics mean</h4>
+            <div className="explanation-grid">
+              <div className="explanation-item">
+                <strong>Expected Profit</strong>
+                <p>
+                  The weighted-average profit across all scenario price paths. This is the profit you would earn on a statistically typical day.
+                </p>
+              </div>
+              <div className="explanation-item">
+                <strong>CVaR (Conditional Value at Risk)</strong>
+                <p>
+                  The average profit in the worst α-fraction of scenarios. Here α = 0.1 means it measures the average of the worst 10% of days. It tells you how bad things get when prices move against you.
+                </p>
+              </div>
+              <div className="explanation-item">
+                <strong>Risk Lambda (λ)</strong>
+                <p>
+                  The convex weight blending expected profit and CVaR. λ = 0 is purely risk-neutral (only average profit matters). λ = 1 is purely tail-defensive (only the worst-case tail matters). λ = 0.5 gives equal weight to both.
+                </p>
+              </div>
+              <div className="explanation-item">
+                <strong>Worst Scenario Profit</strong>
+                <p>
+                  The single lowest profit across all scenarios. This is the absolute worst day in the entire scenario set.
+                </p>
+              </div>
+            </div>
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="04"
+          icon={BatteryCharging}
+          title="Dispatch schedule"
+          description="The solver decides charge, discharge or idle for every 15-minute market time unit. Charge bars go below zero, discharge bars go above zero, and the SoC line shows the physical battery state through time."
+          consumes="PriceScenarios + BatteryProfile + risk objective"
+          produces="schedule: charge_mw, discharge_mw, state_of_charge_mwh, action"
+        >
+          <OptimizerDispatchChart schedule={schedule} />
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="05"
+          icon={CheckCircle2}
+          title="Feasibility check"
+          description="After optimization, the schedule is checked against battery dynamics and hard limits. This confirms that the result is not only profitable, but physically executable."
+          consumes="Schedule + BatteryProfile"
+          produces="FeasibilityReport"
+        >
+          <div className="spec-grid">
+            <Info label="Feasible" value={metadata.feasibility?.feasible ? "True" : "False"} />
+            <Info label="Solver status" value={metadata.solver_status} />
+            <Info label="Runtime" value={`${metadata.runtime_ms} ms`} />
+            <Info label="Cycles used" value={`${metadata.cycles_used} / ${metadata.battery_profile.max_cycles_per_day}`} />
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="06"
+          icon={CircleDollarSign}
+          title="Economic scoring"
+          description="The resulting actions are converted into money: discharge earns revenue, charge pays market cost, and the run reports expected and realized economic performance."
+          consumes="Schedule + price curve"
+          produces="period_profit_eur and realized_profit_eur"
+        >
+          <div className="chart-mid analytics-focus">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+                <CartesianGrid stroke="#1F2937" vertical={false} />
+                <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<ProfitTooltip />} />
+                <Bar dataKey="period_profit_eur" barSize={5}>{schedule.map((r) => <Cell key={r.idx} fill={r.period_profit_eur >= 0 ? "#16A34A" : COLORS.red} fillOpacity={0.72} />)}</Bar>
+                <Line dataKey="cumulative_profit_eur" stroke={COLORS.text} dot={false} strokeWidth={1.8} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="07"
+          icon={Activity}
+          title="Rainflow degradation"
+          description="The optimizer output is then scored with a cycle-depth-aware degradation algorithm. This uses the SoC trajectory to estimate aging cost instead of pretending degradation is only a static input."
+          consumes="Schedule SoC trajectory"
+          produces="RainflowScore"
+        >
+          <DegradationView waterfall={waterfall} />
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="08"
+          icon={ShieldAlert}
+          title="Robustness sweep"
+          description="The fixed schedule is replayed under different battery assumptions. This answers: how bad is the profit if efficiency or degradation assumptions are wrong?"
+          consumes="Schedule + perturbed BatteryProfile assumptions"
+          produces="ParameterSweepResult"
+        >
+          <RobustnessChart robustness={robustness} />
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="09"
+          icon={GitBranch}
+          title="Bid curves"
+          description="When bid output is enabled, the backend can re-solve across candidate clearing prices to produce a HEnEx-style price-quantity ladder."
+          consumes="Expected price curve + BatteryProfile"
+          produces="bid_curves artifact"
+        >
+          <div className="artifact-note">
+            <GitBranch size={18} />
+            <div>
+              <strong>Bid curves artifact</strong>
+              <p>The backend can export `bid_curves.parquet/json` when bid output is enabled. This viewer does not invent bid quantities; it waits for that artifact.</p>
+            </div>
+          </div>
+        </WorkflowStepSection>
+
+        <div className="step-connector"><ArrowDownToLine size={18} /></div>
+
+        <WorkflowStepSection
+          number="10"
+          icon={Radar}
+          title="DispatchResult output"
+          description="The final result bundle is what the dashboard visualizes: schedule, scenarios, bid curves, rainflow score, feasibility, robustness and metadata."
+          consumes="All optimizer sub-results"
+          produces="DispatchResult"
+        >
+          <OptimizerOutputTable rows={outputRows} />
+        </WorkflowStepSection>
+      </section>
+
+      <aside className="rail workflow-rail">
+        <h2>Reading guide</h2>
+        <ul className="judge-list">
+          <li>Scroll top to bottom.</li>
+          <li>Each section shows one backend responsibility.</li>
+          <li>No forecasting model is shown here.</li>
+          <li>Everything visualized is an Optimizer V1 input or output artifact.</li>
+        </ul>
+        <Info label="Backend entrypoint" value={metadata.optimizer} />
+        <Info label="Result object" value="DispatchResult" />
+        <Info label="Scenario count" value={metadata.scenarios_used} />
+      </aside>
+    </div>
+  );
 }
 
-function FeatureTooltip({ active, payload }) { if (!active || !payload?.length) return null; const f = payload[0].payload; return <div className="tooltip"><strong>{f.name}</strong><span>{f.family}</span><span>SHAP gain {f.gain}</span></div>; }
-
-function EuropeMap({ mode = "tier" }) {
-  return <div className="mapbox">{zoneData.map((z) => <div key={z.code} className={`zone tier-${z.tier} ${z.code === "GR" ? "anchor" : ""}`} style={{ left: `${z.x}%`, top: `${z.y}%`, transform: `scale(${mode === "tam" ? 0.8 + z.bess / 14000 : 1})` }} title={`${z.name}: ${z.mtu} min MTU, neighbors ${z.neighbors}`}><span>{z.code}</span></div>)}<div className="map-caption">{mode === "tam" ? "Shaded by addressable BESS pipeline" : "Tier coverage by connected sources"}</div></div>;
+function WorkflowStepSection({ number, icon: Icon, title, description, consumes, produces, children }) {
+  return (
+    <section className="workflow-section">
+      <div className="workflow-copy">
+        <span className="workflow-number">{number}</span>
+        <Icon size={18} />
+        <div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+          <div className="io-grid">
+            <Info label="Consumes" value={consumes} />
+            <Info label="Produces" value={produces} />
+          </div>
+        </div>
+      </div>
+      <div className="workflow-visual">{children}</div>
+    </section>
+  );
 }
 
-function CouplingChain() {
-  const nodes = ["DE", "AT/CH", "IT-N", "IT-S", "GR", "CZ", "SK", "HU", "RO", "BG"];
-  return <div className="chain">{nodes.map((n) => <span key={n}>{n}</span>)}<svg viewBox="0 0 900 180" preserveAspectRatio="none"><path d="M70 45 C190 20 240 30 330 55 S500 70 590 85 S720 95 830 120" /><path d="M70 45 C210 100 260 120 350 120 S520 120 610 122 S730 128 830 120" /></svg></div>;
+function ScenarioChart({ scenarioChart, labels }) {
+  const colorFor = (idx) => [
+    COLORS.blue,
+    COLORS.amber,
+    COLORS.green,
+    COLORS.teal,
+    COLORS.purple,
+    COLORS.cyan,
+    "#94A3B8",
+    "#F97316",
+  ][idx % 8];
+  return (
+    <div className="chart-mid analytics-focus">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={scenarioChart} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke="#1F2937" vertical={false} />
+          <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+          {labels.map((label, idx) => (
+            <Line key={label} dataKey={label} stroke={colorFor(idx)} strokeOpacity={0.38} strokeWidth={1.2} dot={false} isAnimationActive={false} />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
-function Business() {
-  return <div className="page moat-grid"><section className="content"><Panel title="Addressable SDAC market"><EuropeMap mode="tam" /><div className="tam-stats"><strong>46,300 MW</strong><span>addressable BESS pipeline</span><strong>38%</strong><span>Europe ingested in MVP roadmap</span></div></Panel><div className="pricing">{["Per-MW SaaS", "Performance kicker", "Tier-4 network effect"].map((title, i) => <div className="price-card" key={title}><h3>{title}</h3><strong>{["€2k-€6k / MW-year", "5-12% uplift share", "Telemetry premium"][i]}</strong><p>{["Asset owners and operators", "Trading desks and IPPs", "Fleet customers after pilot"][i]}</p><ul><li>Dispatch dashboard</li><li>Backtested value reporting</li><li>Robustness and risk controls</li></ul></div>)}</div><Panel title="Roadmap"><div className="roadmap">{[["30-day", "Live Greek pilot", "Deployed dashboard", "Operator feedback loop"], ["90-day", "Italy + Bulgaria + Romania", "REMIT outage features", "Rolling-horizon MPC"], ["365-day", "Continental coverage", "DAM + intraday + ancillary co-optimization", "Learned terminal-SoC value function"]].map((col) => <div key={col[0]}><h3>{col[0]}</h3>{col.slice(1).map((m) => <p key={m}><Zap size={13} /> {m}</p>)}</div>)}</div></Panel></section><aside className="rail"><h2>Network effect</h2><div className="chart-mid small"><ResponsiveContainer width="100%" height="100%"><LineChart data={[0, 1, 3, 5, 8, 13].map((c, i) => ({ c, public: 58 + i, tier2: 64 + i * 2.2, tier4: 64 + i * i * 1.2 }))}><CartesianGrid stroke="#1F2937" vertical={false} /><XAxis dataKey="c" tick={{ fill: COLORS.faint, fontSize: 10 }} /><YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} /><Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} /><Line dataKey="public" stroke="#64748B" dot={false} /><Line dataKey="tier2" stroke={COLORS.blue} dot={false} /><Line dataKey="tier4" stroke={COLORS.amber} strokeWidth={2.4} dot={false} /></LineChart></ResponsiveContainer></div><Info label="Public data only" value="flat accuracy" /><Info label="Tier-2 multi-country" value="engineering moat" /><Info label="Tier-4 telemetry" value="compounds after customer #1" /></aside></div>;
+function OptimizerDispatchChart({ schedule }) {
+  return (
+    <div className="chart-mid analytics-focus">
+      <ResponsiveContainer width="100%" height="100%">
+        <ComposedChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke="#1F2937" vertical={false} />
+          <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis yAxisId="mw" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis yAxisId="soc" orientation="right" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<DispatchTooltip />} />
+          <Bar yAxisId="mw" dataKey="dispatchBar" barSize={5}>{schedule.map((r) => <Cell key={r.idx} fill={r.dispatchBar < 0 ? COLORS.blue : COLORS.amber} fillOpacity={0.75} />)}</Bar>
+          <Line yAxisId="soc" dataKey="state_of_charge_mwh" stroke={COLORS.text} strokeWidth={1.8} dot={false} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function DegradationView({ waterfall }) {
+  return (
+    <div className="value-grid">
+      <div className="value-flow">
+        {["Schedule SoC", "rainflow_count", "aging cost", "net profit"].map((label, i) => (
+          <React.Fragment key={label}>
+            <span className={i === 1 ? "blue" : i === 3 ? "amber" : ""}>{label}</span>
+            {i < 3 && <ArrowDownToLine size={15} />}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="chart-mid compact">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={waterfall} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+            <CartesianGrid stroke="#1F2937" vertical={false} />
+            <XAxis dataKey="name" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip formatter={(value) => formatEUR(value)} contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]}>{waterfall.map((r) => <Cell key={r.name} fill={r.fill} fillOpacity={0.82} />)}</Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function RobustnessChart({ robustness }) {
+  return (
+    <div className="chart-mid analytics-focus">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={robustness.slice(0, 16)} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke="#1F2937" vertical={false} />
+          <XAxis dataKey="round_trip_efficiency" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <Tooltip formatter={(value) => formatEUR(value)} contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+          <Bar dataKey="realized_profit_eur" fill={COLORS.amber} fillOpacity={0.78} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ScenarioInputTable({ rows }) {
+  return (
+    <div className="feature-matrix scenario-input-table">
+      <div className="matrix-head"><span>MTU</span><span>Scenario</span><span>Weight</span><span>Price</span></div>
+      {rows.map((r) => (
+        <div key={`${r.time}-${r.scenario}`} className="matrix-row">
+          <span>{r.time}</span><span>{r.scenario}</span><span>{r.weight}</span><span>{r.price}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OptimizerOutputTable({ rows }) {
+  return (
+    <div className="feature-matrix optimizer-output-table">
+      <div className="matrix-head"><span>MTU</span><span>Expected price</span><span>Charge</span><span>Discharge</span><span>SoC</span><span>Action</span></div>
+      {rows.map((r) => (
+        <div key={r.time} className="matrix-row">
+          <span>{r.time}</span><span>{r.price}</span><span>{r.charge}</span><span>{r.discharge}</span><span>{r.soc}</span><span>{r.action}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 createRoot(document.getElementById("root")).render(<App />);

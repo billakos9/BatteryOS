@@ -1,1 +1,962 @@
-[]
+[
+  {
+    "timestamp": "2026-04-29T00:00:00",
+    "forecast_price_eur_per_mwh": 63.25007623240312,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.9975,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 63.25007623240312
+  },
+  {
+    "timestamp": "2026-04-29T00:15:00",
+    "forecast_price_eur_per_mwh": 60.75154389407206,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.995,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 60.75154389407206
+  },
+  {
+    "timestamp": "2026-04-29T00:30:00",
+    "forecast_price_eur_per_mwh": 63.91012166817864,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.9925,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 63.91012166817864
+  },
+  {
+    "timestamp": "2026-04-29T00:45:00",
+    "forecast_price_eur_per_mwh": 63.88554482453962,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.99,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 63.88554482453962
+  },
+  {
+    "timestamp": "2026-04-29T01:00:00",
+    "forecast_price_eur_per_mwh": 58.24413237630253,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.987501,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 58.24413237630253
+  },
+  {
+    "timestamp": "2026-04-29T01:15:00",
+    "forecast_price_eur_per_mwh": 67.72765701002808,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.985001,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 67.72765701002808
+  },
+  {
+    "timestamp": "2026-04-29T01:30:00",
+    "forecast_price_eur_per_mwh": 66.03512762529287,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.982501,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 66.03512762529287
+  },
+  {
+    "timestamp": "2026-04-29T01:45:00",
+    "forecast_price_eur_per_mwh": 65.19651262652192,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 99.980002,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 65.19651262652192
+  },
+  {
+    "timestamp": "2026-04-29T02:00:00",
+    "forecast_price_eur_per_mwh": 44.321801324692586,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 123.7025,
+    "action": "CHARGE",
+    "period_profit_eur": -1158.0450331173147,
+    "realized_price_eur_per_mwh": 44.321801324692586
+  },
+  {
+    "timestamp": "2026-04-29T02:15:00",
+    "forecast_price_eur_per_mwh": 53.6159027643242,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 123.69941,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 53.6159027643242
+  },
+  {
+    "timestamp": "2026-04-29T02:30:00",
+    "forecast_price_eur_per_mwh": 49.06399608868319,
+    "charge_mw": 76.388594,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.81951,
+    "action": "CHARGE",
+    "period_profit_eur": -975.176716309002,
+    "realized_price_eur_per_mwh": 49.06399608868319
+  },
+  {
+    "timestamp": "2026-04-29T02:45:00",
+    "forecast_price_eur_per_mwh": 52.535356153055154,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.81597,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 52.535356153055154
+  },
+  {
+    "timestamp": "2026-04-29T03:00:00",
+    "forecast_price_eur_per_mwh": 52.81782122457391,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.81242,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 52.81782122457391
+  },
+  {
+    "timestamp": "2026-04-29T03:15:00",
+    "forecast_price_eur_per_mwh": 51.59694820486152,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.80887,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 51.59694820486152
+  },
+  {
+    "timestamp": "2026-04-29T03:30:00",
+    "forecast_price_eur_per_mwh": 57.88842909742191,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.80533,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 57.88842909742191
+  },
+  {
+    "timestamp": "2026-04-29T03:45:00",
+    "forecast_price_eur_per_mwh": 54.73910977371052,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.80178,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 54.73910977371052
+  },
+  {
+    "timestamp": "2026-04-29T04:00:00",
+    "forecast_price_eur_per_mwh": 55.67030162571138,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.79824,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 55.67030162571138
+  },
+  {
+    "timestamp": "2026-04-29T04:15:00",
+    "forecast_price_eur_per_mwh": 56.38344424643203,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.79469,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 56.38344424643203
+  },
+  {
+    "timestamp": "2026-04-29T04:30:00",
+    "forecast_price_eur_per_mwh": 55.48616982785696,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.79115,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 55.48616982785696
+  },
+  {
+    "timestamp": "2026-04-29T04:45:00",
+    "forecast_price_eur_per_mwh": 52.76870440251129,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.7876,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 52.76870440251129
+  },
+  {
+    "timestamp": "2026-04-29T05:00:00",
+    "forecast_price_eur_per_mwh": 53.14138556843564,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.78406,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 53.14138556843564
+  },
+  {
+    "timestamp": "2026-04-29T05:15:00",
+    "forecast_price_eur_per_mwh": 74.61481418419726,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.78052,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 74.61481418419726
+  },
+  {
+    "timestamp": "2026-04-29T05:30:00",
+    "forecast_price_eur_per_mwh": 88.3637638250231,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.77697,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 88.3637638250231
+  },
+  {
+    "timestamp": "2026-04-29T05:45:00",
+    "forecast_price_eur_per_mwh": 72.7276001927281,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.77343,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 72.7276001927281
+  },
+  {
+    "timestamp": "2026-04-29T06:00:00",
+    "forecast_price_eur_per_mwh": 66.40930050924952,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.76988,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 66.40930050924952
+  },
+  {
+    "timestamp": "2026-04-29T06:15:00",
+    "forecast_price_eur_per_mwh": 71.31584409036307,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.76634,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 71.31584409036307
+  },
+  {
+    "timestamp": "2026-04-29T06:30:00",
+    "forecast_price_eur_per_mwh": 80.61094019519447,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.76279,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 80.61094019519447
+  },
+  {
+    "timestamp": "2026-04-29T06:45:00",
+    "forecast_price_eur_per_mwh": 85.26311856907333,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 141.75925,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 85.26311856907333
+  },
+  {
+    "timestamp": "2026-04-29T07:00:00",
+    "forecast_price_eur_per_mwh": 119.26858707245994,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 115.41219,
+    "action": "DISCHARGE",
+    "period_profit_eur": 2931.7146768114985,
+    "realized_price_eur_per_mwh": 119.26858707245994
+  },
+  {
+    "timestamp": "2026-04-29T07:15:00",
+    "forecast_price_eur_per_mwh": 111.77389665022748,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 115.4093,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 111.77389665022748
+  },
+  {
+    "timestamp": "2026-04-29T07:30:00",
+    "forecast_price_eur_per_mwh": 126.51598648962315,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 89.062896,
+    "action": "DISCHARGE",
+    "period_profit_eur": 3112.8996622405784,
+    "realized_price_eur_per_mwh": 126.51598648962315
+  },
+  {
+    "timestamp": "2026-04-29T07:45:00",
+    "forecast_price_eur_per_mwh": 111.48357223637477,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 89.06067,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 111.48357223637477
+  },
+  {
+    "timestamp": "2026-04-29T08:00:00",
+    "forecast_price_eur_per_mwh": 110.71513133007619,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 89.058443,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 110.71513133007619
+  },
+  {
+    "timestamp": "2026-04-29T08:15:00",
+    "forecast_price_eur_per_mwh": 115.1705315803544,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 62.712697,
+    "action": "DISCHARGE",
+    "period_profit_eur": 2829.26328950886,
+    "realized_price_eur_per_mwh": 115.1705315803544
+  },
+  {
+    "timestamp": "2026-04-29T08:30:00",
+    "forecast_price_eur_per_mwh": 115.110277971645,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 62.711129,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 115.110277971645
+  },
+  {
+    "timestamp": "2026-04-29T08:45:00",
+    "forecast_price_eur_per_mwh": 115.78506267783732,
+    "charge_mw": 0.0,
+    "discharge_mw": 62.100216,
+    "state_of_charge_mwh": 46.350179,
+    "action": "DISCHARGE",
+    "period_profit_eur": 1766.5192424668091,
+    "realized_price_eur_per_mwh": 115.78506267783732
+  },
+  {
+    "timestamp": "2026-04-29T09:00:00",
+    "forecast_price_eur_per_mwh": 119.60829461782772,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 20.005501,
+    "action": "DISCHARGE",
+    "period_profit_eur": 2890.207365445693,
+    "realized_price_eur_per_mwh": 119.60829461782772
+  },
+  {
+    "timestamp": "2026-04-29T09:15:00",
+    "forecast_price_eur_per_mwh": 80.80450970431096,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.005001,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 80.80450970431096
+  },
+  {
+    "timestamp": "2026-04-29T09:30:00",
+    "forecast_price_eur_per_mwh": 77.32299503234925,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.004501,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 77.32299503234925
+  },
+  {
+    "timestamp": "2026-04-29T09:45:00",
+    "forecast_price_eur_per_mwh": 73.55910516436909,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.004,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 73.55910516436909
+  },
+  {
+    "timestamp": "2026-04-29T10:00:00",
+    "forecast_price_eur_per_mwh": 85.10589662288342,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0035,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 85.10589662288342
+  },
+  {
+    "timestamp": "2026-04-29T10:15:00",
+    "forecast_price_eur_per_mwh": 86.96256456590945,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.003,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 86.96256456590945
+  },
+  {
+    "timestamp": "2026-04-29T10:30:00",
+    "forecast_price_eur_per_mwh": 87.90088700678278,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0025,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 87.90088700678278
+  },
+  {
+    "timestamp": "2026-04-29T10:45:00",
+    "forecast_price_eur_per_mwh": 94.65440639328978,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.002,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 94.65440639328978
+  },
+  {
+    "timestamp": "2026-04-29T11:00:00",
+    "forecast_price_eur_per_mwh": 92.33664971078716,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0015,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 92.33664971078716
+  },
+  {
+    "timestamp": "2026-04-29T11:15:00",
+    "forecast_price_eur_per_mwh": 78.69467952326696,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.001,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 78.69467952326696
+  },
+  {
+    "timestamp": "2026-04-29T11:30:00",
+    "forecast_price_eur_per_mwh": 82.31123620207694,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0005,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 82.31123620207694
+  },
+  {
+    "timestamp": "2026-04-29T11:45:00",
+    "forecast_price_eur_per_mwh": 80.34514121435538,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 80.34514121435538
+  },
+  {
+    "timestamp": "2026-04-29T12:00:00",
+    "forecast_price_eur_per_mwh": 46.48331017358386,
+    "charge_mw": 0.0021074816,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0,
+    "action": "CHARGE",
+    "period_profit_eur": -0.026598161824480195,
+    "realized_price_eur_per_mwh": 46.48331017358386
+  },
+  {
+    "timestamp": "2026-04-29T12:15:00",
+    "forecast_price_eur_per_mwh": 42.729285897396345,
+    "charge_mw": 0.0063226027,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.001,
+    "action": "CHARGE",
+    "period_profit_eur": -0.07386267729598751,
+    "realized_price_eur_per_mwh": 42.729285897396345
+  },
+  {
+    "timestamp": "2026-04-29T12:30:00",
+    "forecast_price_eur_per_mwh": 47.6411654450085,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0005,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 47.6411654450085
+  },
+  {
+    "timestamp": "2026-04-29T12:45:00",
+    "forecast_price_eur_per_mwh": 53.703865278796016,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 53.703865278796016
+  },
+  {
+    "timestamp": "2026-04-29T13:00:00",
+    "forecast_price_eur_per_mwh": 45.49285499757959,
+    "charge_mw": 78.818976,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 38.699302,
+    "action": "CHARGE",
+    "period_profit_eur": -935.8345495564265,
+    "realized_price_eur_per_mwh": 45.49285499757959
+  },
+  {
+    "timestamp": "2026-04-29T13:15:00",
+    "forecast_price_eur_per_mwh": 39.83085753095235,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 62.423335,
+    "action": "CHARGE",
+    "period_profit_eur": -1045.7714382738086,
+    "realized_price_eur_per_mwh": 39.83085753095235
+  },
+  {
+    "timestamp": "2026-04-29T13:30:00",
+    "forecast_price_eur_per_mwh": 43.20282728794369,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 86.146774,
+    "action": "CHARGE",
+    "period_profit_eur": -1130.0706821985923,
+    "realized_price_eur_per_mwh": 43.20282728794369
+  },
+  {
+    "timestamp": "2026-04-29T13:45:00",
+    "forecast_price_eur_per_mwh": 41.4816598745156,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 109.86962,
+    "action": "CHARGE",
+    "period_profit_eur": -1087.04149686289,
+    "realized_price_eur_per_mwh": 41.4816598745156
+  },
+  {
+    "timestamp": "2026-04-29T14:00:00",
+    "forecast_price_eur_per_mwh": 38.74167140139491,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 133.59187,
+    "action": "CHARGE",
+    "period_profit_eur": -1018.5417850348728,
+    "realized_price_eur_per_mwh": 38.74167140139491
+  },
+  {
+    "timestamp": "2026-04-29T14:15:00",
+    "forecast_price_eur_per_mwh": 41.978456180359565,
+    "charge_mw": 95.639086,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 156.27891,
+    "action": "CHARGE",
+    "period_profit_eur": -1051.51483819516,
+    "realized_price_eur_per_mwh": 41.978456180359565
+  },
+  {
+    "timestamp": "2026-04-29T14:30:00",
+    "forecast_price_eur_per_mwh": 41.500341149097814,
+    "charge_mw": 100.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 180.0,
+    "action": "CHARGE",
+    "period_profit_eur": -1137.5085287274453,
+    "realized_price_eur_per_mwh": 41.500341149097814
+  },
+  {
+    "timestamp": "2026-04-29T14:45:00",
+    "forecast_price_eur_per_mwh": 53.49296772550351,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9955,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 53.49296772550351
+  },
+  {
+    "timestamp": "2026-04-29T15:00:00",
+    "forecast_price_eur_per_mwh": 45.06731306234777,
+    "charge_mw": 0.037934194,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 180.0,
+    "action": "CHARGE",
+    "period_profit_eur": -0.46533224319145855,
+    "realized_price_eur_per_mwh": 45.06731306234777
+  },
+  {
+    "timestamp": "2026-04-29T15:15:00",
+    "forecast_price_eur_per_mwh": 86.06994198048397,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9955,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 86.06994198048397
+  },
+  {
+    "timestamp": "2026-04-29T15:30:00",
+    "forecast_price_eur_per_mwh": 81.97458407426308,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.991,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 81.97458407426308
+  },
+  {
+    "timestamp": "2026-04-29T15:45:00",
+    "forecast_price_eur_per_mwh": 76.83990252486326,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9865,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 76.83990252486326
+  },
+  {
+    "timestamp": "2026-04-29T16:00:00",
+    "forecast_price_eur_per_mwh": 79.10445511642959,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.982,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 79.10445511642959
+  },
+  {
+    "timestamp": "2026-04-29T16:15:00",
+    "forecast_price_eur_per_mwh": 80.66297619245358,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9775,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 80.66297619245358
+  },
+  {
+    "timestamp": "2026-04-29T16:30:00",
+    "forecast_price_eur_per_mwh": 84.86282274341295,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.973,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 84.86282274341295
+  },
+  {
+    "timestamp": "2026-04-29T16:45:00",
+    "forecast_price_eur_per_mwh": 73.56885106668413,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9685,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 73.56885106668413
+  },
+  {
+    "timestamp": "2026-04-29T17:00:00",
+    "forecast_price_eur_per_mwh": 78.65660497746656,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.964,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 78.65660497746656
+  },
+  {
+    "timestamp": "2026-04-29T17:15:00",
+    "forecast_price_eur_per_mwh": 73.36842294460644,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.9595,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 73.36842294460644
+  },
+  {
+    "timestamp": "2026-04-29T17:30:00",
+    "forecast_price_eur_per_mwh": 74.94703861090942,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.95501,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 74.94703861090942
+  },
+  {
+    "timestamp": "2026-04-29T17:45:00",
+    "forecast_price_eur_per_mwh": 67.76402738085588,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.95051,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 67.76402738085588
+  },
+  {
+    "timestamp": "2026-04-29T18:00:00",
+    "forecast_price_eur_per_mwh": 73.38022890971433,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.94601,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 73.38022890971433
+  },
+  {
+    "timestamp": "2026-04-29T18:15:00",
+    "forecast_price_eur_per_mwh": 74.97248440250698,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.94151,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 74.97248440250698
+  },
+  {
+    "timestamp": "2026-04-29T18:30:00",
+    "forecast_price_eur_per_mwh": 71.23498612362273,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.93701,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 71.23498612362273
+  },
+  {
+    "timestamp": "2026-04-29T18:45:00",
+    "forecast_price_eur_per_mwh": 77.19028524148604,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 179.93251,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 77.19028524148604
+  },
+  {
+    "timestamp": "2026-04-29T19:00:00",
+    "forecast_price_eur_per_mwh": 127.95369247812144,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 153.58449,
+    "action": "DISCHARGE",
+    "period_profit_eur": 3148.842311953036,
+    "realized_price_eur_per_mwh": 127.95369247812144
+  },
+  {
+    "timestamp": "2026-04-29T19:15:00",
+    "forecast_price_eur_per_mwh": 125.158805245965,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 127.23713,
+    "action": "DISCHARGE",
+    "period_profit_eur": 3078.970131149125,
+    "realized_price_eur_per_mwh": 125.158805245965
+  },
+  {
+    "timestamp": "2026-04-29T19:30:00",
+    "forecast_price_eur_per_mwh": 122.44010538785002,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 100.89043,
+    "action": "DISCHARGE",
+    "period_profit_eur": 3011.0026346962504,
+    "realized_price_eur_per_mwh": 122.44010538785002
+  },
+  {
+    "timestamp": "2026-04-29T19:45:00",
+    "forecast_price_eur_per_mwh": 121.51725805760796,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 74.544393,
+    "action": "DISCHARGE",
+    "period_profit_eur": 2987.931451440199,
+    "realized_price_eur_per_mwh": 121.51725805760796
+  },
+  {
+    "timestamp": "2026-04-29T20:00:00",
+    "forecast_price_eur_per_mwh": 131.27819411086415,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 48.19901,
+    "action": "DISCHARGE",
+    "period_profit_eur": 3231.954852771604,
+    "realized_price_eur_per_mwh": 131.27819411086415
+  },
+  {
+    "timestamp": "2026-04-29T20:15:00",
+    "forecast_price_eur_per_mwh": 113.70809904645404,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 48.197805,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 113.70809904645404
+  },
+  {
+    "timestamp": "2026-04-29T20:30:00",
+    "forecast_price_eur_per_mwh": 118.84602237015474,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 48.1966,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 118.84602237015474
+  },
+  {
+    "timestamp": "2026-04-29T20:45:00",
+    "forecast_price_eur_per_mwh": 120.11912231631362,
+    "charge_mw": 0.0,
+    "discharge_mw": 100.0,
+    "state_of_charge_mwh": 21.851875,
+    "action": "DISCHARGE",
+    "period_profit_eur": 2952.9780579078406,
+    "realized_price_eur_per_mwh": 120.11912231631362
+  },
+  {
+    "timestamp": "2026-04-29T21:00:00",
+    "forecast_price_eur_per_mwh": 120.50553759982752,
+    "charge_mw": 0.0,
+    "discharge_mw": 7.0067637,
+    "state_of_charge_mwh": 20.005501,
+    "action": "DISCHARGE",
+    "period_profit_eur": 204.08169292586413,
+    "realized_price_eur_per_mwh": 120.50553759982752
+  },
+  {
+    "timestamp": "2026-04-29T21:15:00",
+    "forecast_price_eur_per_mwh": 72.4511008954539,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.005001,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 72.4511008954539
+  },
+  {
+    "timestamp": "2026-04-29T21:30:00",
+    "forecast_price_eur_per_mwh": 61.026632467807175,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.004501,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 61.026632467807175
+  },
+  {
+    "timestamp": "2026-04-29T21:45:00",
+    "forecast_price_eur_per_mwh": 69.10462858316725,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.004,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 69.10462858316725
+  },
+  {
+    "timestamp": "2026-04-29T22:00:00",
+    "forecast_price_eur_per_mwh": 74.27252759658288,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0035,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 74.27252759658288
+  },
+  {
+    "timestamp": "2026-04-29T22:15:00",
+    "forecast_price_eur_per_mwh": 70.99554120216658,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.003,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 70.99554120216658
+  },
+  {
+    "timestamp": "2026-04-29T22:30:00",
+    "forecast_price_eur_per_mwh": 69.39873130700069,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0025,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 69.39873130700069
+  },
+  {
+    "timestamp": "2026-04-29T22:45:00",
+    "forecast_price_eur_per_mwh": 55.14895427274068,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.002,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 55.14895427274068
+  },
+  {
+    "timestamp": "2026-04-29T23:00:00",
+    "forecast_price_eur_per_mwh": 57.51650632093992,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0015,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 57.51650632093992
+  },
+  {
+    "timestamp": "2026-04-29T23:15:00",
+    "forecast_price_eur_per_mwh": 67.74200335657595,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.001,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 67.74200335657595
+  },
+  {
+    "timestamp": "2026-04-29T23:30:00",
+    "forecast_price_eur_per_mwh": 64.3144859859023,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0005,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 64.3144859859023
+  },
+  {
+    "timestamp": "2026-04-29T23:45:00",
+    "forecast_price_eur_per_mwh": 63.3726805357861,
+    "charge_mw": 0.0,
+    "discharge_mw": 0.0,
+    "state_of_charge_mwh": 20.0,
+    "action": "IDLE",
+    "period_profit_eur": 0.0,
+    "realized_price_eur_per_mwh": 63.3726805357861
+  }
+]

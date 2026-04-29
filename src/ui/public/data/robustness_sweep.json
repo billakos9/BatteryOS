@@ -1,1 +1,162 @@
-[]
+[
+  {
+    "round_trip_efficiency": 0.85,
+    "degradation_cost_eur_per_mwh": 1.0,
+    "realized_profit_eur": 29666.494266140915,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 479.99999999875,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.85,
+    "degradation_cost_eur_per_mwh": 2.0,
+    "realized_profit_eur": 29186.494266142163,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 959.9999999975,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.85,
+    "degradation_cost_eur_per_mwh": 3.0,
+    "realized_profit_eur": 28706.494266143414,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 1439.9999999962502,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.85,
+    "degradation_cost_eur_per_mwh": 5.0,
+    "realized_profit_eur": 27746.494266145914,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 2399.99999999375,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.9,
+    "degradation_cost_eur_per_mwh": 1.0,
+    "realized_profit_eur": 29666.494266140915,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 479.99999999875,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.9,
+    "degradation_cost_eur_per_mwh": 2.0,
+    "realized_profit_eur": 29186.494266142163,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 959.9999999975,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.9,
+    "degradation_cost_eur_per_mwh": 3.0,
+    "realized_profit_eur": 28706.494266143414,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 1439.9999999962502,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.9,
+    "degradation_cost_eur_per_mwh": 5.0,
+    "realized_profit_eur": 27746.494266145914,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 2399.99999999375,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.95,
+    "degradation_cost_eur_per_mwh": 1.0,
+    "realized_profit_eur": 29666.494266140915,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 479.99999999875,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.95,
+    "degradation_cost_eur_per_mwh": 2.0,
+    "realized_profit_eur": 29186.494266142163,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 959.9999999975,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.95,
+    "degradation_cost_eur_per_mwh": 3.0,
+    "realized_profit_eur": 28706.494266143414,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 1439.9999999962502,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 0.95,
+    "degradation_cost_eur_per_mwh": 5.0,
+    "realized_profit_eur": 27746.494266145914,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 2399.99999999375,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 1.0,
+    "degradation_cost_eur_per_mwh": 1.0,
+    "realized_profit_eur": 29666.494266140915,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 479.99999999875,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 1.0,
+    "degradation_cost_eur_per_mwh": 2.0,
+    "realized_profit_eur": 29186.494266142163,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 959.9999999975,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 1.0,
+    "degradation_cost_eur_per_mwh": 3.0,
+    "realized_profit_eur": 28706.494266143414,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 1439.9999999962502,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  },
+  {
+    "round_trip_efficiency": 1.0,
+    "degradation_cost_eur_per_mwh": 5.0,
+    "realized_profit_eur": 27746.494266145914,
+    "market_profit_eur": 30146.494266139664,
+    "degradation_cost_eur": 2399.99999999375,
+    "cycles_used": 1.4999999999960936,
+    "cycle_violation": 0.0,
+    "throughput_mwh": 479.99999999875
+  }
+]
