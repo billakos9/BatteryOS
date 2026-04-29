@@ -10,7 +10,13 @@ profiles:
     discharge_efficiency: 0.949
     self_discharge_per_hour: 0.0001
     max_cycles_per_day: 1.5
+    max_cycles_per_year: 547.5
+    lifetime_cycles_eol: 5000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 2.0
+    eol_soh_threshold: 0.80
+    soh_model: linear
+    cost_escalation_factor: 2.0
 
   liion_200_2h:
     technology: lithium_ion
@@ -23,7 +29,13 @@ profiles:
     discharge_efficiency: 0.949
     self_discharge_per_hour: 0.0001
     max_cycles_per_day: 1.5
+    max_cycles_per_year: 547.5
+    lifetime_cycles_eol: 5000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 2.0
+    eol_soh_threshold: 0.80
+    soh_model: linear
+    cost_escalation_factor: 2.0
 
   liion_300_2h:
     technology: lithium_ion
@@ -36,7 +48,13 @@ profiles:
     discharge_efficiency: 0.949
     self_discharge_per_hour: 0.0001
     max_cycles_per_day: 1.5
+    max_cycles_per_year: 547.5
+    lifetime_cycles_eol: 5000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 2.0
+    eol_soh_threshold: 0.80
+    soh_model: linear
+    cost_escalation_factor: 2.0
 
   phs_100_8h:
     technology: pumped_hydro
@@ -49,7 +67,13 @@ profiles:
     discharge_efficiency: 0.886
     self_discharge_per_hour: 0.0
     max_cycles_per_day: 1.0
+    max_cycles_per_year: 365.0
+    lifetime_cycles_eol: 15000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 0.5
+    eol_soh_threshold: 0.70
+    soh_model: linear
+    cost_escalation_factor: 1.5
 
   phs_200_8h:
     technology: pumped_hydro
@@ -62,7 +86,13 @@ profiles:
     discharge_efficiency: 0.886
     self_discharge_per_hour: 0.0
     max_cycles_per_day: 1.0
+    max_cycles_per_year: 365.0
+    lifetime_cycles_eol: 15000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 0.5
+    eol_soh_threshold: 0.70
+    soh_model: linear
+    cost_escalation_factor: 1.5
 
   flow_100_6h:
     technology: vanadium_flow
@@ -75,4 +105,10 @@ profiles:
     discharge_efficiency: 0.866
     self_discharge_per_hour: 0.0005
     max_cycles_per_day: 2.0
+    max_cycles_per_year: 730.0
+    lifetime_cycles_eol: 15000.0
+    initial_cycle_count: 0.0
     degradation_cost_eur_per_mwh: 1.0
+    eol_soh_threshold: 0.75
+    soh_model: linear
+    cost_escalation_factor: 1.5

@@ -58,10 +58,10 @@ def evaluate_schedule(
         raise ValueError("realized_prices length must match schedule length")
 
     market_profit = float(np.sum(realized * (discharge - charge)) * duration_hours)
-    deg_cost = float(
-        battery.degradation_cost_eur_per_mwh * np.sum(charge + discharge) * duration_hours
-    )
-    realized_profit = market_profit - deg_cost
+    throughput = float(np.sum(charge + discharge) * duration_hours)
+    deg_cost = float(battery.degradation_cost_eur_per_mwh * throughput)
+    tx_cost = float(battery.transaction_cost_eur_per_mwh * throughput)
+    realized_profit = market_profit - deg_cost - tx_cost
 
     cycles = equivalent_full_cycles(charge, discharge, duration_hours, battery.usable_energy_mwh)
 
@@ -72,9 +72,10 @@ def evaluate_schedule(
         "realized_profit_eur": realized_profit,
         "market_profit_eur": market_profit,
         "degradation_cost_eur": deg_cost,
+        "transaction_cost_eur": tx_cost,
         "cycles_used": cycles,
         "cycle_violation": cycle_violation,
-        "throughput_mwh": float(np.sum(charge + discharge) * duration_hours),
+        "throughput_mwh": throughput,
     }
 
 
