@@ -59,7 +59,7 @@ def build_schedule_frame(
     discharge_mw: Sequence[float],
     soc_mwh: Sequence[float],
     duration_hours: float,
-    degradation_cost_eur_per_mwh: float,
+    degradation_cost_eur_per_mwh: float | Sequence[float],
 ) -> pd.DataFrame:
     timestamps = list(timestamps)
     prices = np.asarray(prices, dtype=float)
@@ -67,8 +67,15 @@ def build_schedule_frame(
     discharge = np.asarray(discharge_mw, dtype=float)
     soc = np.asarray(soc_mwh, dtype=float)
 
+    if isinstance(degradation_cost_eur_per_mwh, (int, float)):
+        degradation_costs = np.full(len(prices), float(degradation_cost_eur_per_mwh))
+    else:
+        degradation_costs = np.asarray(degradation_cost_eur_per_mwh, dtype=float)
+        if len(degradation_costs) != len(prices):
+            raise ValueError("degradation cost vector length must match prices length")
+
     market_profit = prices * (discharge - charge) * duration_hours
-    deg_cost = degradation_cost_eur_per_mwh * (charge + discharge) * duration_hours
+    deg_cost = degradation_costs * (charge + discharge) * duration_hours
     period_profit = market_profit - deg_cost
 
     actions = [label_action(c, d) for c, d in zip(charge, discharge)]

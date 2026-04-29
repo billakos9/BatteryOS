@@ -1,11 +1,8 @@
-"""Sanity tests for the optimizer module.
+"""Tests for the unified BatteryOS dispatch optimizer.
 
-These do not require any market data. They build a synthetic price curve
-with a known low-noon / high-evening pattern and verify each optimizer:
-  * stays within SoC and power limits
-  * charges when prices are low and discharges when prices are high
-  * makes positive profit on the synthetic curve
-  * stochastic/CVaR objectives produce metadata fields we use elsewhere
+There is exactly one optimizer (`optimize_dispatch`); these tests
+exercise the four canonical input forms, the degenerate cases, and the
+DispatchResult bundle.
 """
 from __future__ import annotations
 
@@ -21,15 +18,12 @@ sys.path.insert(0, str(ROOT))
 
 from src.optimize import (  # noqa: E402
     BatteryProfile,
+    DispatchResult,
+    PriceScenarios,
     feasibility_report,
     load_profile,
-    optimize_cvar,
-    optimize_deterministic,
-    optimize_rule_based,
-    optimize_stochastic,
+    optimize_dispatch,
     scenarios_from_quantiles,
-    scenarios_from_samples,
-    sweep_battery_parameters,
 )
 
 
@@ -48,67 +42,168 @@ def day():
     return timestamps, base
 
 
-def test_rule_based_makes_money(battery, day):
-    timestamps, prices = day
-    schedule = optimize_rule_based(timestamps, prices, battery, duration_hours=0.25)
-    assert schedule.total_profit() > 0
-    rep = feasibility_report(schedule.df, battery, 0.25)
-    assert rep.feasible
-
-
-def test_deterministic_beats_rule_based(battery, day):
-    timestamps, prices = day
-    rb = optimize_rule_based(timestamps, prices, battery, duration_hours=0.25)
-    milp = optimize_deterministic(timestamps, prices, battery, duration_hours=0.25)
-    assert milp.solver_status in {"Optimal", "Not Solved"}
-    assert milp.total_profit() >= rb.total_profit() - 1e-6
-    rep = feasibility_report(milp.df, battery, 0.25)
-    assert rep.feasible
-
-
-def test_stochastic_consumes_quantiles(battery, day):
+def test_dispatch_with_pricescenarios(battery, day):
     timestamps, p50 = day
-    p10 = p50 - 30.0
-    p90 = p50 + 60.0
-    scenarios = scenarios_from_quantiles(timestamps, p10, p50, p90)
-    sched = optimize_stochastic(scenarios, battery, duration_hours=0.25, objective="expected")
-    assert sched.metadata["n_scenarios"] == 3
-    assert "expected_profit_eur" in sched.metadata
-    assert sched.metadata["worst_profit_eur"] <= sched.metadata["best_profit_eur"]
+    sc = scenarios_from_quantiles(timestamps, p50 - 30, p50, p50 + 50)
+    result = optimize_dispatch(
+        sc,
+        battery,
+        alpha=0.20,
+        risk_aversion=0.5,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+    )
+    assert isinstance(result, DispatchResult)
+    assert result.scenarios.n_scenarios == 3
+    assert result.feasibility.feasible
+    assert result.summary()["expected_profit_eur"] > 0
 
 
-def test_stochastic_worst_case_is_more_conservative(battery, day):
-    timestamps, p50 = day
-    p10 = p50 - 50.0
-    p90 = p50 + 80.0
-    scenarios = scenarios_from_quantiles(timestamps, p10, p50, p90)
-    expected_sched = optimize_stochastic(scenarios, battery, objective="expected")
-    worst_sched = optimize_stochastic(scenarios, battery, objective="worst_case")
-    assert worst_sched.metadata["worst_profit_eur"] >= expected_sched.metadata["worst_profit_eur"] - 1e-6
-
-
-def test_cvar_lifts_tail_profit(battery, day):
-    timestamps, p50 = day
-    p10 = p50 - 50.0
-    p90 = p50 + 80.0
-    scenarios = scenarios_from_quantiles(timestamps, p10, p50, p90)
-    risk_neutral = optimize_cvar(scenarios, battery, alpha=0.20, risk_aversion=0.0)
-    risk_averse = optimize_cvar(scenarios, battery, alpha=0.20, risk_aversion=1.0)
-    assert risk_averse.metadata["cvar_eur"] >= risk_neutral.metadata["cvar_eur"] - 1e-6
-
-
-def test_scenarios_from_samples_reduces(day):
+def test_dispatch_with_raw_samples(battery, day):
     timestamps, p50 = day
     rng = np.random.default_rng(0)
     samples = p50 + rng.normal(0, 25, size=(200, len(p50)))
-    reduced = scenarios_from_samples(timestamps, samples, n_reduced=10)
-    assert reduced.n_scenarios <= 10
-    assert np.isclose(reduced.weights.sum(), 1.0)
+    result = optimize_dispatch(
+        samples,
+        battery,
+        timestamps=timestamps,
+        n_reduced_scenarios=20,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+    )
+    assert result.scenarios.n_scenarios == 20
+    assert result.feasibility.feasible
 
 
-def test_parameter_sweep_reports_worst_case(battery, day):
-    timestamps, prices = day
-    sched = optimize_deterministic(timestamps, prices, battery, duration_hours=0.25)
-    result = sweep_battery_parameters(sched, prices, battery)
-    assert result.worst_case_profit <= result.median_profit
-    assert "realized_profit_eur" in result.table.columns
+def test_dispatch_single_scenario_collapses_to_deterministic(battery, day):
+    timestamps, p50 = day
+    single = p50.reshape(1, -1)
+    result = optimize_dispatch(
+        single,
+        battery,
+        timestamps=timestamps,
+        n_reduced_scenarios=None,
+        alpha=1.0,
+        risk_aversion=0.0,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+    )
+    assert result.scenarios.n_scenarios == 1
+    sc = scenarios_from_quantiles(timestamps, p50, p50, p50)
+    twin = optimize_dispatch(
+        sc,
+        battery,
+        alpha=1.0,
+        risk_aversion=0.0,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+    )
+    assert abs(result.schedule.total_profit() - twin.schedule.total_profit()) < 1e-3
+
+
+def test_dispatch_full_bundle(battery, day):
+    timestamps, p50 = day
+    short_ts = timestamps[:24]
+    short_p = p50[:24]
+    sc = scenarios_from_quantiles(short_ts, short_p - 25, short_p, short_p + 40)
+    result = optimize_dispatch(
+        sc,
+        battery,
+        duration_hours=0.25,
+        alpha=0.20,
+        risk_aversion=0.5,
+        build_bid_curves=True,
+        bid_price_grid=np.linspace(0, 250, 6),
+        run_robustness_sweep=True,
+        realized_prices=short_p,
+    )
+    assert result.bid_curves is not None
+    assert result.bid_curves.bid_quantities_mw.shape == (24, 6)
+    assert result.robustness is not None
+    assert result.robustness.worst_case_profit <= result.robustness.median_profit
+    assert result.realized_evaluation is not None
+    assert "realized_profit_eur" in result.realized_evaluation
+    assert result.rainflow.aging_cost_eur >= 0
+    assert result.feasibility.feasible
+
+
+def test_dispatch_rejects_empty_horizon(battery):
+    with pytest.raises(ValueError):
+        optimize_dispatch(
+            np.zeros((1, 0)),
+            battery,
+            timestamps=[],
+            build_bid_curves=False,
+            run_robustness_sweep=False,
+        )
+
+
+def test_dispatch_rejects_lossless_battery(day):
+    """LP relaxation is unsafe with eta_rt >= 1; engine should refuse."""
+    timestamps, p50 = day
+    lossless = BatteryProfile(
+        name="lossless",
+        technology="ideal",
+        power_mw=100,
+        energy_mwh=200,
+        soc_min_mwh=20,
+        soc_max_mwh=180,
+        initial_soc_mwh=100,
+        charge_efficiency=1.0,
+        discharge_efficiency=1.0,
+    )
+    sc = scenarios_from_quantiles(timestamps, p50 - 30, p50, p50 + 50)
+    with pytest.raises(ValueError):
+        optimize_dispatch(
+            sc,
+            lossless,
+            build_bid_curves=False,
+            run_robustness_sweep=False,
+        )
+
+
+def test_dispatch_summary_keys(battery, day):
+    timestamps, p50 = day
+    sc = scenarios_from_quantiles(timestamps, p50 - 30, p50, p50 + 50)
+    result = optimize_dispatch(
+        sc,
+        battery,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+    )
+    s = result.summary()
+    expected_keys = {
+        "battery_profile",
+        "n_scenarios",
+        "expected_profit_eur",
+        "cvar_eur",
+        "worst_profit_eur",
+        "best_profit_eur",
+        "rainflow_aging_cost_eur",
+        "rainflow_net_profit_eur",
+        "equivalent_full_cycles",
+        "feasible",
+        "dynamics_residual_mwh",
+    }
+    assert expected_keys.issubset(s.keys())
+
+
+def test_soc_banded_degradation_changes_in_milp_objective(battery, day):
+    timestamps, p50 = day
+    sc = scenarios_from_quantiles(timestamps, p50 - 30, p50, p50 + 50)
+    result = optimize_dispatch(
+        sc,
+        battery,
+        alpha=0.20,
+        risk_aversion=0.5,
+        build_bid_curves=False,
+        run_robustness_sweep=False,
+        use_soc_banded_degradation=True,
+        degradation_fixed_point_iterations=2,
+        degradation_bands=((0.0, 0.60, 10.0), (0.85, 1.0, 10.0)),
+    )
+    costs = result.schedule.metadata["degradation_costs_eur_per_mwh"]
+    assert costs is not None
+    assert max(costs) > battery.degradation_cost_eur_per_mwh
+    assert result.schedule.metadata["degradation_model"] == "soc_banded_fixed_point"
+    assert result.feasibility.feasible

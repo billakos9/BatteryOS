@@ -96,6 +96,30 @@ const featurePresets = {
   remit: ["Greek-only", "+Multi-country", "+German-domino", "+REMIT outages"],
 };
 
+const riskSettings = {
+  balanced: {
+    label: "Balanced",
+    lambda: 0.5,
+    alpha: 0.1,
+    cvarMultiplier: 0.92,
+    perfectBoost: 0,
+  },
+  conservative: {
+    label: "Conservative",
+    lambda: 0.8,
+    alpha: 0.1,
+    cvarMultiplier: 0.98,
+    perfectBoost: 1.5,
+  },
+  aggressive: {
+    label: "Aggressive",
+    lambda: 0.2,
+    alpha: 0.1,
+    cvarMultiplier: 0.84,
+    perfectBoost: -1,
+  },
+};
+
 const zoneData = [
   { code: "GR", name: "Greece", tier: 2, x: 62, y: 68, mtu: 15, bess: 3200, sources: 6, neighbors: "IT-S, BG" },
   { code: "IT-S", name: "Italy South", tier: 2, x: 48, y: 63, mtu: 15, bess: 5400, sources: 5, neighbors: "GR, IT-N" },
@@ -135,8 +159,20 @@ const sourceFreshness = [
   ["Hydro reservoirs", "2026-04-27 23:00", "amber", "18"],
 ];
 
-function generateData(profileKey, runMode, presetKey, country) {
+const workflowSteps = [
+  ["data", "Data Sources", "HEnEx, IPTO, weather and fuel inputs arrive point-in-time.", Database],
+  ["clean", "Cleaning", "Raw DAM files are normalized into aligned 15-minute tables.", SlidersHorizontal],
+  ["features", "Feature Engineering", "Residual load, lags, fuel costs and coupling signals are assembled.", GitBranch],
+  ["forecast", "Forecasting", "The forecaster outputs p10, p50 and p90 price curves.", LineChartIcon],
+  ["optimize", "Optimization", "Battery constraints convert forecast prices into charge/discharge actions.", BatteryCharging],
+  ["economics", "Economic Evaluation", "The schedule is priced into profit, cycles, feasibility and risk.", CircleDollarSign],
+  ["backtest", "Backtesting", "Historical realized prices compare against naive and perfect foresight.", Activity],
+  ["output", "Dashboard Output", "Judges see the decision, value created and robustness in one view.", Radar],
+];
+
+function generateData(profileKey, riskSettingKey, presetKey, country) {
   const profile = profiles[profileKey];
+  const risk = riskSettings[riskSettingKey];
   const featureBoost = { greek: 0, multi: 0.08, domino: 0.15, remit: 0.2 }[presetKey];
   const countryShift = { GR: 0, IT_S: -7, BG: -12 }[country] || 0;
   const powerScale = profile.power_mw / 100;
@@ -152,7 +188,7 @@ function generateData(profileKey, runMode, presetKey, country) {
     const morningSpike = 30 * Math.exp(-Math.pow((hour - 7.5) / 1.8, 2));
     const noise = 8 * Math.sin(i * 0.72) + 5 * Math.cos(i * 0.21);
     const p50 = 112 + countryShift + solarDip + eveningSpike + morningSpike + noise;
-    const band = runMode === "Deterministic" ? 0 : 18 + 18 * Math.exp(-Math.pow((hour - 20) / 3, 2));
+    const band = 18 + 18 * Math.exp(-Math.pow((hour - 20) / 3, 2));
     const p10 = p50 - band;
     const p90 = p50 + band * 1.25;
     const realized = p50 + (1 - featureBoost) * (12 * Math.sin(i * 0.5) + 8 * Math.cos(i * 0.13));
@@ -192,7 +228,7 @@ function generateData(profileKey, runMode, presetKey, country) {
   const throughput = schedule.reduce((s, r) => s + (r.charge_mw + r.discharge_mw) * 0.25, 0);
   const cycles = throughput / (2 * profile.energy_mwh);
   const realizedProfit = schedule.reduce((sum, r) => sum + r.realized_price_eur_per_mwh * (r.discharge_mw - r.charge_mw) * 0.25 - 2 * (r.charge_mw + r.discharge_mw) * 0.25, 0);
-  const perfectPct = Math.min(91, 62 + featureBoost * 120 + (runMode === "CVaR" ? 2 : 0));
+  const perfectPct = Math.min(91, 62 + featureBoost * 120 + risk.perfectBoost);
   const naiveDelta = realizedProfit * (0.18 + featureBoost);
   const scenarioProfits = [
     realizedProfit * 0.62,
@@ -218,14 +254,15 @@ function generateData(profileKey, runMode, presetKey, country) {
     robustness,
     metadata: {
       battery_profile: profile,
-      optimizer: runMode.toLowerCase(),
+      optimizer: "optimize_dispatch",
       objective_value_eur: Math.round(realizedProfit * 0.96),
       solver_status: "Optimal",
       expected_profit_eur: Math.round(realizedProfit),
       worst_profit_eur: Math.min(...robustness.map((r) => r.realized_profit_eur)),
-      cvar_eur: runMode === "CVaR" ? Math.round(scenarioProfits[0] * 0.92) : null,
-      cvar_alpha: runMode === "CVaR" ? 0.1 : null,
-      cvar_lambda: runMode === "CVaR" ? 0.7 : null,
+      cvar_eur: Math.round(scenarioProfits[0] * risk.cvarMultiplier),
+      cvar_alpha: risk.alpha,
+      cvar_lambda: risk.lambda,
+      risk_setting: risk.label,
       scenario_profits_eur: scenarioProfits,
       feasibility: { feasible: true },
       feature_families_enabled: featurePresets[presetKey],
@@ -235,7 +272,7 @@ function generateData(profileKey, runMode, presetKey, country) {
       naive_delta_eur: Math.round(naiveDelta),
       perfect_delta_eur: Math.round(realizedProfit * (100 / perfectPct - 1)),
       runtime_ms: 184,
-      scenarios_used: runMode === "Deterministic" ? 1 : 3,
+      scenarios_used: 3,
     },
   };
 }
@@ -249,24 +286,25 @@ function formatPct(value) {
 }
 
 function App() {
-  const [route, setRoute] = useState(window.location.pathname === "/moat" ? "moat" : window.location.pathname === "/business" ? "business" : "dashboard");
+  const initialRoute = window.location.pathname === "/analytics" ? "analytics" : window.location.pathname === "/moat" ? "moat" : window.location.pathname === "/business" ? "business" : "dashboard";
+  const [route, setRoute] = useState(initialRoute);
   const [country, setCountry] = useState("GR");
   const [profile, setProfile] = useState("liion_100_2h");
-  const [runMode, setRunMode] = useState("Stochastic");
+  const [riskSetting, setRiskSetting] = useState("balanced");
   const [preset, setPreset] = useState("domino");
   const [profitMode, setProfitMode] = useState("period");
   const [selectedPeriod, setSelectedPeriod] = useState(0);
-  const dataset = useMemo(() => generateData(profile, runMode, preset, country), [profile, runMode, preset, country]);
+  const dataset = useMemo(() => generateData(profile, riskSetting, preset, country), [profile, riskSetting, preset, country]);
 
   useEffect(() => {
-    const runModes = ["Deterministic", "Stochastic", "CVaR"];
+    const riskKeys = Object.keys(riskSettings);
     const presets = Object.keys(featurePresets);
     function onKeyDown(event) {
       if (["INPUT", "SELECT", "TEXTAREA"].includes(event.target?.tagName)) return;
       if (event.key === "ArrowRight") setSelectedPeriod((value) => Math.min(95, value + 1));
       if (event.key === "ArrowLeft") setSelectedPeriod((value) => Math.max(0, value - 1));
       if (event.key.toLowerCase() === "r") {
-        setRunMode((value) => runModes[(runModes.indexOf(value) + 1) % runModes.length]);
+        setRiskSetting((value) => riskKeys[(riskKeys.indexOf(value) + 1) % riskKeys.length]);
       }
       if (event.key.toLowerCase() === "f") {
         setPreset((value) => presets[(presets.indexOf(value) + 1) % presets.length]);
@@ -285,8 +323,9 @@ function App() {
     <div className="app">
       <Sidebar route={route} navigate={navigate} />
       <main className="shell">
-        <TopBar country={country} setCountry={setCountry} profile={profile} setProfile={setProfile} runMode={runMode} setRunMode={setRunMode} />
-        {route === "dashboard" && <Dashboard data={dataset} runMode={runMode} preset={preset} setPreset={setPreset} profitMode={profitMode} setProfitMode={setProfitMode} selectedPeriod={selectedPeriod} />}
+        <TopBar country={country} setCountry={setCountry} profile={profile} setProfile={setProfile} riskSetting={riskSetting} setRiskSetting={setRiskSetting} />
+        {route === "dashboard" && <Dashboard data={dataset} preset={preset} setPreset={setPreset} profitMode={profitMode} setProfitMode={setProfitMode} selectedPeriod={selectedPeriod} />}
+        {route === "analytics" && <Analytics data={dataset} />}
         {route === "moat" && <Moat preset={preset} setPreset={setPreset} />}
         {route === "business" && <Business />}
       </main>
@@ -297,6 +336,7 @@ function App() {
 function Sidebar({ route, navigate }) {
   const items = [
     ["dashboard", "Dashboard", LineChartIcon],
+    ["analytics", "Analytics", Database],
     ["moat", "Moat", Radar],
     ["business", "Business", BriefcaseBusiness],
   ];
@@ -318,7 +358,7 @@ function Sidebar({ route, navigate }) {
   );
 }
 
-function TopBar({ country, setCountry, profile, setProfile, runMode, setRunMode }) {
+function TopBar({ country, setCountry, profile, setProfile, riskSetting, setRiskSetting }) {
   return (
     <header className="topbar">
       <div className="control">
@@ -333,16 +373,19 @@ function TopBar({ country, setCountry, profile, setProfile, runMode, setRunMode 
         <span>Delivery day</span>
         <input type="date" defaultValue="2026-04-29" />
       </div>
+      <div className="optimizer-pill">
+        <span>Optimizer</span>
+        <strong>optimize_dispatch</strong>
+      </div>
       <div className="segmented">
-        {["Deterministic", "Stochastic", "CVaR"].map((mode) => <button key={mode} onClick={() => setRunMode(mode)} className={runMode === mode ? "active" : ""}>{mode}</button>)}
+        {Object.entries(riskSettings).map(([key, cfg]) => <button key={key} onClick={() => setRiskSetting(key)} className={riskSetting === key ? "active" : ""}>{cfg.label}</button>)}
       </div>
     </header>
   );
 }
 
-function Dashboard({ data, runMode, preset, setPreset, profitMode, setProfitMode, selectedPeriod }) {
+function Dashboard({ data, preset, setPreset, profitMode, setProfitMode, selectedPeriod }) {
   const { schedule, metadata } = data;
-  const cvarVisible = runMode === "CVaR";
   return (
     <div className="page dashboard-grid">
       <section className="content">
@@ -351,7 +394,7 @@ function Dashboard({ data, runMode, preset, setPreset, profitMode, setProfitMode
           <Kpi title="Perfect foresight captured" value={formatPct(metadata.realized_profit_vs_perfect_pct)} sub="the headline number" icon={Gauge} />
           <Kpi title="Worst-case profit" value={formatEUR(metadata.worst_profit_eur)} sub="if the battery underperforms its spec sheet" icon={ShieldAlert} />
           <Kpi title="Cycles used" value={`${metadata.cycles_used} / ${metadata.battery_profile.max_cycles_per_day}`} sub={<Progress value={metadata.cycles_used / metadata.battery_profile.max_cycles_per_day} />} icon={Activity} />
-          <Kpi title={`CVaR${metadata.cvar_alpha ? `_${metadata.cvar_alpha}` : ""} profit`} value={cvarVisible ? formatEUR(metadata.cvar_eur) : "Hidden"} sub={cvarVisible ? "tail-risk adjusted" : "shown only in CVaR mode"} icon={GitBranch} muted={!cvarVisible} />
+          <Kpi title={`CVaR_${metadata.cvar_alpha} profit`} value={formatEUR(metadata.cvar_eur)} sub={`tail-risk adjusted · λ ${metadata.cvar_lambda}`} icon={GitBranch} />
         </div>
         <Panel title="Live dispatch" action={<span className="caption">Selected {schedule[selectedPeriod]?.time} · 96 quarter-hour MTUs</span>}>
           <div className="chart-large">
@@ -361,9 +404,9 @@ function Dashboard({ data, runMode, preset, setPreset, profitMode, setProfitMode
                 <XAxis dataKey="time" tick={{ fill: COLORS.faint, fontSize: 11 }} interval={7} axisLine={false} tickLine={false} />
                 <YAxis yAxisId="price" tick={{ fill: COLORS.faint, fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: "EUR/MWh", angle: -90, fill: COLORS.faint, position: "insideLeft" }} />
                 <YAxis yAxisId="mw" orientation="right" tick={{ fill: COLORS.faint, fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: "MW", angle: 90, fill: COLORS.faint, position: "insideRight" }} />
-                <Tooltip content={<DispatchTooltip runMode={runMode} />} />
-                {runMode !== "Deterministic" && <Area yAxisId="price" type="monotone" dataKey="bandHigh" stroke="none" fill="#6B7280" fillOpacity={0.13} />}
-                {runMode !== "Deterministic" && <Area yAxisId="price" type="monotone" dataKey="bandLow" stroke="none" fill={COLORS.bg} fillOpacity={1} />}
+                <Tooltip content={<DispatchTooltip />} />
+                <Area yAxisId="price" type="monotone" dataKey="bandHigh" stroke="none" fill="#6B7280" fillOpacity={0.13} />
+                <Area yAxisId="price" type="monotone" dataKey="bandLow" stroke="none" fill={COLORS.bg} fillOpacity={1} />
                 <Bar yAxisId="mw" dataKey="dispatchBar" barSize={4}>{schedule.map((r) => <Cell key={r.idx} fill={r.dispatchBar < 0 ? COLORS.blue : COLORS.amber} fillOpacity={0.72} />)}</Bar>
                 <Line yAxisId="price" type="monotone" dataKey="forecast_price_eur_per_mwh" stroke="#9CA3AF" strokeWidth={2} dot={false} />
                 <Line yAxisId="price" type="monotone" dataKey="realized_price_eur_per_mwh" stroke={COLORS.text} strokeWidth={2.4} strokeDasharray="5 5" dot={false} />
@@ -404,7 +447,7 @@ function Dashboard({ data, runMode, preset, setPreset, profitMode, setProfitMode
         </div>
         <FeaturePills preset={preset} setPreset={setPreset} />
       </section>
-      <RunSummary data={data} runMode={runMode} />
+      <RunSummary data={data} />
     </div>
   );
 }
@@ -425,23 +468,169 @@ function FeaturePills({ preset, setPreset }) {
   return <div className="feature-row">{Object.entries(featurePresets).map(([key, labels]) => <button key={key} onClick={() => setPreset(key)} className={preset === key ? "active" : ""}>{labels[labels.length - 1]}</button>)}</div>;
 }
 
-function RunSummary({ data, runMode }) {
+function RunSummary({ data }) {
   const { metadata } = data;
   const rows = ["p10", "p50", "p90"].map((label, i) => ({ label, weight: [0.2, 0.6, 0.2][i], profit: metadata.scenario_profits_eur[i] }));
-  return <aside className="rail"><h2>Run summary</h2><Info label="Battery" value={metadata.battery_profile.name} /><Info label="Power / energy" value={`${metadata.battery_profile.power_mw} MW / ${metadata.battery_profile.energy_mwh} MWh`} /><Info label="η round-trip" value={`${Math.round(metadata.battery_profile.eta_rt * 100)}%`} /><Info label="Solver" value={`${metadata.solver_status} · ${metadata.runtime_ms} ms`} /><Info label="Scenarios" value={metadata.scenarios_used} /><Info label="Objective" value={formatEUR(metadata.objective_value_eur)} /><div className="feasible"><CheckCircle2 size={16} /> Feasible</div>{runMode !== "Deterministic" && <div className="scenario-table"><h3>Scenario profits</h3>{rows.map((r, idx) => <div key={r.label} className={runMode === "CVaR" && idx === 0 ? "tail" : ""}><span>{r.label}</span><span>{Math.round(r.weight * 100)}%</span><strong>{formatEUR(r.profit)}</strong></div>)}</div>}<button className="rerun"><SlidersHorizontal size={15} /> Re-run with different parameters</button></aside>;
+  return <aside className="rail"><h2>Run summary</h2><Info label="Optimizer" value={metadata.optimizer} /><Info label="Risk setting" value={`${metadata.risk_setting} · λ ${metadata.cvar_lambda}`} /><Info label="Battery" value={metadata.battery_profile.name} /><Info label="Power / energy" value={`${metadata.battery_profile.power_mw} MW / ${metadata.battery_profile.energy_mwh} MWh`} /><Info label="η round-trip" value={`${Math.round(metadata.battery_profile.eta_rt * 100)}%`} /><Info label="Solver" value={`${metadata.solver_status} · ${metadata.runtime_ms} ms`} /><Info label="Scenarios" value={metadata.scenarios_used} /><Info label="Objective" value={formatEUR(metadata.objective_value_eur)} /><div className="feasible"><CheckCircle2 size={16} /> Feasible</div><div className="scenario-table"><h3>Scenario profits</h3>{rows.map((r, idx) => <div key={r.label} className={idx === 0 ? "tail" : ""}><span>{r.label}</span><span>{Math.round(r.weight * 100)}%</span><strong>{formatEUR(r.profit)}</strong></div>)}</div><button className="rerun"><SlidersHorizontal size={15} /> Re-run with different parameters</button></aside>;
 }
 
 function Info({ label, value }) {
   return <div className="info"><span>{label}</span><strong>{value}</strong></div>;
 }
 
-function DispatchTooltip({ active, payload, runMode }) {
+function DispatchTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const r = payload[0].payload;
-  return <div className="tooltip"><strong>{r.timestamp}</strong><span>p50 {r.forecast_price_eur_per_mwh} EUR/MWh</span>{runMode !== "Deterministic" && <span>p10/p90 {r.p10} / {r.p90}</span>}<span>realized {r.realized_price_eur_per_mwh}</span><span>charge/discharge {r.charge_mw} / {r.discharge_mw} MW</span><span>SoC {r.state_of_charge_mwh} MWh</span><span>profit {formatEUR(r.period_profit_eur)}</span></div>;
+  return <div className="tooltip"><strong>{r.timestamp}</strong><span>p50 {r.forecast_price_eur_per_mwh} EUR/MWh</span><span>p10/p90 {r.p10} / {r.p90}</span><span>realized {r.realized_price_eur_per_mwh}</span><span>charge/discharge {r.charge_mw} / {r.discharge_mw} MW</span><span>SoC {r.state_of_charge_mwh} MWh</span><span>profit {formatEUR(r.period_profit_eur)}</span></div>;
 }
 function SimpleTooltip({ active, payload }) { if (!active || !payload?.length) return null; const r = payload[0].payload; return <div className="tooltip"><strong>{r.time}</strong><span>SoC {r.state_of_charge_mwh} MWh</span></div>; }
 function ProfitTooltip({ active, payload }) { if (!active || !payload?.length) return null; const r = payload[0].payload; return <div className="tooltip"><strong>{r.time}</strong><span>period {formatEUR(r.period_profit_eur)}</span><span>cumulative {formatEUR(r.cumulative_profit_eur)}</span></div>; }
+
+function Analytics({ data }) {
+  const [activeStep, setActiveStep] = useState("forecast");
+  const { schedule, metadata } = data;
+  const preview = schedule.filter((_, i) => i % 8 === 0).slice(0, 12);
+  const rawClean = schedule.map((r, i) => ({
+    ...r,
+    raw_price: Math.round((r.realized_price_eur_per_mwh + 10 * Math.sin(i * 1.7) + (i % 11 === 0 ? 24 : 0)) * 100) / 100,
+    cleaned_price: r.realized_price_eur_per_mwh,
+  }));
+  const featureRows = preview.slice(0, 7).map((r, i) => ({
+    time: r.time,
+    residual: Math.round(5200 + 900 * Math.sin(i * 0.9)),
+    lag: Math.round(r.forecast_price_eur_per_mwh + 12 * Math.cos(i)),
+    gas: Math.round(39 + i * 0.4),
+    carbon: Math.round(66 + i * 0.25),
+    weather: Math.round(18 + 6 * Math.sin(i * 0.7)),
+  }));
+  const waterfall = [
+    { name: "Gross arbitrage", value: Math.round(metadata.expected_profit_eur + 12800), fill: COLORS.green },
+    { name: "Charging cost", value: -8200, fill: COLORS.red },
+    { name: "Degradation", value: -4600, fill: COLORS.red },
+    { name: "Net profit", value: metadata.expected_profit_eur, fill: COLORS.amber },
+  ];
+
+  return (
+    <div className="page analytics-grid">
+      <section className="content">
+        <Panel title="Workflow from market data to dispatch decision" action={<span className="caption">Click a step to focus the visuals</span>}>
+          <div className="workflow-strip">
+            {workflowSteps.map(([key, title, desc, Icon], idx) => (
+              <button key={key} className={`workflow-step ${activeStep === key ? "active" : ""}`} onMouseEnter={() => setActiveStep(key)} onClick={() => setActiveStep(key)}>
+                <span className="step-index">{String(idx + 1).padStart(2, "0")}</span>
+                <Icon size={16} />
+                <strong>{title}</strong>
+                <small>{desc}</small>
+                <i className="status-dot" />
+              </button>
+            ))}
+          </div>
+        </Panel>
+
+        <div className="analytics-cards">
+          <Panel title="1. Raw vs cleaned DAM price" action={<FocusBadge active={["data", "clean"].includes(activeStep)} />}>
+            <div className={`chart-mid compact ${["data", "clean"].includes(activeStep) ? "focus" : ""}`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={rawClean} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+                  <CartesianGrid stroke="#1F2937" vertical={false} />
+                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+                  <Line dataKey="raw_price" stroke="#64748B" strokeDasharray="4 4" dot={false} />
+                  <Line dataKey="cleaned_price" stroke={COLORS.text} strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+
+          <Panel title="2. Feature matrix preview" action={<FocusBadge active={activeStep === "features"} />}>
+            <div className={`feature-matrix ${activeStep === "features" ? "focus" : ""}`}>
+              <div className="matrix-head"><span>MTU</span><span>Residual load</span><span>Lag price</span><span>Gas</span><span>Carbon</span><span>Weather</span></div>
+              {featureRows.map((r) => (
+                <div key={r.time} className="matrix-row">
+                  <span>{r.time}</span><span>{r.residual}</span><span>{r.lag}</span><span>{r.gas}</span><span>{r.carbon}</span><span>{r.weather}</span>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel title="3. Forecaster output scenarios" action={<FocusBadge active={activeStep === "forecast"} />}>
+            <div className={`chart-mid compact ${activeStep === "forecast" ? "focus" : ""}`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+                  <CartesianGrid stroke="#1F2937" vertical={false} />
+                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+                  <Line dataKey="p10" stroke="#64748B" dot={false} strokeDasharray="3 4" />
+                  <Line dataKey="forecast_price_eur_per_mwh" name="p50" stroke={COLORS.blue} strokeWidth={2.3} dot={false} />
+                  <Line dataKey="p90" stroke="#CBD5E1" dot={false} strokeDasharray="3 4" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+
+          <Panel title="4. Optimizer output" action={<FocusBadge active={["optimize", "output"].includes(activeStep)} />}>
+            <div className={`chart-mid compact ${["optimize", "output"].includes(activeStep) ? "focus" : ""}`}>
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={schedule} margin={{ top: 14, right: 16, left: -18, bottom: 0 }}>
+                  <CartesianGrid stroke="#1F2937" vertical={false} />
+                  <XAxis dataKey="time" interval={15} tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="mw" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="soc" orientation="right" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<DispatchTooltip />} />
+                  <Bar yAxisId="mw" dataKey="dispatchBar" barSize={5}>{schedule.map((r) => <Cell key={r.idx} fill={r.dispatchBar < 0 ? COLORS.blue : COLORS.amber} fillOpacity={0.75} />)}</Bar>
+                  <Line yAxisId="soc" dataKey="state_of_charge_mwh" stroke={COLORS.text} strokeWidth={1.8} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+        </div>
+
+        <Panel title="How value is created" action={<FocusBadge active={["economics", "backtest"].includes(activeStep)} />}>
+          <div className="value-grid">
+            <div className="value-flow">
+              {["forecast price", "optimizer decision", "battery schedule", "realized profit"].map((label, i) => (
+                <React.Fragment key={label}>
+                  <span className={i === 1 ? "blue" : i === 3 ? "amber" : ""}>{label}</span>
+                  {i < 3 && <ArrowDownToLine size={15} />}
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="chart-mid compact">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={waterfall} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+                  <CartesianGrid stroke="#1F2937" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: COLORS.faint, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(value) => formatEUR(value)} contentStyle={{ background: COLORS.panel, border: `1px solid ${COLORS.border}` }} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>{waterfall.map((r) => <Cell key={r.name} fill={r.fill} fillOpacity={0.82} />)}</Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </Panel>
+      </section>
+      <aside className="rail">
+        <h2>What the judge should understand</h2>
+        <ul className="judge-list">
+          <li>We do not optimize raw data directly.</li>
+          <li>The forecaster predicts price curves.</li>
+          <li>The optimizer converts price curves into feasible battery actions.</li>
+          <li>The economic model converts actions into profit and risk metrics.</li>
+          <li>Backtesting proves whether the full system works historically.</li>
+        </ul>
+        <Info label="Current focus" value={workflowSteps.find(([key]) => key === activeStep)?.[1]} />
+        <Info label="Demo artifact" value="Synthetic 96-MTU day" />
+        <Info label="Integration contract" value="timestamp + forecast_price" />
+      </aside>
+    </div>
+  );
+}
+
+function FocusBadge({ active }) {
+  return <span className={`focus-badge ${active ? "active" : ""}`}>{active ? "in focus" : "linked"}</span>;
+}
 
 function Moat({ preset, setPreset }) {
   const features = makeFeatures(preset);

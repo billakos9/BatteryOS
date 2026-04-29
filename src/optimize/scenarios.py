@@ -1,3 +1,20 @@
+"""Scenario containers and reducers.
+
+These are forecaster-side utilities. The architectural contract is:
+
+  forecaster
+      → samples N Monte Carlo price paths
+      → reduces them via `scenarios_fast_forward` (or its own method)
+      → emits a `PriceScenarios` bundle
+
+  optimizer (`optimize_dispatch`)
+      → consumes the `PriceScenarios`, no further reduction
+
+`scenarios_from_quantiles`, `scenarios_from_samples`, and
+`scenarios_fast_forward` are exposed here for the forecaster team to
+import. They are also used as a convenience fallback inside
+`optimize_dispatch` when callers pass raw arrays during prototyping.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass

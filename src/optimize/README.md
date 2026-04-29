@@ -1,344 +1,201 @@
 # src/optimize
 
-Battery scheduling optimizers and economic dispatch logic live here.
+The BatteryOS dispatch optimizer. **One** optimizer.
 
-## What this module owns
+## What it does
 
-The optimizer does not collect data and does not forecast prices.
+Takes the forecaster's scenario output, returns a day-ahead dispatch
+plan, a HEnEx bid ladder, a rainflow-based degradation score, and a
+battery-parameter robustness panel — in a single function call.
 
-It starts after the forecaster has already produced a price forecast.
-
-```text
-forecaster output -> optimizer -> battery schedule + expected profit
-```
-
-## Input from the forecaster
-
-The optimizer only needs a clean forecast table like this:
+## Architecture: who owns what
 
 ```text
-timestamp
-forecast_price_eur_per_mwh
+┌──────────────────── forecaster (separate module) ────────────────────┐
+│  features → predictive distribution (probabilistic forecast)         │
+│           → Monte Carlo sampling      (N price paths, N up to ~1000) │
+│           → scenario reduction        (Heitsch-Romisch / k-means /   │
+│                                        Wasserstein, S = 20-50)       │
+│           → emits PriceScenarios      (S weighted scenarios)         │
+└───────────────────────────────┬──────────────────────────────────────┘
+                                │  PriceScenarios
+                                ▼
+┌──────────────────── optimizer (this module) ─────────────────────────┐
+│  optimize_dispatch(scenarios, battery, ...)                          │
+│           → Mean-CVaR LP                                             │
+│           → bid curves                                               │
+│           → rainflow degradation                                     │
+│           → robustness sweep                                         │
+│           → DispatchResult                                           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-Optional later:
+**The forecaster owns scenario generation and reduction.** Sampling and
+reduction are concerns about *how to represent uncertainty*, which the
+forecaster has the most context to do well (it knows the predictive
+density, the cross-time copula, conditional dependence on weather and
+load). The optimizer just consumes the resulting `PriceScenarios`.
+
+For convenience during prototyping (before the forecaster pipeline
+emits its own reduced bundle), `optimize_dispatch` will *also* accept a
+raw `(N, T)` NumPy array and run `scenarios_fast_forward` internally.
+This is a fallback, not the production path.
+
+The forecaster team should import the reducer it needs from
+`src.optimize.scenarios` (or copy the algorithm into its own module —
+it's ~80 lines of NumPy):
+
+```python
+from src.optimize.scenarios import (
+    scenarios_fast_forward,    # Heitsch-Romisch (production-standard)
+    scenarios_from_samples,    # k-means (faster, less tail-aware)
+    scenarios_from_quantiles,  # 3-curve p10/p50/p90 (hackathon-grade)
+    PriceScenarios,            # the output contract
+)
+```
 
 ```text
-p10_price_eur_per_mwh
-p50_price_eur_per_mwh
-p90_price_eur_per_mwh
+forecaster scenarios + battery profile
+              │
+              ▼
+       optimize_dispatch
+              │
+              ▼
+   ┌───────── DispatchResult ─────────┐
+   │ schedule         96-period plan   │
+   │ bid_curves       HEnEx ladder     │
+   │ rainflow         aging cost       │
+   │ feasibility      constraint check │
+   │ robustness       worst-case panel │
+   └───────────────────────────────────┘
 ```
 
-That means the optimizer does not care whether the forecast came from:
+## The technique (one combined optimizer, not three)
+
+Mean-CVaR scenario-based stochastic optimization with Heitsch-Romisch
+scenario reduction and the Rockafellar-Uryasev CVaR LP. Same
+architecture used in production by Habitat Energy, Fluence Mosaic,
+Tesla Autobidder, Gridmatic, Stem Athena.
+
+Single objective:
 
 ```text
-naive model
-LightGBM
-statistical model
-manual forecast
-perfect-foresight benchmark
+maximize  (1 - lambda) * E[profit]   +   lambda * CVaR_alpha[profit]
+                ▲                              ▲
+                │                              │
+        risk-neutral term            tail-protection term
 ```
 
-As long as it receives the same interface, it can work.
+When the forecaster only emits a point forecast, the input collapses to
+a single-scenario problem and the math reduces to ordinary deterministic
+optimization automatically. There are no separate "deterministic" /
+"stochastic" / "CVaR" modes for the user.
 
-## Other inputs
-
-The optimizer also needs a storage profile:
-
-```text
-power_mw
-energy_mwh
-min_soc_mwh
-max_soc_mwh
-initial_soc_mwh
-charge_efficiency
-discharge_efficiency
-max_cycles_per_day
-degradation_cost_eur_per_mwh
-```
-
-Example:
-
-```text
-power_mw = 100
-energy_mwh = 200
-min_soc_mwh = 20
-max_soc_mwh = 180
-initial_soc_mwh = 100
-charge_efficiency = 0.95
-discharge_efficiency = 0.95
-max_cycles_per_day = 1.5
-degradation_cost_eur_per_mwh = 2
-```
-
-## Decision
-
-For every timestamp, the optimizer decides:
-
-```text
-charge_mw[t]
-discharge_mw[t]
-state_of_charge_mwh[t]
-action[t]
-```
-
-Where:
-
-```text
-action = CHARGE, DISCHARGE, or IDLE
-```
-
-## Core constraints
-
-The battery must obey:
-
-```text
-0 <= charge_mw[t] <= power_mw
-0 <= discharge_mw[t] <= power_mw
-min_soc_mwh <= state_of_charge_mwh[t] <= max_soc_mwh
-cannot charge and discharge at the same time
-state_of_charge evolves correctly through time
-daily cycle limit is respected
-```
-
-State of charge update:
-
-```text
-soc[t] =
-  soc[t-1]
-  + charge_mw[t] * charge_efficiency * duration_hours
-  - discharge_mw[t] / discharge_efficiency * duration_hours
-```
-
-For 15-minute DAM data:
-
-```text
-duration_hours = 0.25
-```
-
-## Economic objective
-
-The optimizer maximizes expected profit:
-
-```text
-profit =
-  revenue_from_discharge
-  - cost_of_charge
-  - degradation_cost
-```
-
-For each timestamp:
-
-```text
-market_profit[t] =
-  forecast_price[t]
-  * (discharge_mw[t] - charge_mw[t])
-  * duration_hours
-```
-
-Total:
-
-```text
-maximize sum(market_profit[t]) - degradation_cost
-```
-
-## Stochastic optimization
-
-The deterministic version above trusts a single forecast price curve.
-
-The stochastic version optimizes across many possible price curves at once.
-
-Forecaster output with uncertainty:
-
-```text
-timestamp | p10 | p50 | p90
-12:00     | 10  | 20  | 50
-19:00     | 90  | 180 | 300
-```
-
-Convert this into scenarios:
-
-```text
-low scenario   = p10 curve
-base scenario  = p50 curve
-high scenario  = p90 curve
-```
-
-The optimizer chooses ONE schedule before knowing which scenario happens, then evaluates profit under each scenario:
-
-```text
-profit_low
-profit_base
-profit_high
-```
-
-### Objective options
-
-Expected profit (probability weighted):
-
-```text
-maximize  w_low * profit_low + w_base * profit_base + w_high * profit_high
-```
-
-Example weights:
-
-```text
-0.2 * profit_low + 0.6 * profit_base + 0.2 * profit_high
-```
-
-Risk-adjusted profit:
-
-```text
-maximize  expected_profit - lambda * risk_penalty
-```
-
-Robust / worst-case (CVaR-style):
-
-```text
-maximize  worst_case_profit
-```
-
-### What stays the same
-
-```text
-SoC limits
-power limits
-cycle limits
-no simultaneous charge/discharge
-state-of-charge update equation
-```
-
-Only the objective function changes. Constraints are enforced on the single schedule that must work across all scenarios.
-
-### Why it matters
-
-A deterministic optimizer can pick a schedule that looks great on the p50 forecast but loses money if reality lands near p10. The stochastic optimizer prefers schedules that are decent across the whole distribution.
-
-Example tradeoff:
-
-```text
-Schedule A:  profit_low = -1000,  profit_base =  5000,  profit_high = 12000
-Schedule B:  profit_low =  1000,  profit_base =  4000,  profit_high =  7000
-```
-
-Maximizing upside picks A. Maximizing worst case picks B.
-
-### Implementation order
-
-```text
-1. deterministic optimizer on forecast_price (or p50)
-2. scenario evaluator: replay one schedule across p10/p50/p90 to score robustness
-3. stochastic optimizer: jointly optimize across scenarios with expected-profit objective
-4. robust optimizer: worst-case or CVaR objective
-```
-
-Build step 1 first. Steps 2-4 reuse the same battery model and constraints.
-
-## Output
-
-The optimizer should return a schedule:
-
-```text
-timestamp
-forecast_price_eur_per_mwh
-charge_mw
-discharge_mw
-state_of_charge_mwh
-action
-period_profit_eur
-```
-
-Example:
-
-```text
-00:00 | 60 EUR/MWh  | charge 100 MW    | soc increases
-12:00 | 20 EUR/MWh  | charge 100 MW    | soc increases
-19:00 | 180 EUR/MWh | discharge 100 MW | soc decreases
-```
-
-## Files in this module
-
-```text
-battery.py        BatteryProfile dataclass + YAML loader
-schedule.py       Schedule output format + period_profit/action labels
-economics.py      profit, cycles, feasibility checks
-scenarios.py      PriceScenarios + quantile/sample reduction (k-means)
-_milp_core.py     shared MILP building blocks (variables, constraints, solver)
-rule_based.py     greedy rank-based heuristic (no solver)
-milp.py           deterministic single-curve optimizer
-stochastic.py     two-stage scenario MILP (expected / worst-case / mean-MAD)
-robust.py         CVaR optimizer + battery-parameter sweep
-__init__.py       public API
-```
-
-Public API:
+## Usage
 
 ```python
 from src.optimize import (
     BatteryProfile, load_profile,
-    optimize_rule_based, optimize_deterministic,
-    scenarios_from_quantiles, scenarios_from_samples,
-    optimize_stochastic, optimize_cvar,
-    sweep_battery_parameters, feasibility_report,
+    optimize_dispatch, DispatchResult,
 )
+
+# 1. The asset
+battery = load_profile("config/storage_profiles.yaml", "liion_100_2h")
+# or:
+battery = BatteryProfile.custom(
+    name="my_megapack",
+    power_mw=200, energy_mwh=400,
+    round_trip_efficiency=0.88,
+    max_cycles_per_day=1.5,
+    degradation_cost_eur_per_mwh=2.5,
+)
+
+# 2. The forecaster output (Monte Carlo price paths)
+samples = forecaster.predict(...)        # shape (N, 96), N up to ~1000
+
+# 3. Run the optimizer — one call
+result = optimize_dispatch(
+    scenarios=samples,
+    timestamps=ts,
+    battery=battery,
+    alpha=0.10,            # CVaR tail mass
+    risk_aversion=0.5,     # weight on CVaR vs expected profit
+    n_reduced_scenarios=30,
+)
+
+# 4. Use the outputs
+schedule_df = result.schedule.df          # DAM dispatch plan
+bid_ladder  = result.bid_curves           # to submit to HEnEx
+aging_cost  = result.rainflow.aging_cost_eur
+worst_case  = result.robustness.worst_case_profit
+print(result.summary())
 ```
 
-Solver: PuLP with CBC by default; auto-switches to HiGHS if installed.
+## What's in DispatchResult
 
-## First implementation target
+| Field | Type | What it carries |
+|---|---|---|
+| `schedule` | `Schedule` | timestamp / forecast price / charge_mw / discharge_mw / SoC / action / profit per period |
+| `bid_curves` | `BidCurves` | HEnEx-style price-quantity ladder per delivery period (resolve method) |
+| `rainflow` | `RainflowScore` | ASTM E1049 rainflow cycles + Wöhler aging cost (replaces the constant €/MWh stand-in) |
+| `feasibility` | `FeasibilityReport` | SoC / power / cycle / dynamics / terminal-SoC violations |
+| `robustness` | `ParameterSweepResult` | realized PnL across efficiency × degradation perturbations |
+| `scenarios` | `PriceScenarios` | the (possibly reduced) scenario set actually used |
+| `battery` | `BatteryProfile` | the asset spec |
+| `realized_evaluation` | `dict \| None` | ex-post PnL when realized prices are supplied |
+| `metadata` | `dict` | the run knobs (alpha, lambda, horizon, …) |
 
-Build this first:
+## Tuning the knobs (industry-typical defaults)
+
+| Knob | Default | Range used in industry |
+|---|---|---|
+| `alpha` | 0.10 | 0.05 – 0.20 (CVaR tail mass) |
+| `risk_aversion` | 0.5 | 0.3 – 0.7 (weight on tail vs expected) |
+| `n_reduced_scenarios` | 30 | 20 – 50 (post-reduction scenario count) |
+| `duration_hours` | 0.25 | matches the SDAC 15-minute MTU |
+
+## Files in this module
 
 ```text
-forecast_price curve -> simple optimizer -> schedule -> expected profit
+dispatch.py          THE entry point: optimize_dispatch + DispatchResult
+battery.py           BatteryProfile (incl. .custom builder + YAML loader)
+schedule.py          Schedule output + period_profit / action labels
+scenarios.py         PriceScenarios + reducers (forecaster-side utilities)
+economics.py         period_profit, cycle counting, feasibility checks
+degradation.py       Rainflow counter + Wöhler aging cost
+bid_curves.py        Bid-curve construction (resolve method)
+robust.py            CVaR LP engine + battery-parameter sweep   (private)
+milp.py              Single-curve LP used inside bid_curves      (private)
+_milp_core.py        Shared MILP scaffolding                     (private)
 ```
 
-This can be tested with fake prices, so it does not block on the data team.
+`robust.py`, `milp.py`, and `_milp_core.py` are the engine room of
+`optimize_dispatch`. They are not part of the public API; only
+`optimize_dispatch` is.
 
-Example fake forecast:
+## Customizing the asset
 
-```text
-low prices at noon
-high prices in the evening
-```
+Three ways to build a battery, all reach the same `BatteryProfile`:
 
-Expected behavior:
+```python
+# Bundled catalog
+load_profile("config/storage_profiles.yaml", "liion_100_2h")
 
-```text
-charge at low prices
-discharge at high prices
-stay idle when spread is not worth it
-```
+# Multiple files (bundled + user)
+load_profile(
+    ["config/storage_profiles.yaml", "config/custom_profiles.yaml"],
+    "my_megapack",
+)
 
-## Boundary with the forecasting teammate
-
-Your teammate owns:
-
-```text
-raw HEnEx/IPTO/weather data
-feature engineering
-price forecasting
-forecast accuracy metrics
-```
-
-The optimizer owns:
-
-```text
-battery constraints
-charge/discharge decisions
-profit calculation
-robustness to battery parameter uncertainty
-schedule feasibility
-```
-
-The contract between both parts is only:
-
-```text
-timestamp + forecast_price
-```
-
-Later, if the forecaster produces uncertainty, the contract becomes:
-
-```text
-timestamp + p10_price + p50_price + p90_price
+# Direct kwargs (the dashboard's "Create custom battery" form maps to this)
+BatteryProfile.custom(
+    name="my_megapack",
+    power_mw=200,
+    energy_mwh=400,
+    soc_min_frac=0.10,
+    soc_max_frac=0.90,
+    round_trip_efficiency=0.88,
+    max_cycles_per_day=1.5,
+    degradation_cost_eur_per_mwh=2.5,
+)
 ```

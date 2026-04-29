@@ -27,6 +27,7 @@ def optimize_cvar(
     risk_aversion: float = 1.0,
     time_limit_s: Optional[int] = 180,
     enforce_disjunction: bool = False,
+    degradation_costs_eur_per_mwh: Optional[Iterable[float]] = None,
 ) -> Schedule:
     """Mean-CVaR objective via Rockafellar-Uryasev LP reformulation.
 
@@ -46,6 +47,13 @@ def optimize_cvar(
         raise ValueError("risk_aversion (lambda) must lie in [0, 1]")
 
     horizon = scenarios.horizon
+    degradation_cost = (
+        battery.degradation_cost_eur_per_mwh
+        if degradation_costs_eur_per_mwh is None
+        else np.asarray(list(degradation_costs_eur_per_mwh), dtype=float)
+    )
+    if not np.isscalar(degradation_cost) and len(degradation_cost) != horizon:
+        raise ValueError("degradation_costs_eur_per_mwh length must match scenario horizon")
     model = build_battery_model(
         battery,
         horizon,
@@ -56,7 +64,7 @@ def optimize_cvar(
     S = scenarios.n_scenarios
 
     profits = [
-        scenario_profit_expression(model, scenarios.prices[s], battery.degradation_cost_eur_per_mwh)
+        scenario_profit_expression(model, scenarios.prices[s], degradation_cost)
         for s in range(S)
     ]
     expected_profit = pulp.lpSum(scenarios.weights[s] * profits[s] for s in range(S))
@@ -82,9 +90,15 @@ def optimize_cvar(
         market = float(
             np.sum(prices_s * (np.array(discharge) - np.array(charge))) * duration_hours
         )
+        if np.isscalar(degradation_cost):
+            degradation_cost_array = np.full(horizon, float(degradation_cost))
+        else:
+            degradation_cost_array = np.asarray(degradation_cost, dtype=float)
         deg = float(
-            battery.degradation_cost_eur_per_mwh
-            * np.sum(np.array(charge) + np.array(discharge))
+            np.sum(
+                degradation_cost_array
+                * (np.array(charge) + np.array(discharge))
+            )
             * duration_hours
         )
         scenario_profits.append(market - deg)
@@ -110,7 +124,7 @@ def optimize_cvar(
         discharge,
         soc,
         duration_hours,
-        battery.degradation_cost_eur_per_mwh,
+        degradation_cost,
     )
 
     return Schedule(
@@ -129,6 +143,11 @@ def optimize_cvar(
             "worst_profit_eur": float(scenario_profits.min()),
             "best_profit_eur": float(scenario_profits.max()),
             "scenario_profits_eur": scenario_profits.tolist(),
+            "degradation_model": (
+                "constant"
+                if degradation_costs_eur_per_mwh is None
+                else "soc_banded_fixed_point"
+            ),
         },
     )
 

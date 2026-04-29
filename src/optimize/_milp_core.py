@@ -103,20 +103,30 @@ def build_battery_model(
     return BatteryMILP(prob=prob, p_ch=p_ch, p_dis=p_dis, soc=soc, z=z, duration_hours=duration_hours)
 
 
+def _period_costs(cost: float | Sequence[float], horizon: int) -> list[float]:
+    if isinstance(cost, (int, float)):
+        return [float(cost)] * horizon
+    costs = [float(c) for c in cost]
+    if len(costs) != horizon:
+        raise ValueError("degradation cost vector length must match horizon")
+    return costs
+
+
 def scenario_profit_expression(
     model: BatteryMILP,
     prices: Sequence[float],
-    degradation_cost_eur_per_mwh: float,
+    degradation_cost_eur_per_mwh: float | Sequence[float],
 ) -> pulp.LpAffineExpression:
     horizon = len(model.p_ch)
     if len(prices) != horizon:
         raise ValueError("prices length must match horizon")
+    degradation_costs = _period_costs(degradation_cost_eur_per_mwh, horizon)
     revenue = pulp.lpSum(
         prices[t] * (model.p_dis[t] - model.p_ch[t]) * model.duration_hours
         for t in range(horizon)
     )
     deg = pulp.lpSum(
-        degradation_cost_eur_per_mwh
+        degradation_costs[t]
         * (model.p_ch[t] + model.p_dis[t])
         * model.duration_hours
         for t in range(horizon)

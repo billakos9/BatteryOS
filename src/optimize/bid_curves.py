@@ -1,27 +1,16 @@
-"""Bid-curve construction from forecast prices.
+"""Bid-curve construction.
 
-A bid curve is a step function `q(p)` that says, for each delivery period,
-how many MW we are willing to buy/sell at each candidate clearing price p.
-Self-scheduling submits a single (q, t) commitment; bid curves submit a
-schedule of (q, p, t) triples and let the market clear them.
+A bid curve is a step function `q(p)` that says, for each delivery
+period, how many MW we are willing to buy/sell at each candidate
+clearing price `p`. Self-scheduling submits a single (q, t) commitment;
+bid curves submit a schedule of (q, p, t) triples and let the market
+clear them.
 
-Two construction methods, both consume only forecasts (no live market data):
-
-  build_bid_curves_resolve
-      Sweep a grid of price perturbations per period and re-solve the
-      deterministic optimizer for each. The resulting q-vs-p relationship
-      is the period's bid curve. Slow (K solves per period) but robust
-      and works with any optimizer (CVaR, stochastic, MILP).
-
-  build_bid_curves_from_duals
-      For the LP relaxation, the shadow prices on the SoC constraint give
-      the marginal value of stored energy at each timestamp. The optimal
-      bid is "discharge if forecast price > shadow price, charge if
-      forecast price + losses < shadow price". One solve, exact for the LP.
-
-For HEnEx-style markets that accept ladder bids (multiple price-quantity
-points per period), the resolve method gives a richer ladder; the duals
-method gives a single break-even price.
+We construct curves by sweeping candidate clearing prices per period
+and re-solving the underlying LP for each — the response of optimal
+dispatch to candidate prices traces the curve. This works on top of any
+single-curve optimization run, so it composes cleanly with the unified
+`optimize_dispatch` pipeline.
 """
 from __future__ import annotations
 
@@ -30,16 +19,9 @@ from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
-import pulp
 
 from .battery import BatteryProfile
 from .milp import optimize_deterministic
-from ._milp_core import (
-    build_battery_model,
-    extract_values,
-    get_solver,
-    scenario_profit_expression,
-)
 
 
 @dataclass
@@ -85,7 +67,6 @@ def build_bid_curves_resolve(
     battery: BatteryProfile,
     duration_hours: float = 0.25,
     price_grid_eur_per_mwh: Sequence[float] | None = None,
-    perturb_around_each_period: bool = True,
     time_limit_s: Optional[int] = 60,
 ) -> BidCurves:
     """Sweep candidate clearing prices per period; re-solve the optimizer.
@@ -135,126 +116,5 @@ def build_bid_curves_resolve(
             "horizon": horizon,
             "n_price_points": K,
             "n_solves": horizon * K,
-            "perturb_around_each_period": perturb_around_each_period,
-        },
-    )
-
-
-def build_bid_curves_from_duals(
-    timestamps: Sequence,
-    forecast_prices: Sequence[float],
-    battery: BatteryProfile,
-    duration_hours: float = 0.25,
-    time_limit_s: Optional[int] = 60,
-    degeneracy_tol_eur_per_mwh: float = 1.0,
-    fallback_to_resolve: bool = False,
-) -> BidCurves:
-    """Extract bid prices from the LP relaxation's shadow prices.
-
-    The shadow price of the SoC balance constraint at time t is the
-    marginal value of stored energy at that period. Combined with one-way
-    efficiencies and degradation cost, it gives the period's break-even
-    discharge price (above which we sell) and break-even charge price
-    (below which we buy):
-
-        sell_threshold[t] = shadow[t] / discharge_efficiency + deg_cost
-        buy_threshold[t]  = shadow[t] * charge_efficiency    - deg_cost
-
-    These are the Lagrangian-optimal bid prices for the LP relaxation.
-    Returns a two-point ladder per period.
-
-    Degenerate case: when the cycle-limit constraint binds (the typical
-    case on high-spread days), the SoC-balance duals collapse to a near-
-    constant value across all t, and the bid curve reduces to a single
-    threshold per direction. The function flags this in metadata under
-    `degenerate_constant_shadow_prices`. With `fallback_to_resolve=True`
-    it transparently re-runs `build_bid_curves_resolve` instead.
-    """
-    horizon = len(forecast_prices)
-    if horizon == 0:
-        raise ValueError("forecast_prices is empty")
-    if horizon != len(timestamps):
-        raise ValueError("timestamps and forecast_prices must have the same length")
-    model = build_battery_model(
-        battery,
-        horizon,
-        duration_hours,
-        name="battery_dual",
-        enforce_disjunction=False,
-    )
-    model.prob += scenario_profit_expression(
-        model, forecast_prices, battery.degradation_cost_eur_per_mwh
-    )
-    solver = get_solver(time_limit_s=time_limit_s)
-    status = model.prob.solve(solver)
-    if pulp.LpStatus[status] not in {"Optimal"}:
-        raise RuntimeError(f"LP did not solve to optimality: {pulp.LpStatus[status]}")
-
-    shadow_prices = np.zeros(horizon)
-    for t, soc_var in enumerate(model.soc):
-        constraints_with_var = [
-            c for c in model.prob.constraints.values() if soc_var in c
-        ]
-        if constraints_with_var:
-            shadow_prices[t] = float(constraints_with_var[0].pi or 0.0)
-
-    shadow_spread = float(shadow_prices.max() - shadow_prices.min())
-    is_degenerate = shadow_spread <= degeneracy_tol_eur_per_mwh
-
-    if is_degenerate and fallback_to_resolve:
-        return build_bid_curves_resolve(
-            timestamps,
-            forecast_prices,
-            battery,
-            duration_hours=duration_hours,
-            time_limit_s=time_limit_s,
-        )
-
-    deg = battery.degradation_cost_eur_per_mwh
-    sell_threshold = shadow_prices / max(battery.discharge_efficiency, 1e-6) + deg
-    buy_threshold = shadow_prices * battery.charge_efficiency - deg
-
-    grid_per_period = np.column_stack([buy_threshold, sell_threshold])
-    bid_quantities = np.zeros_like(grid_per_period)
-    bid_quantities[:, 0] = -battery.power_mw
-    bid_quantities[:, 1] = battery.power_mw
-
-    common_grid = np.linspace(
-        float(min(buy_threshold.min(), float(np.min(forecast_prices)))) - 5.0,
-        float(max(sell_threshold.max(), float(np.max(forecast_prices)))) + 5.0,
-        21,
-    )
-    bids = np.zeros((horizon, len(common_grid)))
-    for t in range(horizon):
-        for j, p in enumerate(common_grid):
-            if p <= buy_threshold[t]:
-                bids[t, j] = -battery.power_mw
-            elif p >= sell_threshold[t]:
-                bids[t, j] = battery.power_mw
-            else:
-                bids[t, j] = 0.0
-
-    return BidCurves(
-        timestamps=list(timestamps),
-        price_grid=common_grid,
-        bid_quantities_mw=bids,
-        method="duals",
-        metadata={
-            "horizon": horizon,
-            "shadow_prices_eur_per_mwh": shadow_prices.tolist(),
-            "buy_thresholds_eur_per_mwh": buy_threshold.tolist(),
-            "sell_thresholds_eur_per_mwh": sell_threshold.tolist(),
-            "solver_status": pulp.LpStatus[status],
-            "shadow_price_spread_eur_per_mwh": shadow_spread,
-            "degenerate_constant_shadow_prices": bool(is_degenerate),
-            "degeneracy_explanation": (
-                "Cycle-limit constraint is binding; SoC-balance duals are "
-                "approximately constant across all periods. The bid curve "
-                "reduces to a single buy/sell threshold per direction. "
-                "Pass fallback_to_resolve=True to compute period-specific "
-                "curves via the resolve method instead."
-                if is_degenerate
-                else ""
-            ),
         },
     )
