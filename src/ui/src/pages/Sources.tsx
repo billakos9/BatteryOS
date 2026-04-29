@@ -60,7 +60,7 @@ export default function PageSources() {
       </Card>
 
       <div className="mt-4 grid grid-cols-12 gap-4">
-        <div className="col-span-7">
+        <div className="col-span-12">
           <Card title="Pipeline map" meta="raw → processed → features → model">
             <svg viewBox="0 0 600 220" width="100%" height="220">
               {[
@@ -82,30 +82,6 @@ export default function PageSources() {
               <polygon points="540,110 535,107 535,113" fill="hsl(var(--acc))" />
               <text x="540" y="100" fontSize="10" fontFamily="IBM Plex Mono" fill="hsl(var(--fg-2))">model</text>
             </svg>
-          </Card>
-        </div>
-
-        <div className="col-span-5">
-          <Card title="Feature build log" meta="last run">
-            <div className="font-mono-tnum text-[11px] leading-7 text-fg-2">
-              {[
-                ["12:43:01", "ingest.henex: pulled 96 MTU prices for 2026-04-29", "acc"],
-                ["12:43:04", "ingest.ipto: load_fc → 96 rows, res_fc → 96 rows", "acc"],
-                ["12:43:06", "ingest.openmeteo: temp,wind,irradiance @ 11 stations", "acc"],
-                ["12:43:09", "ingest.ttf: cached value < 2h, using EOD", "amber"],
-                ["12:43:11", "features.calendar: 12 features ✓", "acc"],
-                ["12:43:13", "features.market: 38 lags + spreads ✓", "acc"],
-                ["12:43:18", "features.fundamentals: residual_load + fuel_cost ✓", "acc"],
-                ["12:43:24", "features.cross_border: DE/IT/BG residuals ✓", "acc"],
-                ["12:43:27", "features.build: 184 features × 96 MTU written", "acc"],
-                ["12:43:28", "✓ no leakage detected", "acc"],
-                ["12:43:28", "✓ all asof_ts ≤ gate_close(D−1)", "acc"],
-              ].map(([t, m, c], i) => (
-                <div key={i}>
-                  <span style={{ color: c === "acc" ? "hsl(var(--acc))" : c === "amber" ? "hsl(var(--amber))" : "hsl(var(--fg-3))" }}>[{t}]</span>{" "}{m}
-                </div>
-              ))}
-            </div>
           </Card>
         </div>
       </div>

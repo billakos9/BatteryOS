@@ -50,7 +50,7 @@ export function AssetEditor({
             {isEdit ? "Edit asset" : "Add asset"}
           </DialogTitle>
           <DialogDescription className="text-[12px] text-fg-2">
-            Battery profile dispatched into the Greek DAM. All physics parameters feed the optimizer directly.
+            Edit the asset profile used across the BatteryOS interface.
           </DialogDescription>
         </DialogHeader>
 

@@ -156,7 +156,7 @@ export default function PageForecaster() {
         <div className="col-span-8">
           <Card
             title="Day-ahead price · P10 / P50 / P90"
-            meta={overview ? `${overview.market} · ${overview.unit} · res ${overview.resolution_minutes}min · ${new Date(overview.generated_at).toLocaleTimeString()} · ${overview.source}` : "fetching from local backend…"}
+            meta={overview ? `${overview.market} · ${overview.unit} · res ${overview.resolution_minutes}min · ${new Date(overview.generated_at).toLocaleTimeString()}` : "loading forecast…"}
             actions={
               <>
                 <Seg<"24" | "48">
@@ -192,9 +192,6 @@ export default function PageForecaster() {
                 { color: "hsl(var(--magenta))", label: "P10 – P90 band" },
                 { color: "hsl(var(--blue))", label: "Realized DAM" },
               ]} />
-              <div className="ml-auto font-mono-tnum text-[10px] text-fg-3">
-                source: <span className="text-fg-0">/api/forecast/overview</span>
-              </div>
             </div>
           </Card>
         </div>
@@ -228,7 +225,7 @@ export default function PageForecaster() {
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-7">
-          <Card title="Feature importance" meta="backend overview · gain" flush>
+          <Card title="Feature importance" meta="gain" flush>
             <table className="bos-tbl">
               <thead><tr><th>Feature</th><th>Group</th><th className="num">Gain</th><th style={{ width: "38%" }}>Importance</th></tr></thead>
               <tbody>

@@ -12,12 +12,12 @@ interface PositionedNode extends WorkflowNode {
   laneIndex: number;
 }
 
-const NODE_W = 168;
-const NODE_H = 56;
-const COL_GAP = 220;
-const ROW_GAP = 88;
-const PADDING_X = 24;
-const PADDING_Y = 56;
+const NODE_W = 220;
+const NODE_H = 72;
+const COL_GAP = 280;
+const ROW_GAP = 120;
+const PADDING_X = 32;
+const PADDING_Y = 72;
 
 function laneColumns(nodes: WorkflowNode[]): Map<string, number> {
   // Topological columns by lane order, with collisions in same lane stacking.
@@ -90,13 +90,12 @@ export default function WorkflowDiagram() {
       {isLoading && <div className="font-mono-tnum text-[11px] text-fg-3">Loading pipeline diagram…</div>}
       {isError && <div className="font-mono-tnum text-[11px] text-red">Pipeline diagram unavailable.</div>}
       {data && (
-        <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0,1fr) 320px" }}>
-          <div className="overflow-x-auto">
+        <div className="flex flex-col gap-4">
+          <div className="w-full overflow-x-auto">
             <svg
               viewBox={`0 0 ${width} ${height}`}
-              width="100%"
-              height={height}
-              style={{ display: "block" }}
+              preserveAspectRatio="xMidYMid meet"
+              style={{ display: "block", width: "100%", height: "auto" }}
             >
               {/* lane bands */}
               {data.lanes.map((lane, idx) => (
@@ -110,12 +109,12 @@ export default function WorkflowDiagram() {
                     opacity={0.35}
                   />
                   <text
-                    x={12}
-                    y={PADDING_Y + idx * ROW_GAP - ROW_GAP / 2 + 16}
-                    fontSize="9"
+                    x={16}
+                    y={PADDING_Y + idx * ROW_GAP - ROW_GAP / 2 + 22}
+                    fontSize="12"
                     fontFamily="IBM Plex Mono"
                     fill={lane.color}
-                    style={{ letterSpacing: "0.12em", textTransform: "uppercase" }}
+                    style={{ letterSpacing: "0.14em", textTransform: "uppercase" }}
                   >
                     {lane.label}
                   </text>
@@ -150,7 +149,7 @@ export default function WorkflowDiagram() {
                       strokeDasharray={dash}
                     />
                     <polygon
-                      points={`${x2},${y2} ${x2 - 5},${y2 - 3} ${x2 - 5},${y2 + 3}`}
+                      points={`${x2},${y2} ${x2 - 7},${y2 - 4} ${x2 - 7},${y2 + 4}`}
                       fill={stroke}
                     />
                   </g>
@@ -179,9 +178,9 @@ export default function WorkflowDiagram() {
                       strokeWidth={isActive ? 1.6 : 1}
                     />
                     <text
-                      x={12}
-                      y={20}
-                      fontSize="11"
+                      x={16}
+                      y={28}
+                      fontSize="14"
                       fontFamily="IBM Plex Mono"
                       fill="hsl(var(--fg-0))"
                       style={{ fontWeight: 500 }}
@@ -189,15 +188,15 @@ export default function WorkflowDiagram() {
                       {node.label}
                     </text>
                     <text
-                      x={12}
-                      y={38}
-                      fontSize="9"
+                      x={16}
+                      y={50}
+                      fontSize="11"
                       fontFamily="IBM Plex Mono"
                       fill="hsl(var(--fg-3))"
                     >
                       {node.modules[0] ?? ""}
                     </text>
-                    <circle cx={NODE_W - 12} cy={12} r={3.5} fill={lane?.color ?? "hsl(var(--fg-3))"} />
+                    <circle cx={NODE_W - 14} cy={14} r={4} fill={lane?.color ?? "hsl(var(--fg-3))"} />
                   </g>
                 );
               })}
@@ -205,20 +204,23 @@ export default function WorkflowDiagram() {
           </div>
 
           {/* details panel */}
-          <div className="rounded border border-line bg-bg-2 p-3 text-[11px]">
+          <div className="rounded border border-line bg-bg-2 p-4 text-[12px]">
             {(() => {
               const node = activeId ? nodeById.get(activeId) : positioned[0];
               if (!node) return null;
               const lane = data.lanes.find((l) => l.id === node.lane);
               return (
-                <div className="flex flex-col gap-3">
+                <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(220px,1fr) 2fr minmax(220px,1fr) minmax(220px,1fr)" }}>
                   <div>
                     <div className="eyebrow" style={{ color: lane?.color }}>
                       {lane?.label}
                     </div>
-                    <div className="mt-1 font-mono-tnum text-fg-0">{node.label}</div>
+                    <div className="mt-1 font-mono-tnum text-[13px] text-fg-0">{node.label}</div>
+                    <div className="mt-3 font-mono-tnum text-[10px] text-fg-3">
+                      Hover any block to inspect its role.
+                    </div>
                   </div>
-                  <div className="text-fg-2">{node.summary}</div>
+                  <div className="text-fg-2 leading-relaxed">{node.summary}</div>
                   <div>
                     <div className="eyebrow mb-1">Modules</div>
                     <ul className="font-mono-tnum text-fg-2">
@@ -227,26 +229,16 @@ export default function WorkflowDiagram() {
                       ))}
                     </ul>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="eyebrow mb-1">Inputs</div>
-                      <ul className="font-mono-tnum text-fg-2">
-                        {node.inputs.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="eyebrow mb-1">Outputs</div>
-                      <ul className="font-mono-tnum text-fg-2">
-                        {node.outputs.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="mt-1 border-t border-line pt-2 font-mono-tnum text-[10px] text-fg-3">
-                    Hover any block to inspect its role.
+                  <div>
+                    <div className="eyebrow mb-1">Inputs / Outputs</div>
+                    <ul className="font-mono-tnum text-fg-2">
+                      {node.inputs.map((x) => (
+                        <li key={`in-${x}`}>← {x}</li>
+                      ))}
+                      {node.outputs.map((x) => (
+                        <li key={`out-${x}`}>→ {x}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               );

@@ -24,8 +24,7 @@ export default function PageAssets() {
           <div className="eyebrow mb-2">Fleet</div>
           <h1 className="h-display">Storage <em>assets</em></h1>
           <div className="mt-2 max-w-[72ch] text-[13px] text-fg-2">
-            Battery profiles dispatched into the Greek DAM. Edit physics, cycle limits, and degradation per asset.
-            Changes propagate live to the Optimizer.
+            Battery profiles for the Greek DAM. Review and edit asset assumptions, cycle limits, and degradation settings.
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">

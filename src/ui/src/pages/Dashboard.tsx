@@ -168,7 +168,7 @@ export default function PageDashboard() {
 
       {error && (
         <div className="bos-callout mb-4 border-red/40 text-red">
-          Backend artifact fetch failed: {error}
+          Could not load dispatch results: {error}
         </div>
       )}
 
