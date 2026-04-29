@@ -25,7 +25,7 @@ import time
 import webbrowser
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def find_python() -> str:
@@ -72,7 +72,6 @@ def start_backend(port: int) -> subprocess.Popen:
         python, "-m", "uvicorn", "api.server:app",
         "--host", "127.0.0.1",
         "--port", str(port),
-        "--reload",
     ]
     print(f"[BACKEND ] Starting on http://127.0.0.1:{port}/")
     return subprocess.Popen(
@@ -89,7 +88,7 @@ def start_frontend(port: int) -> tuple[subprocess.Popen, int]:
     npm = find_npm()
     env = os.environ.copy()
     env["VITE_PORT"] = str(port)
-    cmd = [npm, "run", "dev", "--", "--port", str(port)]
+    cmd = [npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", str(port)]
     print(f"[FRONTEND] Starting on http://127.0.0.1:{port}/")
     proc = subprocess.Popen(
         cmd,
