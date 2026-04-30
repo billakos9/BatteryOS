@@ -1,5 +1,3 @@
-WORKFLOW_PLAN.md
-
 # Data (raw + processed + interim)
 /data/
 /reports/figures/*.png

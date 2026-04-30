@@ -17,6 +17,7 @@ BatteryOS couples a probabilistic price forecaster with a stochastic dispatch op
 7. [Backtesting & Evaluation](#backtesting--evaluation)
 8. [Quick Start](#quick-start)
 9. [Repository Layout](#repository-layout)
+10. [Further Documentation](#further-documentation)
 
 ---
 
@@ -386,20 +387,46 @@ python pipelines/daily_inference.py
 
 ```
 BatteryOS/
+├── api/                               # REST API (experimental)
+│   ├── server.py
+│   ├── inference.py
+│   └── compute_baselines.py
+├── archive/                           # Legacy pre-modular scripts (not imported)
 ├── config/
-│   └── storage_profiles.yaml          # Battery catalog
+│   ├── storage_profiles.yaml          # Battery catalog
+│   └── lightgbm_quantile_params.yaml  # Model hyperparameters
 ├── data/
 │   ├── raw/                           # EnEx, ENTSO-E, weather CSVs/XLSXs
+│   ├── interim/                       # Intermediate aligned tables
 │   └── processed/                     # Master feature matrices
+├── docs/
+│   ├── reports/                       # Technical deep-dives
+│   │   ├── BACKTEST_REPORT.md
+│   │   ├── BACKTEST_REPORT_HONEST.md
+│   │   ├── FORECASTING_REPORT.md
+│   │   ├── OPTIMIZER_REPORT.md
+│   │   └── REMAINING_BIASES.md
+│   ├── planning/                      # Design-phase documents
+│   │   └── WORKFLOW_PLAN.md
+│   └── presentation/                  # Pitch decks & demo guides
+│       ├── BatteryOS_Presentation.md
+│       └── DEMO_GUIDE.md
+├── logs/                              # Runtime logs (gitignored)
 ├── models/                            # Saved LightGBM .joblib + feature list
+├── notebooks/                         # Exploratory analysis only
 ├── outputs/                           # Predictions, backtests, SHAP data
 ├── pipelines/                         # End-to-end runnable scripts
 │   ├── run_training_pipeline.py
 │   ├── run_walkforward_training.py
 │   ├── run_backtest.py
+│   ├── run_optuna_tuning.py
 │   ├── daily_inference.py
 │   ├── explain_last_day_shap.py
 │   └── save_trained_models.py
+├── scripts/                           # Deployment & cron helpers
+│   ├── setup_cron.sh
+│   ├── start.sh
+│   └── start_dev.py
 ├── src/
 │   ├── ingest/                        # Data fetchers
 │   │   ├── entsoe.py
@@ -415,21 +442,46 @@ BatteryOS/
 │   │   ├── train.py
 │   │   ├── utils.py
 │   │   └── tune_lightgbm.py
-│   └── optimize/                      # Dispatch optimizer
-│       ├── battery.py
-│       ├── dispatch.py
-│       ├── milp.py
-│       ├── robust.py
-│       ├── schedule.py
-│       ├── economics.py
-│       ├── tracker.py
-│       ├── degradation.py
-│       ├── backtest.py
-│       └── bid_curves.py
+│   ├── optimize/                      # Dispatch optimizer
+│   │   ├── battery.py
+│   │   ├── dispatch.py
+│   │   ├── milp.py
+│   │   ├── _milp_core.py
+│   │   ├── robust.py
+│   │   ├── scenarios.py
+│   │   ├── risk_profiles.py
+│   │   ├── schedule.py
+│   │   ├── economics.py
+│   │   ├── tracker.py
+│   │   ├── degradation.py
+│   │   ├── backtest.py
+│   │   └── bid_curves.py
+│   ├── backtest/                      # Walk-forward & metrics
+│   │   ├── walk_forward.py
+│   │   ├── metrics.py
+│   │   ├── protocols.py
+│   │   └── result.py
+│   └── ui/                            # React/Vite dashboard (experimental)
 ├── tests/                             # Unit tests
-├── BACKTEST_REPORT.md                 # Detailed backtest analysis
+│   └── test_optimize.py
 └── README.md                          # This file
 ```
+
+---
+
+## Further Documentation
+
+For deep-dive technical reports, see `docs/reports/`:
+
+| Document | What it covers |
+|----------|---------------|
+| [`docs/reports/FORECASTING_REPORT.md`](docs/reports/FORECASTING_REPORT.md) | Data ingestion, feature engineering, and model training in detail |
+| [`docs/reports/OPTIMIZER_REPORT.md`](docs/reports/OPTIMIZER_REPORT.md) | LP/MILP formulation, CVaR math, and solver strategy |
+| [`docs/reports/BACKTEST_REPORT_HONEST.md`](docs/reports/BACKTEST_REPORT_HONEST.md) | Walk-forward backtest results with honest bias accounting |
+| [`docs/reports/REMAINING_BIASES.md`](docs/reports/REMAINING_BIASES.md) | Known limitations and estimated distortion directions |
+
+Design-phase planning documents live in `docs/planning/`.  
+Presentation materials live in `docs/presentation/`.
 
 ---
 
