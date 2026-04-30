@@ -35,7 +35,7 @@ export interface TickerRow {
 export interface BacktestSummary {
   days: number;
   equity: { batteryOS: number[]; naive: number[]; perfect: number[] };
-  dayProfits: { d: number; bos: number; naive: number; perfect: number; capture: number }[];
+  dayProfits: { d: number; date: string; bos: number; naive: number; perfect: number; capture: number }[];
   heatmap: number[][];
   source?: string;
 }
@@ -100,10 +100,17 @@ export function useBatteries(): UseQueryResult<BatteryAsset[]> {
   });
 }
 
-export function useBacktestSummary(days: number = 90): UseQueryResult<BacktestSummary> {
+export function useBacktestSummary(
+  days: number = 90,
+  profile: string = "all",
+): UseQueryResult<BacktestSummary> {
+  const params = new URLSearchParams({ days: String(days) });
+  if (profile && profile !== "all") {
+    params.set("profile", profile);
+  }
   return useQuery({
-    queryKey: ["api", "backtest", "summary", days],
-    queryFn: () => getJson<BacktestSummary>(`/api/backtest/summary?days=${days}`),
+    queryKey: ["api", "backtest", "summary", days, profile],
+    queryFn: () => getJson<BacktestSummary>(`/api/backtest/summary?${params.toString()}`),
     staleTime: 30_000,
   });
 }

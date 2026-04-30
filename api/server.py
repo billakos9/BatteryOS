@@ -567,8 +567,8 @@ async def forecast_overview(horizon_h: int = 24) -> dict[str, Any]:
         },
         "models": _FORECAST_CACHE.get("models", []),
         "features": _FORECAST_CACHE.get("features", []),
-        "residuals": [],
-        "calibration": {
+        "residuals": _FORECAST_CACHE.get("residuals", []),
+        "calibration": _FORECAST_CACHE.get("calibration") or {
             "nominal": [],
             "empirical": [],
         },
@@ -850,11 +850,19 @@ async def api_ticker() -> list[dict[str, Any]]:
 
 
 @app.get("/api/backtest/summary")
-async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
+async def api_backtest_summary(days: int = 90, profile: Optional[str] = None) -> dict[str, Any]:
     """Walk-forward backtest summary.
 
     Reads honest backtest results (BatteryOS regular scenario) and
     pre-computed perfect / naive baselines from outputs/*.csv.
+
+    Parameters
+    ----------
+    days : int
+        Number of trailing days to return (default 90).
+    profile : str | None
+        Battery profile to filter by (e.g. "liion_100_2h"). If omitted
+        or "all", aggregates across all profiles.
     """
     import pandas as pd
 
@@ -865,13 +873,22 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
     if not detailed_path.exists():
         raise HTTPException(status_code=503, detail="Backtest detailed results not found. Run 'python pipelines/run_backtest.py' first.")
 
+    # Normalise profile filter
+    profile_filter = None if profile is None or profile.lower() == "all" else profile
+
     df_bos = pd.read_csv(detailed_path)
     df_bos["date"] = pd.to_datetime(df_bos["date"])
 
     # Use the 'regular' scenario as the canonical BatteryOS strategy
     df_bos = df_bos[df_bos["scenario"] == "regular"]
 
-    # Aggregate across all profiles per day
+    # Filter by profile if requested
+    if profile_filter:
+        df_bos = df_bos[df_bos["profile"] == profile_filter]
+        if df_bos.empty:
+            raise HTTPException(status_code=404, detail=f"Profile {profile_filter!r} not found in backtest results.")
+
+    # Aggregate per day (across profiles or single profile)
     bos_daily = df_bos.groupby("date")["realized_profit_eur"].sum().reset_index()
     bos_daily = bos_daily.sort_values("date")
 
@@ -884,6 +901,8 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
     if perfect_path.exists():
         df_perf = pd.read_csv(perfect_path)
         df_perf["date"] = pd.to_datetime(df_perf["date"])
+        if profile_filter:
+            df_perf = df_perf[df_perf["profile"] == profile_filter]
         perfect_daily = df_perf.groupby("date")["realized_profit_eur"].sum().reset_index()
         perfect_daily = perfect_daily.sort_values("date")
         if len(perfect_daily) > days:
@@ -894,6 +913,8 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
     if naive_path.exists():
         df_naive = pd.read_csv(naive_path)
         df_naive["date"] = pd.to_datetime(df_naive["date"])
+        if profile_filter:
+            df_naive = df_naive[df_naive["profile"] == profile_filter]
         naive_daily = df_naive.groupby("date")["realized_profit_eur"].sum().reset_index()
         naive_daily = naive_daily.sort_values("date")
         if len(naive_daily) > days:
@@ -919,6 +940,7 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
 
     # Build day-by-day profit log
     day_profits = []
+    dates = bos_daily["date"].dt.date.astype(str).tolist()
     for i in range(n):
         bos_p = bos_values[i]
         perf_p = perf_values[i] if i < len(perf_values) else bos_p
@@ -926,6 +948,7 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
         capture = bos_p / perf_p if perf_p > 0 else 0.0
         day_profits.append({
             "d": i,
+            "date": dates[i] if i < len(dates) else "",
             "bos": round(bos_p, 2),
             "naive": round(naive_p, 2),
             "perfect": round(perf_p, 2),
@@ -959,10 +982,13 @@ async def api_backtest_summary(days: int = 90) -> dict[str, Any]:
                 heatmap = []
 
     if not heatmap:
-        # Fallback: uniform random-ish heatmap
-        import random
-        random.seed(42)
-        heatmap = [[random.uniform(0, 100) for _ in range(24)] for _ in range(min(n, 90))]
+        # Fallback: distribute each day's profit uniformly across 24 hours.
+        # This preserves daily profit intensity even when hourly backtest
+        # breakdown is unavailable.
+        heatmap = []
+        for i in range(n):
+            daily_val = bos_values[i] / 24.0
+            heatmap.append([daily_val] * 24)
 
     return {
         "days": n,

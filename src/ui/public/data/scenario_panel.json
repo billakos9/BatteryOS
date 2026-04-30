@@ -6,10 +6,1150 @@
     "price_eur_per_mwh": 77.44648042696556
   },
   {
+    "timestamp": "2026-04-30 00:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 74.4584254346307
+  },
+  {
+    "timestamp": "2026-04-30 00:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 70.37283753652315
+  },
+  {
+    "timestamp": "2026-04-30 00:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 69.13408896091886
+  },
+  {
+    "timestamp": "2026-04-30 01:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.71987896953848
+  },
+  {
+    "timestamp": "2026-04-30 01:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.97376117930779
+  },
+  {
+    "timestamp": "2026-04-30 01:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 63.190459402439
+  },
+  {
+    "timestamp": "2026-04-30 01:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 59.33620937092476
+  },
+  {
+    "timestamp": "2026-04-30 02:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 57.5030197807638
+  },
+  {
+    "timestamp": "2026-04-30 02:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 63.909552540713534
+  },
+  {
+    "timestamp": "2026-04-30 02:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 67.69820776749577
+  },
+  {
+    "timestamp": "2026-04-30 02:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 73.52155320357049
+  },
+  {
+    "timestamp": "2026-04-30 03:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 71.29931221287346
+  },
+  {
+    "timestamp": "2026-04-30 03:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 101.24669990781284
+  },
+  {
+    "timestamp": "2026-04-30 03:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 107.73401149054449
+  },
+  {
+    "timestamp": "2026-04-30 03:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 112.57698168861744
+  },
+  {
+    "timestamp": "2026-04-30 04:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 102.39576576728761
+  },
+  {
+    "timestamp": "2026-04-30 04:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 109.480278962128
+  },
+  {
+    "timestamp": "2026-04-30 04:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 112.70829286685428
+  },
+  {
+    "timestamp": "2026-04-30 04:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 118.37395726389852
+  },
+  {
+    "timestamp": "2026-04-30 05:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 118.7412398458658
+  },
+  {
+    "timestamp": "2026-04-30 05:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 117.31888352608232
+  },
+  {
+    "timestamp": "2026-04-30 05:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 118.58848262490811
+  },
+  {
+    "timestamp": "2026-04-30 05:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 125.14705087500793
+  },
+  {
+    "timestamp": "2026-04-30 06:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 115.64899499994497
+  },
+  {
+    "timestamp": "2026-04-30 06:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 120.28858057219382
+  },
+  {
+    "timestamp": "2026-04-30 06:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 116.54917525051069
+  },
+  {
+    "timestamp": "2026-04-30 06:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 116.54260090845808
+  },
+  {
+    "timestamp": "2026-04-30 07:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 108.80494454153329
+  },
+  {
+    "timestamp": "2026-04-30 07:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 102.51876567040013
+  },
+  {
+    "timestamp": "2026-04-30 07:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 94.86174240341258
+  },
+  {
+    "timestamp": "2026-04-30 07:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 89.85638812596427
+  },
+  {
+    "timestamp": "2026-04-30 08:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 93.66115173427606
+  },
+  {
+    "timestamp": "2026-04-30 08:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 84.28983708530119
+  },
+  {
+    "timestamp": "2026-04-30 08:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 67.91961511753341
+  },
+  {
+    "timestamp": "2026-04-30 08:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 58.32920231286165
+  },
+  {
+    "timestamp": "2026-04-30 09:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 53.665293546153514
+  },
+  {
+    "timestamp": "2026-04-30 09:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 26.366606812227865
+  },
+  {
+    "timestamp": "2026-04-30 09:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 14.89195705989751
+  },
+  {
+    "timestamp": "2026-04-30 09:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 8.25680520217471
+  },
+  {
+    "timestamp": "2026-04-30 10:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 18.512331740411934
+  },
+  {
+    "timestamp": "2026-04-30 10:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.575811829663483
+  },
+  {
+    "timestamp": "2026-04-30 10:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -14.824243803272473
+  },
+  {
+    "timestamp": "2026-04-30 10:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -16.502703907997724
+  },
+  {
+    "timestamp": "2026-04-30 11:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.491562260596744
+  },
+  {
+    "timestamp": "2026-04-30 11:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.860873347221393
+  },
+  {
+    "timestamp": "2026-04-30 11:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.91680178117327
+  },
+  {
+    "timestamp": "2026-04-30 11:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -10.616781250408838
+  },
+  {
+    "timestamp": "2026-04-30 12:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -6.220933787883291
+  },
+  {
+    "timestamp": "2026-04-30 12:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -7.049709526680394
+  },
+  {
+    "timestamp": "2026-04-30 12:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.36001591649968
+  },
+  {
+    "timestamp": "2026-04-30 12:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.104605776182325
+  },
+  {
+    "timestamp": "2026-04-30 13:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -6.08585212528539
+  },
+  {
+    "timestamp": "2026-04-30 13:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -7.075838227522958
+  },
+  {
+    "timestamp": "2026-04-30 13:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -6.638836284665401
+  },
+  {
+    "timestamp": "2026-04-30 13:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -6.666410113439026
+  },
+  {
+    "timestamp": "2026-04-30 14:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -10.281051959288764
+  },
+  {
+    "timestamp": "2026-04-30 14:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -9.173369862983144
+  },
+  {
+    "timestamp": "2026-04-30 14:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -6.899731905842142
+  },
+  {
+    "timestamp": "2026-04-30 14:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -3.5028370642735336
+  },
+  {
+    "timestamp": "2026-04-30 15:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": -0.12527366092089465
+  },
+  {
+    "timestamp": "2026-04-30 15:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 17.912737932604976
+  },
+  {
+    "timestamp": "2026-04-30 15:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 27.1331374101845
+  },
+  {
+    "timestamp": "2026-04-30 15:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 37.011396243692886
+  },
+  {
+    "timestamp": "2026-04-30 16:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 37.23549912996954
+  },
+  {
+    "timestamp": "2026-04-30 16:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 44.51233988582254
+  },
+  {
+    "timestamp": "2026-04-30 16:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 52.23160752156766
+  },
+  {
+    "timestamp": "2026-04-30 16:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 57.55147840392701
+  },
+  {
+    "timestamp": "2026-04-30 17:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 82.11052919940975
+  },
+  {
+    "timestamp": "2026-04-30 17:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 81.29461910952377
+  },
+  {
+    "timestamp": "2026-04-30 17:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 78.4040251317475
+  },
+  {
+    "timestamp": "2026-04-30 17:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.72948848128313
+  },
+  {
+    "timestamp": "2026-04-30 18:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 76.94292446376001
+  },
+  {
+    "timestamp": "2026-04-30 18:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 75.36534644639868
+  },
+  {
+    "timestamp": "2026-04-30 18:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.0408083000347
+  },
+  {
+    "timestamp": "2026-04-30 18:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 66.05053685340538
+  },
+  {
+    "timestamp": "2026-04-30 19:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 60.024006703870334
+  },
+  {
+    "timestamp": "2026-04-30 19:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.96199002593345
+  },
+  {
+    "timestamp": "2026-04-30 19:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 68.20602064699388
+  },
+  {
+    "timestamp": "2026-04-30 19:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 74.16852999196414
+  },
+  {
+    "timestamp": "2026-04-30 20:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 67.46288327651908
+  },
+  {
+    "timestamp": "2026-04-30 20:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 66.5614458497569
+  },
+  {
+    "timestamp": "2026-04-30 20:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 66.66107344846935
+  },
+  {
+    "timestamp": "2026-04-30 20:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 65.45817375342446
+  },
+  {
+    "timestamp": "2026-04-30 21:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 58.35316087375539
+  },
+  {
+    "timestamp": "2026-04-30 21:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 58.15001436023905
+  },
+  {
+    "timestamp": "2026-04-30 21:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 57.43134353274092
+  },
+  {
+    "timestamp": "2026-04-30 21:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 54.84443598988025
+  },
+  {
+    "timestamp": "2026-04-30 22:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 52.052312873825855
+  },
+  {
+    "timestamp": "2026-04-30 22:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 50.760230261437336
+  },
+  {
+    "timestamp": "2026-04-30 22:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 50.10279092725192
+  },
+  {
+    "timestamp": "2026-04-30 22:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 49.323916007910825
+  },
+  {
+    "timestamp": "2026-04-30 23:00:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 46.80237012527005
+  },
+  {
+    "timestamp": "2026-04-30 23:15:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 39.94099763294943
+  },
+  {
+    "timestamp": "2026-04-30 23:30:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 37.04312925546071
+  },
+  {
+    "timestamp": "2026-04-30 23:45:00+03:00",
+    "scenario_label": "p10",
+    "scenario_weight": 0.2,
+    "price_eur_per_mwh": 28.0494262949684
+  },
+  {
     "timestamp": "2026-04-30 00:00:00+03:00",
     "scenario_label": "p50",
     "scenario_weight": 0.6,
     "price_eur_per_mwh": 104.0323181255496
+  },
+  {
+    "timestamp": "2026-04-30 00:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 98.39630270221002
+  },
+  {
+    "timestamp": "2026-04-30 00:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 93.897963643206
+  },
+  {
+    "timestamp": "2026-04-30 00:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 93.92504904451982
+  },
+  {
+    "timestamp": "2026-04-30 01:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 93.24427243217269
+  },
+  {
+    "timestamp": "2026-04-30 01:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 94.12196885263401
+  },
+  {
+    "timestamp": "2026-04-30 01:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 92.49830526617463
+  },
+  {
+    "timestamp": "2026-04-30 01:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 94.2570018616219
+  },
+  {
+    "timestamp": "2026-04-30 02:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 93.29564147244686
+  },
+  {
+    "timestamp": "2026-04-30 02:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 93.07904733576298
+  },
+  {
+    "timestamp": "2026-04-30 02:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 96.04887227804589
+  },
+  {
+    "timestamp": "2026-04-30 02:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 99.76471424637559
+  },
+  {
+    "timestamp": "2026-04-30 03:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 101.25784285649212
+  },
+  {
+    "timestamp": "2026-04-30 03:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 116.63927455131181
+  },
+  {
+    "timestamp": "2026-04-30 03:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 131.66936621983353
+  },
+  {
+    "timestamp": "2026-04-30 03:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 138.89307874542018
+  },
+  {
+    "timestamp": "2026-04-30 04:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 122.89170818754019
+  },
+  {
+    "timestamp": "2026-04-30 04:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 133.2488449983625
+  },
+  {
+    "timestamp": "2026-04-30 04:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 136.69592652866035
+  },
+  {
+    "timestamp": "2026-04-30 04:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 141.38087126486465
+  },
+  {
+    "timestamp": "2026-04-30 05:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 144.99291716176447
+  },
+  {
+    "timestamp": "2026-04-30 05:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 143.77497343329415
+  },
+  {
+    "timestamp": "2026-04-30 05:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 145.58376852443396
+  },
+  {
+    "timestamp": "2026-04-30 05:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 155.72241904055022
+  },
+  {
+    "timestamp": "2026-04-30 06:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 138.17433377496275
+  },
+  {
+    "timestamp": "2026-04-30 06:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 145.02813848027768
+  },
+  {
+    "timestamp": "2026-04-30 06:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 140.96925945700406
+  },
+  {
+    "timestamp": "2026-04-30 06:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 138.70753769305185
+  },
+  {
+    "timestamp": "2026-04-30 07:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 126.7676812523815
+  },
+  {
+    "timestamp": "2026-04-30 07:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 126.13962803756934
+  },
+  {
+    "timestamp": "2026-04-30 07:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 127.07010877664615
+  },
+  {
+    "timestamp": "2026-04-30 07:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 117.26198671327876
+  },
+  {
+    "timestamp": "2026-04-30 08:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 119.66594190244915
+  },
+  {
+    "timestamp": "2026-04-30 08:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 111.03401260780298
+  },
+  {
+    "timestamp": "2026-04-30 08:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 97.97244394547955
+  },
+  {
+    "timestamp": "2026-04-30 08:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 85.74525111603428
+  },
+  {
+    "timestamp": "2026-04-30 09:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 82.73967325919448
+  },
+  {
+    "timestamp": "2026-04-30 09:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 77.48669210777565
+  },
+  {
+    "timestamp": "2026-04-30 09:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 65.31924305240086
+  },
+  {
+    "timestamp": "2026-04-30 09:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 62.47626519409645
+  },
+  {
+    "timestamp": "2026-04-30 10:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 80.42016527147474
+  },
+  {
+    "timestamp": "2026-04-30 10:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 64.34660830464465
+  },
+  {
+    "timestamp": "2026-04-30 10:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 62.205636119424796
+  },
+  {
+    "timestamp": "2026-04-30 10:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 59.605936141525476
+  },
+  {
+    "timestamp": "2026-04-30 11:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 62.14748097981698
+  },
+  {
+    "timestamp": "2026-04-30 11:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 62.41082101485985
+  },
+  {
+    "timestamp": "2026-04-30 11:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 59.81457341786187
+  },
+  {
+    "timestamp": "2026-04-30 11:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 55.49587058737075
+  },
+  {
+    "timestamp": "2026-04-30 12:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 63.08943524875108
+  },
+  {
+    "timestamp": "2026-04-30 12:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 58.1331837988392
+  },
+  {
+    "timestamp": "2026-04-30 12:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 61.25854980855699
+  },
+  {
+    "timestamp": "2026-04-30 12:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 61.90316081304786
+  },
+  {
+    "timestamp": "2026-04-30 13:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 62.870981083515545
+  },
+  {
+    "timestamp": "2026-04-30 13:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 60.41984114847476
+  },
+  {
+    "timestamp": "2026-04-30 13:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 57.07368933098142
+  },
+  {
+    "timestamp": "2026-04-30 13:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 56.89189315255196
+  },
+  {
+    "timestamp": "2026-04-30 14:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 63.54756967485362
+  },
+  {
+    "timestamp": "2026-04-30 14:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 63.29733912231495
+  },
+  {
+    "timestamp": "2026-04-30 14:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 61.618485945852804
+  },
+  {
+    "timestamp": "2026-04-30 14:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 60.82485294013497
+  },
+  {
+    "timestamp": "2026-04-30 15:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 70.55054621823203
+  },
+  {
+    "timestamp": "2026-04-30 15:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 70.01655368982208
+  },
+  {
+    "timestamp": "2026-04-30 15:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 76.89247791110351
+  },
+  {
+    "timestamp": "2026-04-30 15:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 78.3577104314847
+  },
+  {
+    "timestamp": "2026-04-30 16:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 92.36718161287412
+  },
+  {
+    "timestamp": "2026-04-30 16:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 100.88982058926693
+  },
+  {
+    "timestamp": "2026-04-30 16:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 94.28502693408744
+  },
+  {
+    "timestamp": "2026-04-30 16:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 95.23392552803266
+  },
+  {
+    "timestamp": "2026-04-30 17:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 109.02039349336214
+  },
+  {
+    "timestamp": "2026-04-30 17:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 102.03289040739055
+  },
+  {
+    "timestamp": "2026-04-30 17:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 105.59870913652095
+  },
+  {
+    "timestamp": "2026-04-30 17:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 102.33187022117082
+  },
+  {
+    "timestamp": "2026-04-30 18:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 114.40350892551498
+  },
+  {
+    "timestamp": "2026-04-30 18:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 121.25856253802567
+  },
+  {
+    "timestamp": "2026-04-30 18:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 109.77724789468556
+  },
+  {
+    "timestamp": "2026-04-30 18:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 101.87431082346953
+  },
+  {
+    "timestamp": "2026-04-30 19:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 109.63088559866907
+  },
+  {
+    "timestamp": "2026-04-30 19:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 107.5652743178989
+  },
+  {
+    "timestamp": "2026-04-30 19:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 108.84669808664138
+  },
+  {
+    "timestamp": "2026-04-30 19:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 110.2511406599648
+  },
+  {
+    "timestamp": "2026-04-30 20:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 108.02864599868128
+  },
+  {
+    "timestamp": "2026-04-30 20:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 103.42346925305452
+  },
+  {
+    "timestamp": "2026-04-30 20:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 104.23383742794344
+  },
+  {
+    "timestamp": "2026-04-30 20:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 103.61027215852836
+  },
+  {
+    "timestamp": "2026-04-30 21:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 98.24744801818646
+  },
+  {
+    "timestamp": "2026-04-30 21:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 98.35946472765214
+  },
+  {
+    "timestamp": "2026-04-30 21:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 97.64293918019764
+  },
+  {
+    "timestamp": "2026-04-30 21:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 90.4351592963334
+  },
+  {
+    "timestamp": "2026-04-30 22:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 85.5722155873065
+  },
+  {
+    "timestamp": "2026-04-30 22:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 83.89962232995826
+  },
+  {
+    "timestamp": "2026-04-30 22:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 84.32113480438058
+  },
+  {
+    "timestamp": "2026-04-30 22:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 84.00884841788324
+  },
+  {
+    "timestamp": "2026-04-30 23:00:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 79.41197732931737
+  },
+  {
+    "timestamp": "2026-04-30 23:15:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 75.26388426819602
+  },
+  {
+    "timestamp": "2026-04-30 23:30:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 71.28594043934949
+  },
+  {
+    "timestamp": "2026-04-30 23:45:00+03:00",
+    "scenario_label": "p50",
+    "scenario_weight": 0.6,
+    "price_eur_per_mwh": 68.36341688010235
   },
   {
     "timestamp": "2026-04-30 00:00:00+03:00",
@@ -19,33 +1159,9 @@
   },
   {
     "timestamp": "2026-04-30 00:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 74.4584254346307
-  },
-  {
-    "timestamp": "2026-04-30 00:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 98.39630270221002
-  },
-  {
-    "timestamp": "2026-04-30 00:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 111.31864061335466
-  },
-  {
-    "timestamp": "2026-04-30 00:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 70.37283753652315
-  },
-  {
-    "timestamp": "2026-04-30 00:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 93.897963643206
   },
   {
     "timestamp": "2026-04-30 00:30:00+03:00",
@@ -55,33 +1171,9 @@
   },
   {
     "timestamp": "2026-04-30 00:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 69.13408896091886
-  },
-  {
-    "timestamp": "2026-04-30 00:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 93.92504904451982
-  },
-  {
-    "timestamp": "2026-04-30 00:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 112.55875667758207
-  },
-  {
-    "timestamp": "2026-04-30 01:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.71987896953848
-  },
-  {
-    "timestamp": "2026-04-30 01:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 93.24427243217269
   },
   {
     "timestamp": "2026-04-30 01:00:00+03:00",
@@ -91,33 +1183,9 @@
   },
   {
     "timestamp": "2026-04-30 01:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.97376117930779
-  },
-  {
-    "timestamp": "2026-04-30 01:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 94.12196885263401
-  },
-  {
-    "timestamp": "2026-04-30 01:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 112.28964462703497
-  },
-  {
-    "timestamp": "2026-04-30 01:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 63.190459402439
-  },
-  {
-    "timestamp": "2026-04-30 01:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 92.49830526617463
   },
   {
     "timestamp": "2026-04-30 01:30:00+03:00",
@@ -127,33 +1195,9 @@
   },
   {
     "timestamp": "2026-04-30 01:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 59.33620937092476
-  },
-  {
-    "timestamp": "2026-04-30 01:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 94.2570018616219
-  },
-  {
-    "timestamp": "2026-04-30 01:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 115.74264934722517
-  },
-  {
-    "timestamp": "2026-04-30 02:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 57.5030197807638
-  },
-  {
-    "timestamp": "2026-04-30 02:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 93.29564147244686
   },
   {
     "timestamp": "2026-04-30 02:00:00+03:00",
@@ -163,33 +1207,9 @@
   },
   {
     "timestamp": "2026-04-30 02:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 63.909552540713534
-  },
-  {
-    "timestamp": "2026-04-30 02:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 93.07904733576298
-  },
-  {
-    "timestamp": "2026-04-30 02:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 116.11712753299827
-  },
-  {
-    "timestamp": "2026-04-30 02:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 67.69820776749577
-  },
-  {
-    "timestamp": "2026-04-30 02:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 96.04887227804589
   },
   {
     "timestamp": "2026-04-30 02:30:00+03:00",
@@ -199,33 +1219,9 @@
   },
   {
     "timestamp": "2026-04-30 02:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 73.52155320357049
-  },
-  {
-    "timestamp": "2026-04-30 02:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 99.76471424637559
-  },
-  {
-    "timestamp": "2026-04-30 02:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 124.67115042632553
-  },
-  {
-    "timestamp": "2026-04-30 03:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 71.29931221287346
-  },
-  {
-    "timestamp": "2026-04-30 03:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 101.25784285649212
   },
   {
     "timestamp": "2026-04-30 03:00:00+03:00",
@@ -235,33 +1231,9 @@
   },
   {
     "timestamp": "2026-04-30 03:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 101.24669990781284
-  },
-  {
-    "timestamp": "2026-04-30 03:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 116.63927455131181
-  },
-  {
-    "timestamp": "2026-04-30 03:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 132.76366477109397
-  },
-  {
-    "timestamp": "2026-04-30 03:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 107.73401149054449
-  },
-  {
-    "timestamp": "2026-04-30 03:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 131.66936621983353
   },
   {
     "timestamp": "2026-04-30 03:30:00+03:00",
@@ -271,33 +1243,9 @@
   },
   {
     "timestamp": "2026-04-30 03:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 112.57698168861744
-  },
-  {
-    "timestamp": "2026-04-30 03:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 138.89307874542018
-  },
-  {
-    "timestamp": "2026-04-30 03:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 161.5277750175748
-  },
-  {
-    "timestamp": "2026-04-30 04:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 102.39576576728761
-  },
-  {
-    "timestamp": "2026-04-30 04:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 122.89170818754019
   },
   {
     "timestamp": "2026-04-30 04:00:00+03:00",
@@ -307,33 +1255,9 @@
   },
   {
     "timestamp": "2026-04-30 04:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 109.480278962128
-  },
-  {
-    "timestamp": "2026-04-30 04:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 133.2488449983625
-  },
-  {
-    "timestamp": "2026-04-30 04:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 151.10251232017941
-  },
-  {
-    "timestamp": "2026-04-30 04:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 112.70829286685428
-  },
-  {
-    "timestamp": "2026-04-30 04:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 136.69592652866035
   },
   {
     "timestamp": "2026-04-30 04:30:00+03:00",
@@ -343,33 +1267,9 @@
   },
   {
     "timestamp": "2026-04-30 04:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 118.37395726389852
-  },
-  {
-    "timestamp": "2026-04-30 04:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 141.38087126486465
-  },
-  {
-    "timestamp": "2026-04-30 04:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 166.14015686440013
-  },
-  {
-    "timestamp": "2026-04-30 05:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 118.7412398458658
-  },
-  {
-    "timestamp": "2026-04-30 05:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 144.99291716176447
   },
   {
     "timestamp": "2026-04-30 05:00:00+03:00",
@@ -379,33 +1279,9 @@
   },
   {
     "timestamp": "2026-04-30 05:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 117.31888352608232
-  },
-  {
-    "timestamp": "2026-04-30 05:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 143.77497343329415
-  },
-  {
-    "timestamp": "2026-04-30 05:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 159.88027347301764
-  },
-  {
-    "timestamp": "2026-04-30 05:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 118.58848262490811
-  },
-  {
-    "timestamp": "2026-04-30 05:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 145.58376852443396
   },
   {
     "timestamp": "2026-04-30 05:30:00+03:00",
@@ -415,33 +1291,9 @@
   },
   {
     "timestamp": "2026-04-30 05:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 125.14705087500793
-  },
-  {
-    "timestamp": "2026-04-30 05:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 155.72241904055022
-  },
-  {
-    "timestamp": "2026-04-30 05:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 170.3939627677936
-  },
-  {
-    "timestamp": "2026-04-30 06:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 115.64899499994497
-  },
-  {
-    "timestamp": "2026-04-30 06:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 138.17433377496275
   },
   {
     "timestamp": "2026-04-30 06:00:00+03:00",
@@ -451,33 +1303,9 @@
   },
   {
     "timestamp": "2026-04-30 06:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 120.28858057219382
-  },
-  {
-    "timestamp": "2026-04-30 06:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 145.02813848027768
-  },
-  {
-    "timestamp": "2026-04-30 06:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 177.94286562410028
-  },
-  {
-    "timestamp": "2026-04-30 06:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 116.54917525051069
-  },
-  {
-    "timestamp": "2026-04-30 06:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 140.96925945700406
   },
   {
     "timestamp": "2026-04-30 06:30:00+03:00",
@@ -487,33 +1315,9 @@
   },
   {
     "timestamp": "2026-04-30 06:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 116.54260090845808
-  },
-  {
-    "timestamp": "2026-04-30 06:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 138.70753769305185
-  },
-  {
-    "timestamp": "2026-04-30 06:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 176.12884764136453
-  },
-  {
-    "timestamp": "2026-04-30 07:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 108.80494454153329
-  },
-  {
-    "timestamp": "2026-04-30 07:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 126.7676812523815
   },
   {
     "timestamp": "2026-04-30 07:00:00+03:00",
@@ -523,33 +1327,9 @@
   },
   {
     "timestamp": "2026-04-30 07:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 102.51876567040013
-  },
-  {
-    "timestamp": "2026-04-30 07:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 126.13962803756934
-  },
-  {
-    "timestamp": "2026-04-30 07:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 153.31301959005424
-  },
-  {
-    "timestamp": "2026-04-30 07:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 94.86174240341258
-  },
-  {
-    "timestamp": "2026-04-30 07:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 127.07010877664615
   },
   {
     "timestamp": "2026-04-30 07:30:00+03:00",
@@ -559,33 +1339,9 @@
   },
   {
     "timestamp": "2026-04-30 07:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 89.85638812596427
-  },
-  {
-    "timestamp": "2026-04-30 07:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 117.26198671327876
-  },
-  {
-    "timestamp": "2026-04-30 07:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 151.3134556467549
-  },
-  {
-    "timestamp": "2026-04-30 08:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 93.66115173427606
-  },
-  {
-    "timestamp": "2026-04-30 08:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 119.66594190244915
   },
   {
     "timestamp": "2026-04-30 08:00:00+03:00",
@@ -595,33 +1351,9 @@
   },
   {
     "timestamp": "2026-04-30 08:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 84.28983708530119
-  },
-  {
-    "timestamp": "2026-04-30 08:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 111.03401260780298
-  },
-  {
-    "timestamp": "2026-04-30 08:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 146.82439910445768
-  },
-  {
-    "timestamp": "2026-04-30 08:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 67.91961511753341
-  },
-  {
-    "timestamp": "2026-04-30 08:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 97.97244394547955
   },
   {
     "timestamp": "2026-04-30 08:30:00+03:00",
@@ -631,33 +1363,9 @@
   },
   {
     "timestamp": "2026-04-30 08:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 58.32920231286165
-  },
-  {
-    "timestamp": "2026-04-30 08:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 85.74525111603428
-  },
-  {
-    "timestamp": "2026-04-30 08:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 119.43590238208067
-  },
-  {
-    "timestamp": "2026-04-30 09:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 53.665293546153514
-  },
-  {
-    "timestamp": "2026-04-30 09:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 82.73967325919448
   },
   {
     "timestamp": "2026-04-30 09:00:00+03:00",
@@ -667,33 +1375,9 @@
   },
   {
     "timestamp": "2026-04-30 09:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 26.366606812227865
-  },
-  {
-    "timestamp": "2026-04-30 09:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 77.48669210777565
-  },
-  {
-    "timestamp": "2026-04-30 09:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 115.67423945530501
-  },
-  {
-    "timestamp": "2026-04-30 09:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 14.89195705989751
-  },
-  {
-    "timestamp": "2026-04-30 09:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 65.31924305240086
   },
   {
     "timestamp": "2026-04-30 09:30:00+03:00",
@@ -703,33 +1387,9 @@
   },
   {
     "timestamp": "2026-04-30 09:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 8.25680520217471
-  },
-  {
-    "timestamp": "2026-04-30 09:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 62.47626519409645
-  },
-  {
-    "timestamp": "2026-04-30 09:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 95.18197858336602
-  },
-  {
-    "timestamp": "2026-04-30 10:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 18.512331740411934
-  },
-  {
-    "timestamp": "2026-04-30 10:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 80.42016527147474
   },
   {
     "timestamp": "2026-04-30 10:00:00+03:00",
@@ -739,33 +1399,9 @@
   },
   {
     "timestamp": "2026-04-30 10:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.575811829663483
-  },
-  {
-    "timestamp": "2026-04-30 10:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 64.34660830464465
-  },
-  {
-    "timestamp": "2026-04-30 10:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 99.31160942212026
-  },
-  {
-    "timestamp": "2026-04-30 10:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -14.824243803272473
-  },
-  {
-    "timestamp": "2026-04-30 10:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 62.205636119424796
   },
   {
     "timestamp": "2026-04-30 10:30:00+03:00",
@@ -775,33 +1411,9 @@
   },
   {
     "timestamp": "2026-04-30 10:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -16.502703907997724
-  },
-  {
-    "timestamp": "2026-04-30 10:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 59.605936141525476
-  },
-  {
-    "timestamp": "2026-04-30 10:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 85.75143568108577
-  },
-  {
-    "timestamp": "2026-04-30 11:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.491562260596744
-  },
-  {
-    "timestamp": "2026-04-30 11:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 62.14748097981698
   },
   {
     "timestamp": "2026-04-30 11:00:00+03:00",
@@ -811,33 +1423,9 @@
   },
   {
     "timestamp": "2026-04-30 11:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.860873347221393
-  },
-  {
-    "timestamp": "2026-04-30 11:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 62.41082101485985
-  },
-  {
-    "timestamp": "2026-04-30 11:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 87.79262012285335
-  },
-  {
-    "timestamp": "2026-04-30 11:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.91680178117327
-  },
-  {
-    "timestamp": "2026-04-30 11:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 59.81457341786187
   },
   {
     "timestamp": "2026-04-30 11:30:00+03:00",
@@ -847,33 +1435,9 @@
   },
   {
     "timestamp": "2026-04-30 11:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -10.616781250408838
-  },
-  {
-    "timestamp": "2026-04-30 11:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 55.49587058737075
-  },
-  {
-    "timestamp": "2026-04-30 11:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 82.08440318674779
-  },
-  {
-    "timestamp": "2026-04-30 12:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -6.220933787883291
-  },
-  {
-    "timestamp": "2026-04-30 12:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 63.08943524875108
   },
   {
     "timestamp": "2026-04-30 12:00:00+03:00",
@@ -883,33 +1447,9 @@
   },
   {
     "timestamp": "2026-04-30 12:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -7.049709526680394
-  },
-  {
-    "timestamp": "2026-04-30 12:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 58.1331837988392
-  },
-  {
-    "timestamp": "2026-04-30 12:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 84.35988302566301
-  },
-  {
-    "timestamp": "2026-04-30 12:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.36001591649968
-  },
-  {
-    "timestamp": "2026-04-30 12:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 61.25854980855699
   },
   {
     "timestamp": "2026-04-30 12:30:00+03:00",
@@ -919,33 +1459,9 @@
   },
   {
     "timestamp": "2026-04-30 12:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.104605776182325
-  },
-  {
-    "timestamp": "2026-04-30 12:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 61.90316081304786
-  },
-  {
-    "timestamp": "2026-04-30 12:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 84.66401506084526
-  },
-  {
-    "timestamp": "2026-04-30 13:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -6.08585212528539
-  },
-  {
-    "timestamp": "2026-04-30 13:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 62.870981083515545
   },
   {
     "timestamp": "2026-04-30 13:00:00+03:00",
@@ -955,33 +1471,9 @@
   },
   {
     "timestamp": "2026-04-30 13:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -7.075838227522958
-  },
-  {
-    "timestamp": "2026-04-30 13:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 60.41984114847476
-  },
-  {
-    "timestamp": "2026-04-30 13:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 84.88363611218206
-  },
-  {
-    "timestamp": "2026-04-30 13:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -6.638836284665401
-  },
-  {
-    "timestamp": "2026-04-30 13:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 57.07368933098142
   },
   {
     "timestamp": "2026-04-30 13:30:00+03:00",
@@ -991,33 +1483,9 @@
   },
   {
     "timestamp": "2026-04-30 13:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -6.666410113439026
-  },
-  {
-    "timestamp": "2026-04-30 13:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 56.89189315255196
-  },
-  {
-    "timestamp": "2026-04-30 13:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 89.28634468235032
-  },
-  {
-    "timestamp": "2026-04-30 14:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -10.281051959288764
-  },
-  {
-    "timestamp": "2026-04-30 14:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 63.54756967485362
   },
   {
     "timestamp": "2026-04-30 14:00:00+03:00",
@@ -1027,33 +1495,9 @@
   },
   {
     "timestamp": "2026-04-30 14:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -9.173369862983144
-  },
-  {
-    "timestamp": "2026-04-30 14:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 63.29733912231495
-  },
-  {
-    "timestamp": "2026-04-30 14:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 93.88275212376588
-  },
-  {
-    "timestamp": "2026-04-30 14:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -6.899731905842142
-  },
-  {
-    "timestamp": "2026-04-30 14:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 61.618485945852804
   },
   {
     "timestamp": "2026-04-30 14:30:00+03:00",
@@ -1063,33 +1507,9 @@
   },
   {
     "timestamp": "2026-04-30 14:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -3.5028370642735336
-  },
-  {
-    "timestamp": "2026-04-30 14:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 60.82485294013497
-  },
-  {
-    "timestamp": "2026-04-30 14:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 108.93304633914339
-  },
-  {
-    "timestamp": "2026-04-30 15:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": -0.12527366092089465
-  },
-  {
-    "timestamp": "2026-04-30 15:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 70.55054621823203
   },
   {
     "timestamp": "2026-04-30 15:00:00+03:00",
@@ -1099,33 +1519,9 @@
   },
   {
     "timestamp": "2026-04-30 15:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 17.912737932604976
-  },
-  {
-    "timestamp": "2026-04-30 15:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 70.01655368982208
-  },
-  {
-    "timestamp": "2026-04-30 15:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 104.74585235413186
-  },
-  {
-    "timestamp": "2026-04-30 15:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 27.1331374101845
-  },
-  {
-    "timestamp": "2026-04-30 15:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 76.89247791110351
   },
   {
     "timestamp": "2026-04-30 15:30:00+03:00",
@@ -1135,33 +1531,9 @@
   },
   {
     "timestamp": "2026-04-30 15:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 37.011396243692886
-  },
-  {
-    "timestamp": "2026-04-30 15:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 78.3577104314847
-  },
-  {
-    "timestamp": "2026-04-30 15:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 125.10757084373125
-  },
-  {
-    "timestamp": "2026-04-30 16:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 37.23549912996954
-  },
-  {
-    "timestamp": "2026-04-30 16:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 92.36718161287412
   },
   {
     "timestamp": "2026-04-30 16:00:00+03:00",
@@ -1171,33 +1543,9 @@
   },
   {
     "timestamp": "2026-04-30 16:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 44.51233988582254
-  },
-  {
-    "timestamp": "2026-04-30 16:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 100.88982058926693
-  },
-  {
-    "timestamp": "2026-04-30 16:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 161.0793265534353
-  },
-  {
-    "timestamp": "2026-04-30 16:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 52.23160752156766
-  },
-  {
-    "timestamp": "2026-04-30 16:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 94.28502693408744
   },
   {
     "timestamp": "2026-04-30 16:30:00+03:00",
@@ -1207,33 +1555,9 @@
   },
   {
     "timestamp": "2026-04-30 16:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 57.55147840392701
-  },
-  {
-    "timestamp": "2026-04-30 16:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 95.23392552803266
-  },
-  {
-    "timestamp": "2026-04-30 16:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 152.06795489165555
-  },
-  {
-    "timestamp": "2026-04-30 17:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 82.11052919940975
-  },
-  {
-    "timestamp": "2026-04-30 17:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 109.02039349336214
   },
   {
     "timestamp": "2026-04-30 17:00:00+03:00",
@@ -1243,33 +1567,9 @@
   },
   {
     "timestamp": "2026-04-30 17:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 81.29461910952377
-  },
-  {
-    "timestamp": "2026-04-30 17:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 102.03289040739055
-  },
-  {
-    "timestamp": "2026-04-30 17:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 147.7186532590827
-  },
-  {
-    "timestamp": "2026-04-30 17:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 78.4040251317475
-  },
-  {
-    "timestamp": "2026-04-30 17:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 105.59870913652095
   },
   {
     "timestamp": "2026-04-30 17:30:00+03:00",
@@ -1279,33 +1579,9 @@
   },
   {
     "timestamp": "2026-04-30 17:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.72948848128313
-  },
-  {
-    "timestamp": "2026-04-30 17:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 102.33187022117082
-  },
-  {
-    "timestamp": "2026-04-30 17:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 133.92285239018932
-  },
-  {
-    "timestamp": "2026-04-30 18:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 76.94292446376001
-  },
-  {
-    "timestamp": "2026-04-30 18:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 114.40350892551498
   },
   {
     "timestamp": "2026-04-30 18:00:00+03:00",
@@ -1315,33 +1591,9 @@
   },
   {
     "timestamp": "2026-04-30 18:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 75.36534644639868
-  },
-  {
-    "timestamp": "2026-04-30 18:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 121.25856253802567
-  },
-  {
-    "timestamp": "2026-04-30 18:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 143.15014212647935
-  },
-  {
-    "timestamp": "2026-04-30 18:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.0408083000347
-  },
-  {
-    "timestamp": "2026-04-30 18:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 109.77724789468556
   },
   {
     "timestamp": "2026-04-30 18:30:00+03:00",
@@ -1351,33 +1603,9 @@
   },
   {
     "timestamp": "2026-04-30 18:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 66.05053685340538
-  },
-  {
-    "timestamp": "2026-04-30 18:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 101.87431082346953
-  },
-  {
-    "timestamp": "2026-04-30 18:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 132.5247414432534
-  },
-  {
-    "timestamp": "2026-04-30 19:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 60.024006703870334
-  },
-  {
-    "timestamp": "2026-04-30 19:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 109.63088559866907
   },
   {
     "timestamp": "2026-04-30 19:00:00+03:00",
@@ -1387,33 +1615,9 @@
   },
   {
     "timestamp": "2026-04-30 19:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.96199002593345
-  },
-  {
-    "timestamp": "2026-04-30 19:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 107.5652743178989
-  },
-  {
-    "timestamp": "2026-04-30 19:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 136.74105187881344
-  },
-  {
-    "timestamp": "2026-04-30 19:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 68.20602064699388
-  },
-  {
-    "timestamp": "2026-04-30 19:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 108.84669808664138
   },
   {
     "timestamp": "2026-04-30 19:30:00+03:00",
@@ -1423,33 +1627,9 @@
   },
   {
     "timestamp": "2026-04-30 19:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 74.16852999196414
-  },
-  {
-    "timestamp": "2026-04-30 19:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 110.2511406599648
-  },
-  {
-    "timestamp": "2026-04-30 19:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 138.52095160163506
-  },
-  {
-    "timestamp": "2026-04-30 20:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 67.46288327651908
-  },
-  {
-    "timestamp": "2026-04-30 20:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 108.02864599868128
   },
   {
     "timestamp": "2026-04-30 20:00:00+03:00",
@@ -1459,33 +1639,9 @@
   },
   {
     "timestamp": "2026-04-30 20:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 66.5614458497569
-  },
-  {
-    "timestamp": "2026-04-30 20:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 103.42346925305452
-  },
-  {
-    "timestamp": "2026-04-30 20:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 118.68235910164819
-  },
-  {
-    "timestamp": "2026-04-30 20:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 66.66107344846935
-  },
-  {
-    "timestamp": "2026-04-30 20:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 104.23383742794344
   },
   {
     "timestamp": "2026-04-30 20:30:00+03:00",
@@ -1495,69 +1651,21 @@
   },
   {
     "timestamp": "2026-04-30 20:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 65.45817375342446
-  },
-  {
-    "timestamp": "2026-04-30 20:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 103.61027215852836
-  },
-  {
-    "timestamp": "2026-04-30 20:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 114.3406508958366
   },
   {
     "timestamp": "2026-04-30 21:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 58.35316087375539
-  },
-  {
-    "timestamp": "2026-04-30 21:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 98.24744801818646
-  },
-  {
-    "timestamp": "2026-04-30 21:00:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 113.25276021427909
   },
   {
     "timestamp": "2026-04-30 21:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 58.15001436023905
-  },
-  {
-    "timestamp": "2026-04-30 21:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 98.35946472765214
-  },
-  {
-    "timestamp": "2026-04-30 21:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 113.25276021427909
-  },
-  {
-    "timestamp": "2026-04-30 21:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 57.43134353274092
-  },
-  {
-    "timestamp": "2026-04-30 21:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 97.64293918019764
   },
   {
     "timestamp": "2026-04-30 21:30:00+03:00",
@@ -1567,33 +1675,9 @@
   },
   {
     "timestamp": "2026-04-30 21:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 54.84443598988025
-  },
-  {
-    "timestamp": "2026-04-30 21:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 90.4351592963334
-  },
-  {
-    "timestamp": "2026-04-30 21:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 105.4326029495697
-  },
-  {
-    "timestamp": "2026-04-30 22:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 52.052312873825855
-  },
-  {
-    "timestamp": "2026-04-30 22:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 85.5722155873065
   },
   {
     "timestamp": "2026-04-30 22:00:00+03:00",
@@ -1603,33 +1687,9 @@
   },
   {
     "timestamp": "2026-04-30 22:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 50.760230261437336
-  },
-  {
-    "timestamp": "2026-04-30 22:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 83.89962232995826
-  },
-  {
-    "timestamp": "2026-04-30 22:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 100.69068296548036
-  },
-  {
-    "timestamp": "2026-04-30 22:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 50.10279092725192
-  },
-  {
-    "timestamp": "2026-04-30 22:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 84.32113480438058
   },
   {
     "timestamp": "2026-04-30 22:30:00+03:00",
@@ -1639,33 +1699,9 @@
   },
   {
     "timestamp": "2026-04-30 22:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 49.323916007910825
-  },
-  {
-    "timestamp": "2026-04-30 22:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 84.00884841788324
-  },
-  {
-    "timestamp": "2026-04-30 22:45:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 95.48601982679422
-  },
-  {
-    "timestamp": "2026-04-30 23:00:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 46.80237012527005
-  },
-  {
-    "timestamp": "2026-04-30 23:00:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 79.41197732931737
   },
   {
     "timestamp": "2026-04-30 23:00:00+03:00",
@@ -1675,51 +1711,15 @@
   },
   {
     "timestamp": "2026-04-30 23:15:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 39.94099763294943
-  },
-  {
-    "timestamp": "2026-04-30 23:15:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 75.26388426819602
-  },
-  {
-    "timestamp": "2026-04-30 23:15:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 92.71235230962284
   },
   {
     "timestamp": "2026-04-30 23:30:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 37.04312925546071
-  },
-  {
-    "timestamp": "2026-04-30 23:30:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 71.28594043934949
-  },
-  {
-    "timestamp": "2026-04-30 23:30:00+03:00",
     "scenario_label": "p90",
     "scenario_weight": 0.2,
     "price_eur_per_mwh": 93.14222297703049
-  },
-  {
-    "timestamp": "2026-04-30 23:45:00+03:00",
-    "scenario_label": "p10",
-    "scenario_weight": 0.2,
-    "price_eur_per_mwh": 28.0494262949684
-  },
-  {
-    "timestamp": "2026-04-30 23:45:00+03:00",
-    "scenario_label": "p50",
-    "scenario_weight": 0.6,
-    "price_eur_per_mwh": 68.36341688010235
   },
   {
     "timestamp": "2026-04-30 23:45:00+03:00",

@@ -212,25 +212,40 @@ def run_inference(target_date: date | None = None) -> dict[str, Any]:
         with open(metadata_path) as f:
             metadata = json.load(f)
 
+    tm = metadata.get("training_metrics", {})
     payload = {
         "target_date": str(target_date),
         "timestamps": result_df.index.astype(str).tolist(),
         "p10": result_df["Pred_p10"].tolist(),
         "p50": result_df["Pred_p50"].tolist(),
         "p90": result_df["Pred_p90"].tolist(),
-        "diagnostics": metadata.get("training_metrics", {}),
+        "diagnostics": {
+            "mae_eur_per_mwh": tm.get("test_mae_p50"),
+            "rmse_eur_per_mwh": tm.get("test_rmse_p50"),
+            "profit_capture_pct": tm.get("profit_capture_pct"),
+            "pinball_q90_eur_per_mwh": tm.get("pinball_q90_eur_per_mwh"),
+            "bias_eur_per_mwh": tm.get("bias_eur_per_mwh"),
+            "sigma_eur_per_mwh": tm.get("sigma_eur_per_mwh"),
+            "p95_abs_error_eur_per_mwh": tm.get("p95_abs_error_eur_per_mwh"),
+            "skew": tm.get("skew"),
+        },
         "features": metadata.get("feature_importance", []),
         "models": [
             {
                 "id": "lgbm_q",
                 "name": "LightGBM Quantile",
                 "kind": "ML+Quantile",
-                "mae": metadata.get("training_metrics", {}).get("test_mae_p50"),
-                "rmse": None,
+                "mae": tm.get("test_mae_p50"),
+                "rmse": tm.get("test_rmse_p50"),
                 "smape": None,
-                "profit_capture_pct": None,
-                "pinball_q90": None,
+                "profit_capture_pct": tm.get("profit_capture_pct"),
+                "pinball_q90": tm.get("pinball_q90_eur_per_mwh"),
             }
         ],
+        "residuals": tm.get("residuals_sample", []),
+        "calibration": {
+            "nominal": [c["nominal"] for c in tm.get("calibration", [])],
+            "empirical": [c["empirical"] for c in tm.get("calibration", [])],
+        },
     }
     return payload

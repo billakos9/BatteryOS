@@ -3,7 +3,12 @@
 Compute Perfect-Foresight and Naive baselines for the honest backtest period.
 
 Perfect: deterministic optimizer fed actual realized prices (clairvoyant upper bound).
-Naive:   greedy heuristic — charge at cheapest N intervals, discharge at most expensive N.
+Naive:   greedy heuristic using p50 forecasts, with full tracker support
+         (SoC carry-over, cycle budgets, SOH decay, dynamic degradation cost).
+
+This gives a fair apples-to-apples comparison: both BatteryOS and the naive
+baseline see the same noisy forecast and suffer the same tracker penalties.
+The only difference is the scheduling strategy (MILP vs greedy).
 
 Usage:
     cd /home/dimit/BatteryOS
@@ -19,8 +24,10 @@ from __future__ import annotations
 
 import os
 import sys
+from dataclasses import replace
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -32,6 +39,8 @@ from src.optimize import load_profile
 from src.optimize.battery import BatteryProfile
 from src.optimize.economics import evaluate_schedule
 from src.optimize.milp import optimize_deterministic
+from src.optimize.schedule import build_schedule_frame
+from src.optimize.tracker import BatteryStateTracker
 
 # ---------------------------------------------------------------------------
 # 1. Load data
@@ -42,7 +51,6 @@ df_pred = pd.read_csv(
 )
 df_pred.index = pd.to_datetime(df_pred.index, utc=True).tz_convert("Europe/Athens")
 
-# Use a generic Li-ion profile for baselines (same across all assets for fair comparison)
 BATTERY_PROFILES = [
     "liion_100_2h",
     "liion_200_2h",
@@ -54,6 +62,72 @@ BATTERY_PROFILES = [
 
 DURATION_HOURS = 0.25
 profile_path = ROOT / "config" / "storage_profiles.yaml"
+
+# ---------------------------------------------------------------------------
+# Helper: greedy heuristic with tracker-aware constraints
+# ---------------------------------------------------------------------------
+def greedy_schedule(
+    forecast: np.ndarray,
+    battery: BatteryProfile,
+    duration_hours: float,
+) -> tuple[list[float], list[float], list[float]]:
+    """
+    Greedy charge/discharge schedule.
+
+    Sorts intervals by forecast price, charges cheapest first,
+    discharges most expensive first, respecting SoC and power limits.
+    Also enforces max_cycles_per_day by scaling down if needed.
+    """
+    n = len(forecast)
+    charge_mw = [0.0] * n
+    discharge_mw = [0.0] * n
+    soc = battery.initial_soc_mwh
+    power = battery.power_mw
+    dt = duration_hours
+    eta_c = battery.charge_efficiency
+    eta_d = battery.discharge_efficiency
+
+    # Charge phase: cheapest intervals
+    sorted_idx = sorted(range(n), key=lambda i: forecast[i])
+    for idx in sorted_idx:
+        if soc >= battery.soc_max_mwh:
+            break
+        max_charge = min(power, (battery.soc_max_mwh - soc) / (eta_c * dt))
+        charge_mw[idx] = max_charge
+        soc += max_charge * eta_c * dt
+
+    # Discharge phase: most expensive intervals
+    sorted_idx_desc = sorted(range(n), key=lambda i: forecast[i], reverse=True)
+    for idx in sorted_idx_desc:
+        if soc <= battery.soc_min_mwh:
+            break
+        max_discharge = min(power, (soc - battery.soc_min_mwh) / dt * eta_d)
+        discharge_mw[idx] = max_discharge
+        soc -= max_discharge / eta_d * dt
+
+    # Enforce max_cycles_per_day by scaling if needed
+    throughput = sum(charge_mw) + sum(discharge_mw)
+    cycles = throughput / (2.0 * battery.usable_energy_mwh) if battery.usable_energy_mwh > 0 else 0.0
+    max_cycles = battery.max_cycles_per_day * (n * dt / 24.0)
+    if cycles > max_cycles and cycles > 0:
+        scale = max_cycles / cycles
+        charge_mw = [c * scale for c in charge_mw]
+        discharge_mw = [d * scale for d in discharge_mw]
+
+    # Recompute SOC trajectory for the schedule DataFrame
+    soc_traj = [battery.initial_soc_mwh]
+    current_soc = battery.initial_soc_mwh
+    for i in range(n):
+        current_soc = (
+            current_soc
+            + charge_mw[i] * eta_c * dt
+            - discharge_mw[i] / eta_d * dt
+        )
+        current_soc = max(battery.soc_min_mwh, min(battery.soc_max_mwh, current_soc))
+        soc_traj.append(current_soc)
+
+    return charge_mw, discharge_mw, soc_traj[:-1]  # exclude the trailing SOC
+
 
 # ---------------------------------------------------------------------------
 # 2. Perfect foresight baseline
@@ -110,15 +184,21 @@ df_perfect.to_csv(ROOT / "outputs" / "backtest_baseline_perfect.csv", index=Fals
 print(f"  Saved {len(df_perfect)} rows -> outputs/backtest_baseline_perfect.csv")
 
 # ---------------------------------------------------------------------------
-# 3. Naive baseline (greedy heuristic)
+# 3. Naive baseline (tracker-aware greedy using FORECAST prices)
 # ---------------------------------------------------------------------------
-print("\n[2/2] Computing NAIVE baseline ...")
+# FAIR COMPARISON: same forecast input, same tracker penalties,
+# same constraints. Only the scheduler differs (greedy vs MILP).
+# ---------------------------------------------------------------------------
+print("\n[2/2] Computing NAIVE baseline (tracker-aware forecast-driven greedy) ...")
 print("-" * 70)
 
 naive_rows = []
 
 for profile_name in BATTERY_PROFILES:
-    battery = load_profile(profile_path, profile_name)
+    base_battery = load_profile(profile_path, profile_name)
+    # Apply transaction cost (same as backtest)
+    base_battery = replace(base_battery, transaction_cost_eur_per_mwh=2.0)
+    tracker = BatteryStateTracker(base_battery)
     print(f"  -> {profile_name} ...")
 
     unique_dates = sorted(df_pred["date"].unique())
@@ -128,51 +208,63 @@ for profile_name in BATTERY_PROFILES:
         if len(day_df) != 96:
             continue
 
+        timestamps = day_df.index.tolist()
         actual = day_df["Actual"].values
-        n = len(actual)
+        forecast = day_df["Pred_p50"].values
+        date_str = str(date)
 
-        # Greedy: sort by price, charge cheapest until full, discharge most expensive until empty
-        charge_mw = [0.0] * n
-        discharge_mw = [0.0] * n
-        soc = battery.initial_soc_mwh
-        usable = battery.usable_energy_mwh
-        power = battery.power_mw
-        dt = DURATION_HOURS
-        eta_c = battery.charge_efficiency
-        eta_d = battery.discharge_efficiency
+        state = tracker.get_state(date_str)
 
-        # Charge phase: cheapest intervals
-        sorted_idx = sorted(range(n), key=lambda i: actual[i])
-        for idx in sorted_idx:
-            if soc >= battery.soc_max_mwh:
-                break
-            max_charge = min(power, (battery.soc_max_mwh - soc) / (eta_c * dt))
-            charge_mw[idx] = max_charge
-            soc += max_charge * eta_c * dt
+        if state.is_eol:
+            tracker.record_day(date_str, 0.0, 0.0)
+            naive_rows.append({
+                "date": date_str,
+                "profile": profile_name,
+                "realized_profit_eur": 0.0,
+                "cycles_used": 0.0,
+                "throughput_mwh": 0.0,
+            })
+            continue
 
-        # Discharge phase: most expensive intervals
-        sorted_idx_desc = sorted(range(n), key=lambda i: actual[i], reverse=True)
-        for idx in sorted_idx_desc:
-            if soc <= battery.soc_min_mwh:
-                break
-            max_discharge = min(power, (soc - battery.soc_min_mwh) / dt * eta_d)
-            discharge_mw[idx] = max_discharge
-            soc -= max_discharge / eta_d * dt
+        # Effective battery from tracker (adjusted for SOH, carry-over SoC)
+        battery = tracker.get_effective_battery(date_str)
 
-        # Evaluate
-        throughput = sum(charge_mw) + sum(discharge_mw)
-        market_profit = sum(actual[i] * (discharge_mw[i] - charge_mw[i]) for i in range(n)) * dt
-        deg_cost = battery.degradation_cost_eur_per_mwh * throughput * dt
-        tx_cost = battery.transaction_cost_eur_per_mwh * throughput * dt
-        realized_profit = market_profit - deg_cost - tx_cost
-        cycles = throughput / (2.0 * usable) if usable > 0 else 0.0
+        # Inflated marginal cost so the greedy internalises friction
+        opt_battery = replace(
+            battery,
+            degradation_cost_eur_per_mwh=(
+                battery.degradation_cost_eur_per_mwh + battery.transaction_cost_eur_per_mwh
+            ),
+        )
+
+        # Run greedy heuristic
+        charge_mw, discharge_mw, soc_traj = greedy_schedule(
+            forecast, opt_battery, DURATION_HOURS
+        )
+
+        # Build schedule DataFrame (needed for evaluate_schedule)
+        sched_df = build_schedule_frame(
+            timestamps=timestamps,
+            prices=forecast,
+            charge_mw=charge_mw,
+            discharge_mw=discharge_mw,
+            soc_mwh=soc_traj,
+            duration_hours=DURATION_HOURS,
+            degradation_cost_eur_per_mwh=battery.degradation_cost_eur_per_mwh,
+        )
+
+        # Evaluate against ACTUAL prices using the effective battery
+        metrics = evaluate_schedule(sched_df, actual, battery, DURATION_HOURS)
+
+        final_soc = soc_traj[-1] if soc_traj else battery.initial_soc_mwh
+        tracker.record_day(date_str, metrics["cycles_used"], final_soc)
 
         naive_rows.append({
-            "date": str(date),
+            "date": date_str,
             "profile": profile_name,
-            "realized_profit_eur": realized_profit,
-            "cycles_used": cycles,
-            "throughput_mwh": throughput * dt,
+            "realized_profit_eur": metrics["realized_profit_eur"],
+            "cycles_used": metrics["cycles_used"],
+            "throughput_mwh": metrics["throughput_mwh"],
         })
 
 df_naive = pd.DataFrame(naive_rows)
@@ -183,8 +275,6 @@ print("\n" + "=" * 70)
 print("BASELINE COMPUTATION COMPLETE")
 print("=" * 70)
 
-# Quick sanity check
-total_bos = df_pred["Actual"].sum()  # placeholder
 print(f"\nPerfect baseline total profit (all profiles, all days):")
 for profile in BATTERY_PROFILES:
     total = df_perfect[df_perfect["profile"] == profile]["realized_profit_eur"].sum()

@@ -1,17 +1,24 @@
 import { useState } from "react";
 import { Card, KPI, Tag, Seg, Icon, Legend } from "@/components/bos/Primitives";
 import { Spark, EquityChart, Heatmap, Histogram } from "@/components/bos/Charts";
-import { useBacktestSummary } from "@/lib/api";
+import { useBacktestSummary, useBatteries } from "@/lib/api";
 import { fmtEur } from "@/lib/dispatch";
-import { useBosStore } from "@/lib/store";
 import { downloadCsv } from "@/lib/export";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function PageBacktest() {
   const [period, setPeriod] = useState<"30" | "90" | "365">("90");
-  const { selectedAssetId } = useBosStore();
+  const [profile, setProfile] = useState<string>("all");
   const days = period === "30" ? 30 : period === "365" ? 365 : 90;
-  const { data, isLoading, isError, refetch } = useBacktestSummary(days);
+  const { data: batteryData } = useBatteries();
+  const { data, isLoading, isError, refetch } = useBacktestSummary(days, profile);
   const equity = data?.equity ?? { batteryOS: [], naive: [], perfect: [] };
   const dayProfits = data?.dayProfits ?? [];
   const heat = data?.heatmap ?? [];
@@ -19,6 +26,11 @@ export default function PageBacktest() {
   const totalNaive = equity.naive[equity.naive.length - 1] ?? 0;
   const totalPerfect = equity.perfect[equity.perfect.length - 1] ?? 0;
   const profits = dayProfits.map((d) => d.bos);
+
+  const profileLabel =
+    profile === "all"
+      ? "All profiles"
+      : batteryData?.find((b) => b.id === profile)?.name ?? profile;
 
   return (
     <div>
@@ -32,6 +44,21 @@ export default function PageBacktest() {
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <Select value={profile} onValueChange={setProfile}>
+            <SelectTrigger className="w-[180px] h-9 text-[12px] border-line bg-bg-1 text-fg-0">
+              <SelectValue placeholder="Select profile" />
+            </SelectTrigger>
+            <SelectContent className="bg-bg-1 border-line">
+              <SelectItem value="all" className="text-fg-0 text-[12px] focus:bg-bg-3 focus:text-fg-0">
+                All profiles
+              </SelectItem>
+              {batteryData?.map((b) => (
+                <SelectItem key={b.id} value={b.id} className="text-fg-0 text-[12px] focus:bg-bg-3 focus:text-fg-0">
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Seg value={period} onChange={(v) => setPeriod(v)} options={[{ v: "30", l: "30D" }, { v: "90", l: "90D" }, { v: "365", l: "1Y" }]} />
           <button
             className="bos-btn"
@@ -41,10 +68,10 @@ export default function PageBacktest() {
                 return;
               }
               downloadCsv(
-                `backtest_${days}d.csv`,
-                dayProfits.map((d, i) => ({
+                `backtest_${profile}_${days}d.csv`,
+                dayProfits.map((d) => ({
                   day: `D${d.d + 1}`,
-                  date: new Date(2026, 3, 29 - i).toISOString().slice(0, 10),
+                  date: d.date,
                   bos_profit_eur: d.bos,
                   naive_profit_eur: d.naive,
                   perfect_profit_eur: d.perfect,
@@ -70,7 +97,7 @@ export default function PageBacktest() {
       </div>
 
       <div className="mb-4 grid grid-cols-4 gap-4">
-        <KPI featured label="Cumulative profit · BatteryOS" value={fmtEur(totalBOS)} unit="EUR"
+        <KPI featured label={`Cumulative profit · ${profileLabel}`} value={fmtEur(totalBOS)} unit="EUR"
           delta={{ tone: "up", text: `+${fmtEur(totalBOS - totalNaive)} vs naive` }}
           spark={<Spark values={equity.batteryOS} color="hsl(var(--acc))" fill />} />
         <KPI label="vs Perfect foresight" value={`${(totalBOS / totalPerfect * 100).toFixed(0)}%`} unit="capture"
@@ -83,7 +110,7 @@ export default function PageBacktest() {
 
       {isLoading && <div className="mb-4 font-mono-tnum text-[11px] text-fg-3">Loading walk-forward summary…</div>}
       {isError && <div className="mb-4 font-mono-tnum text-[11px] text-red">Walk-forward summary unavailable.</div>}
-      <Card title="Equity curve" meta={`walk-forward · ${days} days`}
+      <Card title="Equity curve" meta={`${profileLabel} · walk-forward · ${days} days`}
         actions={<Legend items={[
           { color: "hsl(var(--acc))", label: "BatteryOS" },
           { color: "hsl(var(--magenta))", label: "Naive" },
@@ -94,7 +121,7 @@ export default function PageBacktest() {
 
       <div className="mb-4 mt-4 grid grid-cols-12 gap-4">
         <div className="col-span-7">
-          <Card title="Daily profit heatmap" meta="hour × day · €/MWh dispatched">
+          <Card title="Daily profit heatmap" meta={`${profileLabel} · hour × day`}>
             <Heatmap matrix={heat} height={240} />
             <div className="mt-2 flex gap-4 border-t border-line pt-3">
               <Legend items={[
@@ -127,7 +154,7 @@ export default function PageBacktest() {
         </div>
       </div>
 
-      <Card title="Day-by-day results" meta="walk-forward log" flush>
+      <Card title="Day-by-day results" meta={`${profileLabel} · walk-forward log`} flush>
         <table className="bos-tbl">
           <thead>
             <tr>
@@ -137,22 +164,19 @@ export default function PageBacktest() {
             </tr>
           </thead>
           <tbody>
-            {dayProfits.slice(-12).reverse().map((d, i) => {
-              const date = new Date(2026, 3, 29 - i);
-              return (
-                <tr key={d.d}>
-                  <td className="font-mono-tnum">D{d.d + 1}</td>
-                  <td className="font-mono-tnum">{date.toISOString().slice(0, 10)}</td>
-                  <td className="font-mono-tnum">{selectedAssetId}</td>
-                  <td className="num">0.50</td>
-                  <td className="num">{fmtEur(d.naive)}</td>
-                  <td className="num text-fg-0">{fmtEur(d.bos)}</td>
-                  <td className="num text-fg-3">{fmtEur(d.perfect)}</td>
-                  <td className="num"><span className="font-mono-tnum" style={{ color: d.capture > 0.7 ? "hsl(var(--acc))" : "hsl(var(--amber))" }}>{(d.capture * 100).toFixed(0)}%</span></td>
-                  <td><Tag tone="acc" dot>Optimal</Tag></td>
-                </tr>
-              );
-            })}
+            {dayProfits.slice(-12).reverse().map((d) => (
+              <tr key={d.d}>
+                <td className="font-mono-tnum">D{d.d + 1}</td>
+                <td className="font-mono-tnum">{d.date}</td>
+                <td className="font-mono-tnum">{profileLabel}</td>
+                <td className="num">—</td>
+                <td className="num">{fmtEur(d.naive)}</td>
+                <td className="num text-fg-0">{fmtEur(d.bos)}</td>
+                <td className="num text-fg-3">{fmtEur(d.perfect)}</td>
+                <td className="num"><span className="font-mono-tnum" style={{ color: d.capture > 0.7 ? "hsl(var(--acc))" : "hsl(var(--amber))" }}>{(d.capture * 100).toFixed(0)}%</span></td>
+                <td><Tag tone="acc" dot>Optimal</Tag></td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </Card>
