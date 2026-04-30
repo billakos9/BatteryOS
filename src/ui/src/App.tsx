@@ -10,7 +10,6 @@ import Forecaster from "./pages/Forecaster.tsx";
 import Optimizer from "./pages/Optimizer.tsx";
 import Backtest from "./pages/Backtest.tsx";
 import Assets from "./pages/Assets.tsx";
-import Sources from "./pages/Sources.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/optimizer" element={<Shell><Optimizer /></Shell>} />
           <Route path="/backtest" element={<Shell><Backtest /></Shell>} />
           <Route path="/assets" element={<Shell><Assets /></Shell>} />
-          <Route path="/sources" element={<Shell><Sources /></Shell>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

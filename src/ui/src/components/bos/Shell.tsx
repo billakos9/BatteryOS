@@ -11,7 +11,6 @@ const NAV = [
   { id: "optimizer", to: "/optimizer",  label: "Optimizer",    icon: "sliders",  group: "Analytics" },
   { id: "backtest",  to: "/backtest",   label: "Backtest",     icon: "history",  group: "Analytics" },
   { id: "assets",    to: "/assets",     label: "Assets",       icon: "battery",  group: "Operations" },
-  { id: "sources",   to: "/sources",    label: "Data Sources", icon: "database", group: "Operations" },
 ] as const;
 
 const LABEL_BY_PATH: Record<string, { label: string; group: string }> = NAV.reduce(

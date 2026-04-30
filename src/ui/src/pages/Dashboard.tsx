@@ -225,15 +225,35 @@ export default function PageDashboard() {
 
         <div className="col-span-4 grid gap-4" style={{ gridTemplateRows: "auto auto" }}>
           <Card title="Last day battery state" meta={lastDeliveryDay}>
-            <div className="flex items-center gap-4">
-              <BatteryGauge socMWh={result.soc[28]} energyMWh={asset.energy} />
-              <div className="flex-1">
-                <Row k="SoC" v={<>{result.soc[28].toFixed(1)} <span className="text-[10px] text-fg-3">MWh</span></>} />
-                <Row k="Action" v={<Tag tone="amber" dot>DISCHARGE</Tag>} />
-                <Row k="Power" v={<>{asset.power.toFixed(1)} <span className="text-[10px] text-fg-3">MW</span></>} />
-                <Row k="Period" v="07:30–07:45" last />
-              </div>
-            </div>
+            {(() => {
+              const lastIdx = result.soc.length > 0 ? result.soc.length - 1 : 0;
+              const lastSoc = result.soc[lastIdx] ?? 0;
+              const lastCharge = result.charge[lastIdx] ?? 0;
+              const lastDischarge = result.discharge[lastIdx] ?? 0;
+              const lastTimestamp = result.timestamps[lastIdx] ?? "";
+              const action = lastDischarge > 0.01 ? "DISCHARGE" : lastCharge > 0.01 ? "CHARGE" : "IDLE";
+              const actionTone = action === "DISCHARGE" ? "amber" : action === "CHARGE" ? "acc" : "neu";
+              const power = action === "DISCHARGE" ? lastDischarge : action === "CHARGE" ? lastCharge : 0;
+              const fmtTime = (iso: string) => {
+                if (!iso) return "—";
+                const d = new Date(iso);
+                return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+              };
+              const periodLabel = lastTimestamp
+                ? `${fmtTime(lastTimestamp)}–${fmtTime(new Date(new Date(lastTimestamp).getTime() + 15 * 60 * 1000).toISOString())}`
+                : "—";
+              return (
+                <div className="flex items-center gap-4">
+                  <BatteryGauge socMWh={lastSoc} energyMWh={asset.energy} />
+                  <div className="flex-1">
+                    <Row k="SoC" v={<>{lastSoc.toFixed(1)} <span className="text-[10px] text-fg-3">MWh</span></>} />
+                    <Row k="Action" v={<Tag tone={actionTone as never} dot>{action}</Tag>} />
+                    <Row k="Power" v={<>{power.toFixed(1)} <span className="text-[10px] text-fg-3">MW</span></>} />
+                    <Row k="Period" v={periodLabel} last />
+                  </div>
+                </div>
+              );
+            })()}
           </Card>
           <Card title="Last day profit path" meta="cumulative + per-period">
             <ProfitChart periodProfit={result.periodProfit} cumProfit={result.cumProfit} height={200} />

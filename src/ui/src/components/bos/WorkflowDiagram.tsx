@@ -187,15 +187,6 @@ export default function WorkflowDiagram() {
                     >
                       {node.label}
                     </text>
-                    <text
-                      x={16}
-                      y={50}
-                      fontSize="11"
-                      fontFamily="IBM Plex Mono"
-                      fill="hsl(var(--fg-3))"
-                    >
-                      {node.modules[0] ?? ""}
-                    </text>
                     <circle cx={NODE_W - 14} cy={14} r={4} fill={lane?.color ?? "hsl(var(--fg-3))"} />
                   </g>
                 );
@@ -210,7 +201,7 @@ export default function WorkflowDiagram() {
               if (!node) return null;
               const lane = data.lanes.find((l) => l.id === node.lane);
               return (
-                <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(220px,1fr) 2fr minmax(220px,1fr) minmax(220px,1fr)" }}>
+                <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(220px,1fr) 2fr minmax(220px,1fr)" }}>
                   <div>
                     <div className="eyebrow" style={{ color: lane?.color }}>
                       {lane?.label}
@@ -221,14 +212,6 @@ export default function WorkflowDiagram() {
                     </div>
                   </div>
                   <div className="text-fg-2 leading-relaxed">{node.summary}</div>
-                  <div>
-                    <div className="eyebrow mb-1">Modules</div>
-                    <ul className="font-mono-tnum text-fg-2">
-                      {node.modules.map((m) => (
-                        <li key={m}>{m}</li>
-                      ))}
-                    </ul>
-                  </div>
                   <div>
                     <div className="eyebrow mb-1">Inputs / Outputs</div>
                     <ul className="font-mono-tnum text-fg-2">
