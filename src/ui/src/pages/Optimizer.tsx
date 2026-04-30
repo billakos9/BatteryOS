@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, KPI, Tag, Slider, Toggle, Icon, ParamRow } from "@/components/bos/Primitives";
-import { DispatchChart, ProfitChart, ScenarioChart } from "@/components/bos/Charts";
+import { Card, KPI, Slider, Icon, ParamRow } from "@/components/bos/Primitives";
+import { DispatchChart, ProfitChart } from "@/components/bos/Charts";
 import { fmtEur } from "@/lib/dispatch";
 import { useBosStore } from "@/lib/store";
 import { getRiskProfile, riskProfiles } from "@/lib/riskProfiles";
@@ -9,7 +9,6 @@ import { downloadCsv } from "@/lib/export";
 import {
   artifactsToDispatchView,
   fetchBackendArtifacts,
-  robustRowsForGrid,
   runBackendOptimizer,
   type BackendArtifacts,
 } from "@/lib/backend";
@@ -111,17 +110,15 @@ export default function PageOptimizer() {
     }
   };
 
-  const sweepRows = useMemo(() => robustRowsForGrid(artifacts?.robustness_sweep ?? []), [artifacts]);
-
   return (
     <div>
       <div className="mb-6 flex items-end gap-6 border-b border-line pb-5">
         <div>
           <div className="eyebrow mb-2">Analytics · Optimizer</div>
-          <h1 className="h-display">Mean-CVaR <em>dispatch</em> with rainflow aging</h1>
+          <h1 className="h-display">Mean-CVaR optimizer</h1>
           <div className="mt-2 max-w-[72ch] text-[13px] text-fg-2">
-            Choose a battery profile and a risk preset, then solve to see the dispatch schedule, profit
-            waterfall, rainflow aging and robustness checks for the next delivery day.
+             Choose a battery profile and a risk preset, then solve to see the dispatch schedule, profit
+             waterfall and rainflow aging for the next delivery day.
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -156,8 +153,6 @@ export default function PageOptimizer() {
           delta={{ tone: "up", text: `${result.riskProfileLabel} · ${(result.capture * 100).toFixed(0)}% of perfect` }} />
         <KPI label="Risk profile" value={result.riskProfileLabel}
           delta={{ tone: "neu", text: `λ=${result.riskLambda.toFixed(2)} · α=${result.riskAlpha.toFixed(2)}` }} />
-        <KPI label="Worst case · robust" value={fmtEur(result.worst)} unit="EUR"
-          delta={{ tone: "neu", text: optimizer.robust ? "verified across grid" : "robust mode off" }} />
         <KPI label="Cycles used" value={result.cyclesUsed.toFixed(2)} unit={`/ ${result.cyclesCap.toFixed(1)} cap`}
           delta={{ tone: "up", text: `aging ${fmtEur(result.agingCostTotal)}` }} />
       </div>
@@ -211,11 +206,6 @@ export default function PageOptimizer() {
             <ReadOnlyRow label="Energy" value={`${(artifacts?.run_metadata.battery_profile?.energy_mwh ?? asset.energy).toFixed(0)} MWh`} />
             <ReadOnlyRow label="Round-trip η" value={`${((artifacts?.run_metadata.battery_profile?.eta_rt ?? asset.eff * asset.eff) * 100).toFixed(1)}%`} />
             <ReadOnlyRow label="Degradation" value={artifacts?.run_metadata.degradation_model ?? "constant + SoC-banded"} />
-
-            <div className="param-row" style={{ gridTemplateColumns: "1fr auto", borderBottom: "none" }}>
-              <span className="lbl">Robust sweep<span className="hint">verify under perturbations</span></span>
-              <Toggle on={optimizer.robust} onChange={(v) => setOptimizer({ robust: v })} />
-            </div>
           </Card>
         </div>
 
@@ -234,52 +224,10 @@ export default function PageOptimizer() {
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-12 gap-4">
-        <div className="col-span-5">
-          <Card title="Solver workflow" meta="10 steps · auditable">
-            <div className="bos-steps">
-              {[
-                { t: "Price scenarios", d: `${artifacts?.run_metadata.scenarios_used ?? result.scenarios.length} probabilistic price paths from the forecaster`, x: "forecaster input" },
-                { t: "Battery constraints", d: "power, energy, η, SoC bounds", x: `P≤${asset.power} · E≤${asset.energy}` },
-                { t: "Cycle envelope", d: "daily cycle cap from selected storage profile", x: `max ${result.cyclesCap.toFixed(1)} eq. cycles` },
-                { t: "Mean-CVaR objective", d: "(1−λ)·E[π] + λ·CVaR_α[π]", x: `${result.riskProfileLabel} · λ=${result.riskLambda.toFixed(2)} · α=${result.riskAlpha.toFixed(2)}` },
-                { t: "LP / MILP solve", d: "optimizer engine", x: `${result.solveMs} ms · ${result.status}` },
-                { t: "Feasibility check", d: "SoC, power, simultaneity, cycles", x: artifacts?.run_metadata.feasibility?.feasible === false ? "violations reported" : "feasible" },
-                { t: "Period economics", d: "profit per MTU at realized price", x: `Σ = ${fmtEur(result.expected)}` },
-                { t: "Rainflow aging", d: "ASTM E1049 + Wöhler", x: `${fmtEur(result.agingCostTotal)} cost` },
-                { t: "Robust sweep", d: "η × aging × cycles grid", x: optimizer.robust ? `${sweepRows.length} cells verified` : "off" },
-                { t: "Bid curves", d: "HEnEx ladder per MTU", x: "96 bid blocks" },
-              ].map((s, i) => (
-                <div key={i} className="bos-step done">
-                  <div className="num">{i + 1}</div>
-                  <div>
-                    <div className="ttl">{s.t}</div>
-                    <div className="desc">{s.d}</div>
-                    <div className="extra">{s.x}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        <div className="col-span-7 space-y-4">
-          <Card title="Scenario fan · optimizer input" meta={`${result.scenarios.length} paths × ${result.forecast.length} periods`}
-            actions={<span className="font-mono-tnum text-[10px] text-fg-3">CVaR={fmtEur(result.cvar)}</span>}>
-            <ScenarioChart scenarios={result.scenarios} forecast={result.forecast} realized={result.realized} height={200} />
-          </Card>
-
-          <Card title="Robustness sweep" meta="η × aging cost · realized profit"
-            actions={<span className="font-mono-tnum text-[10px] text-fg-3">worst {sweepRows.length ? fmtEur(Math.min(...sweepRows.map((r) => r.p))) : "n/a"}</span>}>
-            {sweepRows.length ? <RobustGrid rows={sweepRows} /> : <div className="py-8 text-center font-mono-tnum text-[11px] text-fg-3">Run with robust sweep enabled to populate this table.</div>}
-          </Card>
-        </div>
-      </div>
-
       <div className="bos-callout">
         <div className="eyebrow mb-1 text-acc">Decision-aware insight</div>
         Under the {result.riskProfileLabel} profile, the optimizer chooses one feasible schedule from the scenario bundle.
-        Schedule, profit, rainflow aging and robustness checks are shown above. The same logic can be replayed on{" "}
+        Schedule, profit and rainflow aging are shown above. The same logic can be replayed on{" "}
         <button className="bos-btn sm ghost inline-flex" onClick={() => navigate("/backtest")}>90 historical days <Icon name="chevR" size={11} /></button>.
       </div>
     </div>
@@ -295,36 +243,4 @@ function ReadOnlyRow({ label, value }: { label: string; value: React.ReactNode }
   );
 }
 
-function RobustGrid({ rows }: { rows: { e: number; d: number; p: number }[] }) {
-  const effs = [...new Set(rows.map((r) => r.e))];
-  const degs = [...new Set(rows.map((r) => r.d))];
-  const min = Math.min(...rows.map((r) => r.p));
-  const max = Math.max(...rows.map((r) => r.p));
-  const colorFor = (p: number) => {
-    const t = (p - min) / Math.max(1, max - min);
-    if (t < 0.33) return `hsla(0,100%,71%,${0.25 + t})`;
-    if (t < 0.66) return `hsla(35,100%,64%,${0.2 + t})`;
-    return `hsla(152,100%,71%,${0.2 + t * 0.6})`;
-  };
-  return (
-    <div>
-      <div className="grid gap-px" style={{ gridTemplateColumns: `60px repeat(${degs.length}, 1fr)` }}>
-        <div className="eyebrow py-1">η ↓ / €/MWh →</div>
-        {degs.map((d) => <div key={d} className="eyebrow text-center">€{d.toFixed(1)}</div>)}
-      </div>
-      {effs.map((e) => (
-        <div key={e} className="mb-px grid gap-px" style={{ gridTemplateColumns: `60px repeat(${degs.length}, 1fr)` }}>
-          <div className="font-mono-tnum text-[10px] text-fg-3 px-1 py-2">{(e * 100).toFixed(0)}%</div>
-          {degs.map((d) => {
-            const r = rows.find((x) => x.e === e && x.d === d)!;
-            return (
-              <div key={d} className="rounded-sm py-2.5 text-center" style={{ background: colorFor(r.p) }}>
-                <div className="font-mono-tnum text-[11px] font-medium text-fg-0">{fmtEur(r.p)}</div>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-}
+
