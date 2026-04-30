@@ -117,6 +117,23 @@ export default function PageForecaster() {
           >
             <Icon name="download" size={12} />Export forecast
           </button>
+          <button
+            className="bos-btn"
+            onClick={async () => {
+              toast.info("Running inference pipeline (may take 20–40s)…");
+              try {
+                const res = await fetch("/api/forecast/generate", { method: "POST" });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                toast.success(`Forecast generated for ${data.target_date}`);
+                void fetchOverview();
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Generation failed");
+              }
+            }}
+          >
+            <Icon name="play" size={12} />Generate
+          </button>
           <button className="bos-btn primary" onClick={fetchOverview} disabled={loading}>
             <Icon name="refresh" size={12} />{loading ? "Loading…" : "Refresh"}
           </button>
@@ -130,13 +147,13 @@ export default function PageForecaster() {
       )}
 
       <div className="mb-4 grid grid-cols-4 gap-4">
-        <KPI featured label="Forecast MAE" value={diagnostics?.mae_eur_per_mwh.toFixed(1) ?? "0.0"} unit="€/MWh"
+        <KPI featured label="Forecast MAE" value={(diagnostics?.mae_eur_per_mwh ?? 0).toFixed(1)} unit="€/MWh"
           delta={{ tone: "up", text: `${active?.name ?? "Model"} · average absolute error` }} />
-        <KPI label="Forecast RMSE" value={diagnostics?.rmse_eur_per_mwh.toFixed(1) ?? "0.0"} unit="€/MWh"
+        <KPI label="Forecast RMSE" value={(diagnostics?.rmse_eur_per_mwh ?? 0).toFixed(1)} unit="€/MWh"
           delta={{ tone: "neu", text: "penalizes larger misses more heavily" }} />
-        <KPI label="Profit capture" value={diagnostics ? diagnostics.profit_capture_pct.toFixed(0) : "0"} unit="% of perfect"
+        <KPI label="Profit capture" value={(diagnostics?.profit_capture_pct ?? 0).toFixed(0)} unit="% of perfect"
           delta={{ tone: "up", text: "forecast-driven dispatch vs perfect foresight" }} />
-        <KPI label="Pinball loss · q90" value={diagnostics?.pinball_q90_eur_per_mwh.toFixed(2) ?? "0.00"} unit="€/MWh"
+        <KPI label="Pinball loss · q90" value={(diagnostics?.pinball_q90_eur_per_mwh ?? 0).toFixed(2)} unit="€/MWh"
           delta={{ tone: "neu", text: "upper-tail quantile accuracy" }} />
       </div>
 
@@ -261,10 +278,10 @@ export default function PageForecaster() {
             <Histogram values={overview?.residuals ?? []} bins={20} height={160} color="hsl(var(--magenta))" />
             <div className="mt-2 flex gap-4 border-t border-line pt-2">
               {[
-                ["Bias", diagnostics ? diagnostics.bias_eur_per_mwh.toFixed(2) : "0.00"],
-                ["σ", diagnostics ? diagnostics.sigma_eur_per_mwh.toFixed(1) : "0.0"],
-                ["P95", diagnostics ? `±${diagnostics.p95_abs_error_eur_per_mwh.toFixed(1)}` : "±0.0"],
-                ["Skew", diagnostics ? diagnostics.skew.toFixed(2) : "0.00"],
+                ["Bias", (diagnostics?.bias_eur_per_mwh ?? 0).toFixed(2)],
+                ["σ", (diagnostics?.sigma_eur_per_mwh ?? 0).toFixed(1)],
+                ["P95", `±${(diagnostics?.p95_abs_error_eur_per_mwh ?? 0).toFixed(1)}`],
+                ["Skew", (diagnostics?.skew ?? 0).toFixed(2)],
               ].map(([k, v]) => (
                 <div key={k}><div className="eyebrow">{k}</div><div className="font-mono-tnum text-fg-0">{v}</div></div>
               ))}
