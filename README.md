@@ -8,16 +8,130 @@ BatteryOS couples a probabilistic price forecaster with a stochastic dispatch op
 
 ## Table of Contents
 
-1. [Architecture Overview](#architecture-overview)
-2. [Data Sources & Challenges](#data-sources--challenges)
-3. [Feature Engineering](#feature-engineering)
-4. [Forecasting Model](#forecasting-model)
-5. [Explainability (SHAP)](#explainability-shap)
-6. [Dispatch Optimizer](#dispatch-optimizer)
-7. [Backtesting & Evaluation](#backtesting--evaluation)
-8. [Quick Start](#quick-start)
-9. [Repository Layout](#repository-layout)
-10. [Further Documentation](#further-documentation)
+1. [Repository Layout](#repository-layout)
+2. [Performance at a Glance](#performance-at-a-glance)
+3. [Architecture Overview](#architecture-overview)
+4. [Data Sources & Challenges](#data-sources--challenges)
+5. [Feature Engineering](#feature-engineering)
+6. [Forecasting Model](#forecasting-model)
+7. [Explainability (SHAP)](#explainability-shap)
+8. [Dispatch Optimizer](#dispatch-optimizer)
+9. [Backtesting & Evaluation](#backtesting--evaluation)
+10. [Quick Start](#quick-start)
+11. [Further Documentation](#further-documentation)
+
+---
+
+## Performance at a Glance
+
+### Forecasting Engine
+
+| Metric | Value |
+|--------|-------|
+| **Historical data** | **115,795 rows** (15-min intervals, Jan 2023 – Apr 2026) |
+| **Engineered features** | **53** (market, weather, calendar, financial) |
+| **Walk-forward MAE (p50)** | **16.43 €/MWh** — true out-of-sample, within 3% of validation error |
+| **Price range captured** | **−50.00 €/MWh** to **+561.15 €/MWh** |
+| **Quantile coverage** | **~75%** of actual prices fall inside the p10–p90 band |
+| **Daily inference** | Automated cron job at **09:00 EEST** every morning |
+
+### Dispatch Optimizer
+
+| Metric | Value |
+|--------|-------|
+| **LP solves (10-month honest backtest)** | **5,454** (303 days × 6 profiles × 3 scenarios) |
+| **Solver failure rate** | **0%** — all reached proven optimality |
+| **Typical solve time** | **<1 second** per 96-interval horizon |
+| **Aggregate simulated profit** | **€268.3 M** across all profiles & scenarios (10 months) |
+| **Safe vs Risky edge** | **Safe (CVaR) beats Risky on every profile** — aggregate +1.5% |
+| **Best daily performer** | **PHS 200 8h / Regular** averaging **€98,932 / day** |
+
+
+---
+
+## Repository Layout
+
+```
+BatteryOS/
+├── api/                               # REST API (experimental)
+│   ├── server.py
+│   ├── inference.py
+│   └── compute_baselines.py
+├── archive/                           # Legacy pre-modular scripts (not imported)
+├── config/
+│   ├── storage_profiles.yaml          # Battery catalog
+│   └── lightgbm_quantile_params.yaml  # Model hyperparameters
+├── data/
+│   ├── raw/                           # EnEx, ENTSO-E, weather CSVs/XLSXs
+│   ├── interim/                       # Intermediate aligned tables
+│   └── processed/                     # Master feature matrices
+├── docs/
+│   ├── reports/                       # Technical deep-dives
+│   │   ├── BACKTEST_REPORT.md
+│   │   ├── BACKTEST_REPORT_HONEST.md
+│   │   ├── FORECASTING_REPORT.md
+│   │   ├── OPTIMIZER_REPORT.md
+│   │   └── REMAINING_BIASES.md
+│   ├── planning/                      # Design-phase documents
+│   │   └── WORKFLOW_PLAN.md
+│   └── presentation/                  # Pitch decks & demo guides
+│       ├── BatteryOS_Presentation.md
+│       └── DEMO_GUIDE.md
+├── logs/                              # Runtime logs (gitignored)
+├── models/                            # Saved LightGBM .joblib + feature list
+├── notebooks/                         # Exploratory analysis only
+├── outputs/                           # Predictions, backtests, SHAP data
+├── pipelines/                         # End-to-end runnable scripts
+│   ├── run_training_pipeline.py
+│   ├── run_walkforward_training.py
+│   ├── run_backtest.py
+│   ├── run_optuna_tuning.py
+│   ├── daily_inference.py
+│   ├── explain_last_day_shap.py
+│   └── save_trained_models.py
+├── scripts/                           # Deployment & cron helpers
+│   ├── setup_cron.sh
+│   ├── start.sh
+│   └── start_dev.py
+├── src/
+│   ├── ingest/                        # Data fetchers
+│   │   ├── entsoe.py
+│   │   ├── weather.py
+│   │   └── enex.py
+│   ├── features/                      # Feature engineering
+│   │   ├── builder.py
+│   │   ├── preprocessing.py
+│   │   ├── interactions.py
+│   │   ├── advanced.py
+│   │   └── inference.py
+│   ├── forecast/                      # Model training & utilities
+│   │   ├── train.py
+│   │   ├── utils.py
+│   │   └── tune_lightgbm.py
+│   ├── optimize/                      # Dispatch optimizer
+│   │   ├── battery.py
+│   │   ├── dispatch.py
+│   │   ├── milp.py
+│   │   ├── _milp_core.py
+│   │   ├── robust.py
+│   │   ├── scenarios.py
+│   │   ├── risk_profiles.py
+│   │   ├── schedule.py
+│   │   ├── economics.py
+│   │   ├── tracker.py
+│   │   ├── degradation.py
+│   │   ├── backtest.py
+│   │   └── bid_curves.py
+│   ├── backtest/                      # Walk-forward & metrics
+│   │   ├── walk_forward.py
+│   │   ├── metrics.py
+│   │   ├── protocols.py
+│   │   └── result.py
+│   └── ui/                            # React/Vite dashboard (experimental)
+├── tests/                             # Unit tests
+│   └── test_optimize.py
+└── README.md                          # This file
+```
 
 ---
 
@@ -170,9 +284,10 @@ After training, the pipeline reports validation-set metrics:
 - **Pinball loss:** Proper scoring rule for each quantile
   - Lower pinball loss = better calibrated quantiles
 
-Typical validation performance:
-- MAE (p50): **~5–8 €/MWh**
-- Pinball loss scales with quantile: p10 and p90 losses are asymmetric by design, reflecting the cost of under- vs over-prediction.
+Typical performance:
+- **Validation MAE (p50): 16.98 €/MWh** (Jul 2025 – Apr 2026)
+- **Walk-forward MAE (p50): 16.43 €/MWh** — true out-of-sample, within 3% of validation error
+- **Pinball loss:** p10 = 3.98, p50 = 8.50, p90 = 4.19 €/MWh — well-calibrated asymmetric tails
 
 ### Daily Inference Pipeline (`pipelines/daily_inference.py`)
 Designed to run as a **cron job every morning (~09:00 Europe/Athens)**:
@@ -311,7 +426,7 @@ For every complete day (96 intervals) and every battery profile:
 
 ### Backtest Metrics
 The backtest produces:
-- `outputs/backtest_detailed.csv` — 21,564 rows (1,198 days × 6 profiles × 3 scenarios)
+- `outputs/backtest_detailed.csv` — 5,454 rows (303 days × 6 profiles × 3 scenarios)
 - `outputs/backtest_summary.csv` — aggregated per-profile, per-scenario statistics
 - `outputs/backtest_degradation_*_{scenario}.csv` — daily SOH and cycle histories
 
@@ -322,15 +437,22 @@ Key metrics reported:
 - **Profit standard deviation** (volatility)
 - **Final SOH (%)**, cumulative cycles, annual budget remaining
 
-### Representative Results (1,198 days, Jan 2023 – Apr 2026)
+### Honest Backtest Results (303 days, Jul 2025 – Apr 2026)
+
+Walk-forward out-of-sample with SoC carry-over and €2/MWh transaction costs:
 
 | Profile | Safe (€) | Regular (€) | Risky (€) | Safe vs Risky |
 |---------|----------|-------------|-----------|---------------|
-| `liion_100_2h` | 33.3 M | 33.3 M | 33.0 M | **+0.9%** |
-| `phs_100_8h` | 92.8 M | 93.0 M | 92.2 M | **+0.7%** |
-| `flow_100_6h` | 75.6 M | 75.8 M | 75.0 M | **+0.9%** |
+| `liion_100_2h` | **5.76 M** | 5.70 M | 5.66 M | **+1.8%** |
+| `liion_200_2h` | **11.51 M** | 11.40 M | 11.31 M | **+1.8%** |
+| `liion_300_2h` | **17.27 M** | 17.10 M | 16.97 M | **+1.8%** |
+| `phs_100_8h` | **14.36 M** | 14.39 M | 14.14 M | **+1.5%** |
+| `phs_200_8h` | **28.71 M** | 28.79 M | 28.29 M | **+1.5%** |
+| `flow_100_6h` | **12.36 M** | 12.35 M | 12.27 M | **+0.7%** |
 
-**Key finding:** The CVaR-based Safe strategy consistently outperforms the optimistic Risky strategy. Optimizing on p90 causes the battery to discharge too aggressively; when actual prices disappoint, the schedule underperforms. Safe hedges across scenarios and maintains SoC headroom for unexpected spikes.
+**Key finding:** The CVaR-based **Safe strategy beats Risky on every profile** (aggregate +1.5%). Optimizing on p90 causes the battery to discharge too aggressively; when actual prices disappoint, the schedule underperforms. Safe hedges across scenarios and maintains SoC headroom for unexpected spikes.
+
+> Earlier in-sample results (1,198 days) are archived in [`docs/reports/BACKTEST_REPORT.md`](docs/reports/BACKTEST_REPORT.md).
 
 ---
 
@@ -383,92 +505,6 @@ python pipelines/daily_inference.py
 
 ---
 
-## Repository Layout
-
-```
-BatteryOS/
-├── api/                               # REST API (experimental)
-│   ├── server.py
-│   ├── inference.py
-│   └── compute_baselines.py
-├── archive/                           # Legacy pre-modular scripts (not imported)
-├── config/
-│   ├── storage_profiles.yaml          # Battery catalog
-│   └── lightgbm_quantile_params.yaml  # Model hyperparameters
-├── data/
-│   ├── raw/                           # EnEx, ENTSO-E, weather CSVs/XLSXs
-│   ├── interim/                       # Intermediate aligned tables
-│   └── processed/                     # Master feature matrices
-├── docs/
-│   ├── reports/                       # Technical deep-dives
-│   │   ├── BACKTEST_REPORT.md
-│   │   ├── BACKTEST_REPORT_HONEST.md
-│   │   ├── FORECASTING_REPORT.md
-│   │   ├── OPTIMIZER_REPORT.md
-│   │   └── REMAINING_BIASES.md
-│   ├── planning/                      # Design-phase documents
-│   │   └── WORKFLOW_PLAN.md
-│   └── presentation/                  # Pitch decks & demo guides
-│       ├── BatteryOS_Presentation.md
-│       └── DEMO_GUIDE.md
-├── logs/                              # Runtime logs (gitignored)
-├── models/                            # Saved LightGBM .joblib + feature list
-├── notebooks/                         # Exploratory analysis only
-├── outputs/                           # Predictions, backtests, SHAP data
-├── pipelines/                         # End-to-end runnable scripts
-│   ├── run_training_pipeline.py
-│   ├── run_walkforward_training.py
-│   ├── run_backtest.py
-│   ├── run_optuna_tuning.py
-│   ├── daily_inference.py
-│   ├── explain_last_day_shap.py
-│   └── save_trained_models.py
-├── scripts/                           # Deployment & cron helpers
-│   ├── setup_cron.sh
-│   ├── start.sh
-│   └── start_dev.py
-├── src/
-│   ├── ingest/                        # Data fetchers
-│   │   ├── entsoe.py
-│   │   ├── weather.py
-│   │   └── enex.py
-│   ├── features/                      # Feature engineering
-│   │   ├── builder.py
-│   │   ├── preprocessing.py
-│   │   ├── interactions.py
-│   │   ├── advanced.py
-│   │   └── inference.py
-│   ├── forecast/                      # Model training & utilities
-│   │   ├── train.py
-│   │   ├── utils.py
-│   │   └── tune_lightgbm.py
-│   ├── optimize/                      # Dispatch optimizer
-│   │   ├── battery.py
-│   │   ├── dispatch.py
-│   │   ├── milp.py
-│   │   ├── _milp_core.py
-│   │   ├── robust.py
-│   │   ├── scenarios.py
-│   │   ├── risk_profiles.py
-│   │   ├── schedule.py
-│   │   ├── economics.py
-│   │   ├── tracker.py
-│   │   ├── degradation.py
-│   │   ├── backtest.py
-│   │   └── bid_curves.py
-│   ├── backtest/                      # Walk-forward & metrics
-│   │   ├── walk_forward.py
-│   │   ├── metrics.py
-│   │   ├── protocols.py
-│   │   └── result.py
-│   └── ui/                            # React/Vite dashboard (experimental)
-├── tests/                             # Unit tests
-│   └── test_optimize.py
-└── README.md                          # This file
-```
-
----
-
 ## Further Documentation
 
 For deep-dive technical reports, see `docs/reports/`:
@@ -485,6 +521,4 @@ Presentation materials live in `docs/presentation/`.
 
 ---
 
-## License
 
-This project is proprietary and confidential. All rights reserved.
