@@ -67,7 +67,7 @@ df_master_ml_ready = preprocess_features(df_master_ml_ready)
 df_master_ml_ready = add_interaction_features(df_master_ml_ready)
 df_master_ml_ready = engineer_advanced_features(df_master_ml_ready)
 
-# Train/test split
+# Train/validation split
 target_col = "MCP"
 y = df_master_ml_ready[target_col]
 X = df_master_ml_ready.drop(columns=[target_col])
@@ -77,12 +77,12 @@ for drop_col in ("DDAY", "DELIVERY_MTU"):
 
 TRAIN_END = pd.Timestamp("2025-06-30", tz="Europe/Athens")
 mask_train = X.index <= TRAIN_END
-mask_test = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
+mask_val = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
 
 X_train, y_train = X.loc[mask_train], y.loc[mask_train]
-X_test, y_test = X.loc[mask_test], y.loc[mask_test]
+X_val, y_val = X.loc[mask_val], y.loc[mask_val]
 
-print(f"  Train: {X_train.shape} | Test: {X_test.shape}")
+print(f"  Train: {X_train.shape} | Validation: {X_val.shape}")
 
 # ---------------------------------------------------------------------------
 # 2. Run Optuna tuning
@@ -91,7 +91,7 @@ print("\n[2/4] Running Optuna tuning (100 trials x 3 quantiles) ...")
 print("This will take 20-40 minutes. Grab a coffee.")
 print("-" * 70)
 
-best_params = run_tuning(X_train, y_train, X_test, y_test, n_trials=100)
+best_params = run_tuning(X_train, y_train, X_val, y_val, n_trials=100)
 
 # ---------------------------------------------------------------------------
 # 3. Save tuned params
@@ -112,10 +112,10 @@ for alpha in [0.10, 0.50, 0.90]:
 
     model = lgb.LGBMRegressor(**params)
     model.fit(X_train, y_train)
-    preds = model.predict(X_test)
+    preds = model.predict(X_val)
     predictions[alpha] = preds
 
-    mae = mean_absolute_error(y_test, preds)
+    mae = mean_absolute_error(y_val, preds)
     print(f"  Alpha={alpha:.2f} -> MAE: {mae:.2f} €/MWh")
 
 # Compile predictions
@@ -124,9 +124,9 @@ df_predictions = pd.DataFrame(
         "Pred_p10": predictions[0.10],
         "Pred_p50": predictions[0.50],
         "Pred_p90": predictions[0.90],
-        "Actual": y_test.values,
+        "Actual": y_val.values,
     },
-    index=y_test.index,
+    index=y_val.index,
 )
 df_predictions = sort_quantiles(df_predictions)
 

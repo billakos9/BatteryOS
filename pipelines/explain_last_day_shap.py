@@ -50,9 +50,9 @@ print(f"  Loaded: {df.shape}")
 print(f"  Index range: {df.index.min()} -> {df.index.max()}")
 
 # ---------------------------------------------------------------------------
-# 2. Train / test split (same logic as before)
+# 2. Train / validation split (same logic as before)
 # ---------------------------------------------------------------------------
-print("\n[2/6] Train / Test split ...")
+print("\n[2/6] Train / Validation split ...")
 
 target_col = "MCP"
 y = df[target_col]
@@ -63,23 +63,23 @@ for drop_col in ("DDAY", "DELIVERY_MTU"):
 
 TRAIN_END = pd.Timestamp("2025-06-30", tz="Europe/Athens")
 mask_train = X.index <= TRAIN_END
-mask_test = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
+mask_val = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
 
 X_train, y_train = X.loc[mask_train], y.loc[mask_train]
-X_test, y_test = X.loc[mask_test], y.loc[mask_test]
+X_val, y_val = X.loc[mask_val], y.loc[mask_val]
 
 print(f"  Train: {X_train.shape}")
-print(f"  Test : {X_test.shape}")
+print(f"  Validation : {X_val.shape}")
 
 # ---------------------------------------------------------------------------
 # 3. Identify the LAST DAY in the test set
 # ---------------------------------------------------------------------------
 print("\n[3/6] Identifying last day in test set ...")
 
-last_date = X_test.index.max().date()
-last_day_mask = X_test.index.date == last_date
-X_last_day = X_test.loc[last_day_mask]
-y_last_day = y_test.loc[last_day_mask]
+last_date = X_val.index.max().date()
+last_day_mask = X_val.index.date == last_date
+X_last_day = X_val.loc[last_day_mask]
+y_last_day = y_val.loc[last_day_mask]
 
 print(f"  Last day: {last_date}")
 print(f"  Intervals to explain: {len(X_last_day)}")
@@ -90,7 +90,7 @@ print(f"  Intervals to explain: {len(X_last_day)}")
 print("\n[4/6] Training LightGBM quantile models ...")
 
 models, predictions_df = train_quantile_models(
-    X_train, X_test, y_train, y_test, verbose=True
+    X_train, X_val, y_train, y_val, verbose=True
 )
 
 predictions_last_day = {

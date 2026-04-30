@@ -86,24 +86,24 @@ for i, month_start in enumerate(month_starts, 1):
 
     # Training: everything strictly before this month
     train_mask = X.index < month_start
-    # Testing: this month only
-    test_mask = (X.index >= month_start) & (X.index <= month_end)
+    # Validation: this month only (used for early stopping + monthly eval)
+    val_mask = (X.index >= month_start) & (X.index <= month_end)
 
     X_train, y_train = X.loc[train_mask], y.loc[train_mask]
-    X_test, y_test = X.loc[test_mask], y.loc[test_mask]
+    X_val, y_val = X.loc[val_mask], y.loc[val_mask]
 
-    if len(X_train) < 1000 or len(X_test) == 0:
+    if len(X_train) < 1000 or len(X_val) == 0:
         print(f"  [{i}/{len(month_starts)}] {month_start.strftime('%Y-%m')} — SKIP (insufficient data)")
         continue
 
     print(
         f"  [{i}/{len(month_starts)}] {month_start.strftime('%Y-%m')} — "
-        f"train={len(X_train):,} | test={len(X_test):,}"
+        f"train={len(X_train):,} | val={len(X_val):,}"
     )
 
     # Train quantile models (n_splits=1 for speed; we already have temporal split)
     models, df_month_pred = train_quantile_models(
-        X_train, X_test, y_train, y_test,
+        X_train, X_val, y_train, y_val,
         n_estimators=500,
         learning_rate=0.05,
         max_depth=4,

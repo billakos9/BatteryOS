@@ -17,9 +17,9 @@ from src.forecast.utils import sort_quantiles
 
 def train_quantile_models(
     X_train: pd.DataFrame,
-    X_test: pd.DataFrame,
+    X_val: pd.DataFrame,
     y_train: pd.Series,
-    y_test: pd.Series,
+    y_val: pd.Series,
     quantiles: list[float] | None = None,
     n_estimators: int = 1000,
     learning_rate: float = 0.05,
@@ -36,8 +36,10 @@ def train_quantile_models(
 
     Parameters
     ----------
-    X_train, X_test, y_train, y_test
+    X_train, X_val, y_train, y_val
         Chronologically-split feature matrices and targets.
+        ``X_val`` / ``y_val`` are used for early stopping and best-iteration
+        selection only; they are *not* the final test set.
     quantiles
         List of quantiles to model (default: [0.10, 0.50, 0.90]).
     n_estimators, learning_rate, max_depth, num_leaves, subsample, reg_lambda
@@ -54,7 +56,7 @@ def train_quantile_models(
     models : dict[float, lgb.LGBMRegressor]
         Mapping quantile → fitted model.
     df_predictions : pd.DataFrame
-        DataFrame indexed like *y_test* with columns
+        DataFrame indexed like *y_val* with columns
         ``Pred_p10``, ``Pred_p50``, ``Pred_p90``, ``Actual``.
     """
     if quantiles is None:
@@ -63,7 +65,7 @@ def train_quantile_models(
     if verbose:
         print("=" * 70)
         print("LightGBM Quantile Regression — Probabilistic MCP Forecast")
-        print(f"Train: {X_train.shape} | Test: {X_test.shape}")
+        print(f"Train: {X_train.shape} | Validation: {X_val.shape}")
         print("=" * 70)
 
     models: dict[float, lgb.LGBMRegressor] = {}
@@ -93,12 +95,12 @@ def train_quantile_models(
         model.fit(
             X_train,
             y_train,
-            eval_set=[(X_test, y_test)],
+            eval_set=[(X_val, y_val)],
             callbacks=[lgb.early_stopping(stopping_rounds=early_stopping_rounds, verbose=verbose)],
         )
 
         models[alpha] = model
-        preds = model.predict(X_test, num_iteration=model.best_iteration_)
+        preds = model.predict(X_val, num_iteration=model.best_iteration_)
         predictions[alpha] = preds
 
         if verbose:
@@ -115,9 +117,9 @@ def train_quantile_models(
             "Pred_p10": predictions[0.10],
             "Pred_p50": predictions[0.50],
             "Pred_p90": predictions[0.90],
-            "Actual": y_test.values,
+            "Actual": y_val.values,
         },
-        index=y_test.index,
+        index=y_val.index,
     )
 
     df_predictions = sort_quantiles(df_predictions)
@@ -132,19 +134,19 @@ def train_quantile_models(
     if verbose:
         print("\n[3/3] Evaluation")
 
-    mae_p50 = mean_absolute_error(y_test, df_predictions["Pred_p50"])
+    mae_p50 = mean_absolute_error(y_val, df_predictions["Pred_p50"])
     if verbose:
-        print(f"  Test MAE (p50 median) : {mae_p50:,.2f} €/MWh")
+        print(f"  Validation MAE (p50 median) : {mae_p50:,.2f} €/MWh")
 
     for alpha in quantiles:
         q_pred = predictions[alpha]
         pinball = np.where(
-            y_test >= q_pred,
-            alpha * (y_test - q_pred),
-            (1 - alpha) * (q_pred - y_test),
+            y_val >= q_pred,
+            alpha * (y_val - q_pred),
+            (1 - alpha) * (q_pred - y_val),
         ).mean()
         if verbose:
-            print(f"  Pinball loss (α={alpha:.2f}) : {pinball:,.2f} €/MWh")
+            print(f"  Validation Pinball loss (α={alpha:.2f}) : {pinball:,.2f} €/MWh")
 
     if verbose:
         print("\n" + "=" * 70)

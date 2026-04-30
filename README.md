@@ -150,14 +150,26 @@ Three independent models are trained:
 ### Post-Processing
 After inference, quantiles are **sorted row-wise** to enforce monotonicity (`p10 ≤ p50 ≤ p90`). This guarantees that the optimizer receives a logically consistent scenario tree.
 
-### Forecast Metrics
-Metrics are computed on a chronological test split (train ≤ 2025-06-30, test ≥ 2025-07-01):
+### Dataset Split Strategy
+
+Because energy time-series have strong temporal autocorrelation, all splits are **strictly chronological** — no random shuffling.
+
+| Split | Date Range | Role |
+|-------|-----------|------|
+| **Train** | Jan 2023 → 30 Jun 2025 | Fit the gradient boosting trees |
+| **Validation** | 1 Jul 2025 → end of data | Early stopping + best-iteration selection |
+
+**Important:** The Jul 2025+ data is used for **validation** (early stopping), not as a hold-out test set. This means the model indirectly "sees" this data to decide when to stop training. The **true** out-of-sample evaluation comes from the **walk-forward backtest** (`run_walkforward_training.py`), which retrains from scratch on expanding windows and evaluates on genuinely unseen future months.
+
+### Evaluation Metrics
+
+After training, the pipeline reports validation-set metrics:
 
 - **MAE (p50):** Mean absolute error of the median forecast
 - **Pinball loss:** Proper scoring rule for each quantile
   - Lower pinball loss = better calibrated quantiles
 
-Typical test-set performance:
+Typical validation performance:
 - MAE (p50): **~5–8 €/MWh**
 - Pinball loss scales with quantile: p10 and p90 losses are asymmetric by design, reflecting the cost of under- vs over-prediction.
 
@@ -176,7 +188,7 @@ Designed to run as a **cron job every morning (~09:00 Europe/Athens)**:
 Black-box forecasts are unacceptable for regulated energy assets. BatteryOS uses **SHAP (SHapley Additive exPlanations)** to decompose every prediction.
 
 ### Pipeline (`pipelines/explain_last_day_shap.py`)
-For the most recent day in the test set:
+For the most recent day in the validation period:
 1. Trains the three quantile models.
 2. Computes **TreeSHAP interaction values** for all 96 intervals.
 3. Aggregates main effects (sum over interaction tensor diagonal).

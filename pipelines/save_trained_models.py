@@ -26,8 +26,6 @@ REPO_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)
 
-from src.forecast.train import train_quantile_models
-
 print("=" * 70)
 print("Save Trained LightGBM Quantile Models")
 print("=" * 70)

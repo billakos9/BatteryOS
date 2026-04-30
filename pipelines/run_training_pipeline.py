@@ -119,9 +119,9 @@ df_master_ml_ready.to_csv(DATA_PROCESSED / "df_master_ml_ready_advanced.csv")
 print("  Saved: df_master_ml_ready_advanced.csv")
 
 # ---------------------------------------------------------------------------
-# 6. Train / test split
+# 6. Train / validation split
 # ---------------------------------------------------------------------------
-print("\n[6/7] Train / Test Split")
+print("\n[6/7] Train / Validation Split")
 print("-" * 70)
 
 target_col = "MCP"
@@ -133,12 +133,12 @@ for drop_col in ("DDAY", "DELIVERY_MTU"):
 
 TRAIN_END = pd.Timestamp("2025-06-30", tz="Europe/Athens")
 mask_train = X.index <= TRAIN_END
-mask_test = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
+mask_val = X.index >= pd.Timestamp("2025-07-01", tz="Europe/Athens")
 
 X_train, y_train = X.loc[mask_train], y.loc[mask_train]
-X_test, y_test = X.loc[mask_test], y.loc[mask_test]
+X_val, y_val = X.loc[mask_val], y.loc[mask_val]
 
-print(f"  Train: {X_train.shape} | Test: {X_test.shape}")
+print(f"  Train: {X_train.shape} | Validation: {X_val.shape}")
 
 # ---------------------------------------------------------------------------
 # 7. Train LightGBM quantile model
@@ -147,7 +147,7 @@ print("\n[7/7] Train LightGBM Quantile Model")
 print("-" * 70)
 
 models, df_predictions = train_quantile_models(
-    X_train, X_test, y_train, y_test, verbose=True
+    X_train, X_val, y_train, y_val, verbose=True
 )
 
 # Post-process: enforce monotonic quantiles

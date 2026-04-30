@@ -24,7 +24,7 @@ def pinball_loss(y_true, y_pred, alpha):
     ).mean()
 
 
-def objective(trial, X_train, y_train, X_test, y_test, alpha):
+def objective(trial, X_train, y_train, X_val, y_val, alpha):
     import lightgbm as lgb
 
     params = {
@@ -45,18 +45,18 @@ def objective(trial, X_train, y_train, X_test, y_test, alpha):
     model.fit(
         X_train,
         y_train,
-        eval_set=[(X_test, y_test)],
+        eval_set=[(X_val, y_val)],
         callbacks=[
             lgb.early_stopping(stopping_rounds=50, verbose=False),
             optuna.integration.LightGBMPruningCallback(trial, "quantile"),
         ],
     )
 
-    preds = model.predict(X_test, num_iteration=model.best_iteration_)
-    return pinball_loss(y_test, preds, alpha)
+    preds = model.predict(X_val, num_iteration=model.best_iteration_)
+    return pinball_loss(y_val, preds, alpha)
 
 
-def run_tuning(X_train, y_train, X_test, y_test, n_trials=100):
+def run_tuning(X_train, y_train, X_val, y_val, n_trials=100):
     """Run Optuna tuning for all three quantiles and return best params."""
     best_params = {}
 
@@ -66,7 +66,7 @@ def run_tuning(X_train, y_train, X_test, y_test, n_trials=100):
             pruner=optuna.pruners.MedianPruner(n_startup_trials=5),
         )
         study.optimize(
-            lambda trial: objective(trial, X_train, y_train, X_test, y_test, alpha),
+            lambda trial: objective(trial, X_train, y_train, X_val, y_val, alpha),
             n_trials=n_trials,
             show_progress_bar=True,
         )
